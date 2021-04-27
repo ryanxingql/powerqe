@@ -1,0 +1,215 @@
+div2k-qf10:
+  note: ~
+  dataset:
+    train:
+      ds_type: ImTrainingSet
+      ds_opts:
+        gt_path: data/div2k/raw_ds_2/
+        lq_path: data/div2k/jpeg_ds_2/qf10/
+        max_num: 700
+        start_idx: 0
+        aug:
+          if_aug: True
+          opts:
+            gt_h: 128
+            gt_w: 128
+            if_flip: True
+            if_rot: True
+      
+      # for datasampler
+      enlarge_ratio: 100
+
+      # for dataloader
+      bs_pg: 8  # batch size per gpu
+      nworker_pg: 8
+
+    val:
+      ds_type: ImTestSet
+      ds_opts:
+        gt_path: data/div2k/raw_ds_2/
+        lq_path: data/div2k/jpeg_ds_2/qf10/
+        max_num: 100
+        start_idx: 700
+
+    test:
+      ds_type: ImTestSet
+      ds_opts:
+        gt_path: data/div2k/raw_ds_2/
+        lq_path: data/div2k/jpeg_ds_2/qf10/
+        max_num: 100
+        start_idx: 800
+
+  algorithm:
+    type: DnCNNAlgorithm
+    exp_name: dncnn-div2k-qf10
+
+    network:
+      nf_in: 3
+      nf: 64
+      ndepth: 17
+      if_bn: False
+      nf_out: 3
+      
+    train:
+      if_cudnn: False  # True to speed up; if use BN, set to False
+      if_show_graph: True
+
+      real_bs_pg: 8  # multiple backwards and step/zero once
+
+      load_state:
+        if_keep_dir: True
+        if_load: False
+        ckp_load_path: exp/dncnn-div2k-qf10/ckp-last.pt
+
+      niter: !!float 4e+6  # under real_bs_per_pg
+      inter_print: 100
+      inter_val: 5000
+      if_test_baseline: True
+
+      loss:
+        MSELoss:
+          weight: 1.
+          opts:
+            reduction: mean
+
+      optimizer:
+        net:
+          type: Adam
+          opts:
+            lr: !!float 1e-4
+            betas: [0.9, 0.999] # (0., 0.9)
+
+      scheduler:
+        if_sched: False
+
+        net:
+          type: MultiStepLR
+          opts:
+            milestones: [200000,350000,450000,500000]  # .step() after each iter, not epoch
+            gamma: 0.5
+
+    val:
+      if_save_im: False
+
+      criterion:
+        PSNR:
+          if_focus: True
+          unit: dB
+          opts: ~ 
+
+    test:
+      if_save_im: True
+      ckp_load_path: exp/dncnn-div2k-qf10/ckp-first-best.pt
+
+      criterion:
+        PSNR:
+          unit: dB
+          opts: ~
+
+div2k-qp42:
+  note: ~
+  dataset:
+    train:
+      ds_type: ImTrainingSet
+      ds_opts:
+        gt_path: data/div2k/raw_ds_2/
+        lq_path: data/div2k/bpg_ds_2/qp42/
+        max_num: 700
+        start_idx: 0
+        aug:
+          if_aug: True
+          opts:
+            gt_h: 128
+            gt_w: 128
+            if_flip: True
+            if_rot: True
+      
+      # for datasampler
+      enlarge_ratio: 100
+
+      # for dataloader
+      bs_pg: 8  # batch size per gpu
+      nworker_pg: 8
+
+    val:
+      ds_type: ImTestSet
+      ds_opts:
+        gt_path: data/div2k/raw_ds_2/
+        lq_path: data/div2k/bpg_ds_2/qp42/
+        max_num: 100
+        start_idx: 700
+
+    test:
+      ds_type: ImTestSet
+      ds_opts:
+        gt_path: data/div2k/raw_ds_2/
+        lq_path: data/div2k/bpg_ds_2/qp42/
+        max_num: 100
+        start_idx: 800
+
+  algorithm:
+    type: DnCNNAlgorithm
+    exp_name: dncnn-div2k-qp42
+
+    network:
+      nf_in: 3
+      nf: 64
+      ndepth: 17
+      if_bn: False
+      nf_out: 3
+      
+    train:
+      if_cudnn: False  # True to speed up; if use BN, set to False
+      if_show_graph: True
+
+      real_bs_pg: 8  # multiple backwards and step/zero once
+
+      load_state:
+        if_keep_dir: True
+        if_load: False
+        ckp_load_path: exp/dncnn-div2k-qp42/ckp-last.pt
+
+      niter: !!float 4e+6  # under real_bs_per_pg
+      inter_print: 100
+      inter_val: 5000
+      if_test_baseline: True
+
+      loss:
+        MSELoss:
+          weight: 1.
+          opts:
+            reduction: mean
+
+      optimizer:
+        net:
+          type: Adam
+          opts:
+            lr: !!float 1e-4
+            betas: [0.9, 0.999] # (0., 0.9)
+
+      scheduler:
+        if_sched: False
+
+        net:
+          type: MultiStepLR
+          opts:
+            milestones: [200000,350000,450000,500000]  # .step() after each iter, not epoch
+            gamma: 0.5
+
+    val:
+      if_save_im: False
+
+      criterion:
+        PSNR:
+          if_focus: True
+          unit: dB
+          opts: ~
+
+    test:
+      if_save_im: True
+      ckp_load_path: exp/dncnn-div2k-qp42/ckp-first-best.pt
+
+      criterion:
+        PSNR:
+          unit: dB
+          opts: ~

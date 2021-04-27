@@ -1,0 +1,243 @@
+div2k-jpeg:
+  note: ~
+  dataset:
+    train:
+      ds_type: ImTrainingSet
+      ds_opts:
+        gt_path: data/div2k/raw_ds_2_combined/
+        lq_path: data/div2k/jpeg_ds_2_combined/
+        max_num: 3500  # 700*5
+        start_idx: 0
+        aug:
+          if_aug: True
+          opts:
+            gt_h: 128
+            gt_w: 128
+            if_flip: True
+            if_rot: True
+      
+      # for datasampler
+      enlarge_ratio: 100
+
+      # for dataloader
+      bs_pg: 4  # batch size per gpu
+      nworker_pg: 4
+
+    val:
+      ds_type: ImTestSet
+      ds_opts:
+        gt_path: data/div2k/raw_ds_2_combined/
+        lq_path: data/div2k/jpeg_ds_2_combined/
+        max_num: 500  # 100*5
+        start_idx: 3500  # 700*5
+
+    test:
+      ds_type: ImTestSet
+      ds_opts:
+        gt_path: data/div2k/raw_ds_2/
+        lq_path: data/div2k/jpeg_ds_2/qf50/
+        max_num: 100
+        start_idx: 800
+
+  algorithm:
+    type: RBQEAlgorithm
+    exp_name: rbqe-div2k-jpeg
+
+    network:
+      nf_in: 3
+      nf_base: 64
+      nlevel: 5
+      down_method: strideconv
+      up_method: transpose2d
+      nf_out: 3
+      if_separable: False
+      if_eca: True
+      nf_out: 3
+      if_residual: True
+      comp_type: jpeg
+
+    train:
+      if_cudnn: False  # True to speed up; if use BN, set to False
+      if_show_graph: True
+
+      real_bs_pg: 4  # multiple backwards and step/zero once
+
+      load_state:
+        if_keep_dir: True
+        if_load: False
+        ckp_load_path: exp/rbqe-div2k-jpeg/ckp-last.pt
+
+      niter: !!float 5e+6  # under real_bs_per_pg
+      inter_print: 100
+      inter_val: 5000
+      if_test_baseline: True
+
+      loss:
+        MSELoss:
+          weight: 1.
+          opts:
+            reduction: mean
+
+      optimizer:
+        net:
+          type: Adam
+          opts:
+            lr: !!float 1e-4
+            betas: [0.9, 0.999] # (0., 0.9)
+
+      scheduler:
+        if_sched: False
+
+        net:
+          type: MultiStepLR
+          opts:
+            milestones: [200000,350000,450000,500000]  # .step() after each iter, not epoch
+            gamma: 0.5
+
+      additional:
+        weight_out:
+          qf50: [2,1,1,0.5,0.5]
+          qf40: [1,2,1,0.5,0.5]
+          qf30: [0.5,1,2,1,0.5]
+          qf20: [0.5,0.5,1,2,1]
+          qf10: [0.5,0.5,1,1,2]
+
+    val:
+      if_save_im: False
+
+      criterion:
+        PSNR:
+          if_focus: True
+          unit: dB
+          opts: ~ 
+
+    test:
+      if_save_im: True
+      ckp_load_path: exp/rbqe-div2k-jpeg/ckp-first-best.pt
+
+      criterion:
+        PSNR:
+          unit: dB
+          opts: ~
+
+div2k-hevc:
+  note: ~
+  dataset:
+    train:
+      ds_type: ImTrainingSet
+      ds_opts:
+        gt_path: data/div2k/raw_ds_2_combined/
+        lq_path: data/div2k/bpg_ds_2_combined/
+        max_num: 3500  # 700*5
+        start_idx: 0
+        aug:
+          if_aug: True
+          opts:
+            gt_h: 128
+            gt_w: 128
+            if_flip: True
+            if_rot: True
+      
+      # for datasampler
+      enlarge_ratio: 100
+
+      # for dataloader
+      bs_pg: 4  # batch size per gpu
+      nworker_pg: 4
+
+    val:
+      ds_type: ImTestSet
+      ds_opts:
+        gt_path: data/div2k/raw_ds_2_combined/
+        lq_path: data/div2k/bpg_ds_2_combined/
+        max_num: 500  # 100*5
+        start_idx: 3500  # 700*5
+
+    test:
+      ds_type: ImTestSet
+      ds_opts:
+        gt_path: data/div2k/raw_ds_2/
+        lq_path: data/div2k/bpg_ds_2/qp22/
+        max_num: 100
+        start_idx: 800
+
+  algorithm:
+    type: RBQEAlgorithm
+    exp_name: rbqe-div2k-hevc
+
+    network:
+      nf_in: 3
+      nf_base: 64
+      nlevel: 5
+      down_method: strideconv
+      up_method: transpose2d
+      nf_out: 3
+      if_separable: False
+      if_eca: True
+      nf_out: 3
+      if_residual: True
+      comp_type: hevc
+
+    train:
+      if_cudnn: False  # True to speed up; if use BN, set to False
+      if_show_graph: True
+
+      real_bs_pg: 4  # multiple backwards and step/zero once
+
+      load_state:
+        if_keep_dir: True
+        if_load: False
+        ckp_load_path: exp/rbqe-div2k-hevc/ckp-last.pt
+
+      niter: !!float 5e+6  # under real_bs_per_pg
+      inter_print: 100
+      inter_val: 5000
+      if_test_baseline: True
+
+      loss:
+        MSELoss:
+          weight: 1.
+          opts:
+            reduction: mean
+
+      optimizer:
+        net:
+          type: Adam
+          opts:
+            lr: !!float 1e-4
+            betas: [0.9, 0.999] # (0., 0.9)
+
+      scheduler:
+        if_sched: False
+
+        net:
+          type: MultiStepLR
+          opts:
+            milestones: [200000,350000,450000,500000]  # .step() after each iter, not epoch
+            gamma: 0.5
+
+      additional:
+        weight_out:
+          qp22: [2,1,1,0.5,0.5]
+          qp27: [1,2,1,0.5,0.5]
+          qp32: [0.5,1,2,1,0.5]
+          qp37: [0.5,0.5,1,2,1]
+          qp42: [0.5,0.5,1,1,2]
+
+    val:
+      if_save_im: False
+
+      criterion:
+        PSNR:
+          if_focus: True
+          unit: dB
+          opts: ~ 
+
+    test:
+      if_save_im: True
+      ckp_load_path: exp/rbqe-div2k-hevc/ckp-first-best.pt
+
+      criterion:
+        PSNR:
+          unit: dB
+          opts: ~

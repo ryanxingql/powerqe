@@ -1,0 +1,8 @@
+exp
+data
+
+*.csv
+*.so
+
+__pycache__
+.vscode
