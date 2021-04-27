@@ -230,17 +230,17 @@ Note:
 
 - R11: PSNR (dB) of enhanced JPEG QF=10 images.
 - R25: PSNR (dB) of enhanced HEVC QP=42 images.
-- DnCNN* is a modified version of DnCNN. DnCNN* turns off the batch normalization (BN). See FAQ.
+- DnCNN* is a modified version of DnCNN, which turns off the batch normalization (BN). See FAQ.
 
 ### Blind image quality enhancement
 
-**CBDNet**
+**CBDNet***
 
 |params|FPS|R11|R12|R13|R14|R15|R21|R22|R23|R24|R25|
 |-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
 |1,860,806|120.9|27.70|29.90|31.09|31.92|32.58|40.22|37.69|34.77|31.89|29.21|
 
-- CBDNet* is a modified version of CBDNet. CBDNet* is trained in an end-to-end manner without total variation (TV) loss on the noise estimation map. See FAQ.
+- CBDNet* is a modified version of CBDNet, which is trained in an end-to-end manner without total variation (TV) loss on the noise estimation map. See FAQ.
 - R11-15: PSNR (dB) of enhanced JPEG QF=10/20/30/40/50 images.
 - R21-25: PSNR (dB) of enhanced HEVC QP=22/27/32/37/42 images.
 
@@ -295,7 +295,7 @@ HEVC (QP=42)
 |**ESRGAN***|27.172|0.865|0.121|32.475|3.423|3.146|3.502|7.112|
 |**S2G**|27.466|0.870|0.115|29.945|3.237|3.057|3.385|7.139|
 
-- ESRGAN* is a modified version of ESRGAN for quality enhancement task (originally for super-resolution).
+- ESRGAN* is a modified version of ESRGAN for quality enhancement task (ESRGAN is for super-resolution).
 
 ### Non-blind video quality enhancement
 
