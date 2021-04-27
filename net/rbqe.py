@@ -316,7 +316,7 @@ class IQAM():
                 ], dtype=torch.float32
             ).cuda()
 
-            self.thr_out = 0.84
+            self.thr_out = 0.855
 
         elif comp_type == 'hevc':
             self.patch_sz = 4
@@ -330,7 +330,7 @@ class IQAM():
                 ], dtype=torch.float32
             ).cuda()
             
-            self.thr_out = 0.67
+            self.thr_out = 0.900
 
         self.tche_poly_transposed = self.tche_poly.permute(1, 0)  # h <-> w
 
@@ -536,6 +536,7 @@ class Network(BaseNet):
         """
         if idx_out == -2:
             timer_wo_iqam = Timer()
+            timer_wo_iqam.record()
 
         feat_lst_lst = []
 
@@ -582,7 +583,8 @@ class Network(BaseNet):
                 if_out = self.iqam.forward(out_t)
                 if (idx_level == (self.nlevel - 1)) or if_out:
                     break
-                timer_wo_iqam.record()
+                else:
+                    timer_wo_iqam.record()
 
             elif (idx_level == idx_out):
                 out_conv = self.outconv_lst[idx_level]
@@ -594,7 +596,7 @@ class Network(BaseNet):
         if (idx_out == -1):
             return torch.stack(out_t_lst, dim=0)  # nlevel B C H W
         elif (idx_out == -2):
-            return timer_wo_iqam.get_ave_inter(), out_t  # B=1 C H W
+            return sum(timer_wo_iqam.inter_lst), out_t  # B=1 C H W
         else:
             return out_t  # B=1 C H W
 

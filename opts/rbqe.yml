@@ -35,7 +35,7 @@ div2k-jpeg:
       ds_type: ImTestSet
       ds_opts:
         gt_path: data/div2k/raw_ds_2/
-        lq_path: data/div2k/jpeg_ds_2/qf50/
+        lq_path: data/div2k/jpeg_ds_2/qf10/
         max_num: 100
         start_idx: 800
 
@@ -157,7 +157,7 @@ div2k-hevc:
       ds_type: ImTestSet
       ds_opts:
         gt_path: data/div2k/raw_ds_2/
-        lq_path: data/div2k/bpg_ds_2/qp22/
+        lq_path: data/div2k/bpg_ds_2/qp42/
         max_num: 100
         start_idx: 800
 

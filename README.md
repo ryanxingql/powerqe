@@ -178,17 +178,21 @@ cd <path-to-PowerQE>
 CUDA_VISIBLE_DEVICES=0 python -m torch.distributed.launch --nproc_per_node=1 --master_port=21111 test.py --opt opts/arcnn.yml --case div2k-qf10
 ```
 
+Pre-trained models: see GitHub releases or [Baidu Cloud](https://pan.baidu.com/s/1aXMn2mi_SWR_W0y2oAL-Fg) (key: prqe).
+
 ## 6. Results
 
 Note:
 
 - The unit of PSNR is dB.
 - FPS is test with one Tesla V100-SXM2-16GB and Intel (R) Xeon (R) Platinum 8163 CPUs @ 2.50 GHz. FPS can vary depending on many conditions. Just FYI.
-- We adopt two versions of NIQE. The first is NIQE-M, which is built in MATLAB. The other is built in the PIRM 18' challenge. Please refer to [this repository](https://github.com/RyanXingQL/Image-Quality-Assessment-Toolbox) for details of image quality assessment.
+- For evaluating perception-driven methods, we adopt two versions of NIQE. The first is NIQE-M, which is built in MATLAB. The other is built in the PIRM 18' challenge. Please refer to [this repository](https://github.com/RyanXingQL/Image-Quality-Assessment-Toolbox) for details of image quality assessment.
 
 ### Baseline
 
-**JPEG**:
+<details>
+<summary><b>JPEG</b></summary>
+<p>
 
 |QF|10|20|30|40|50|
 |-:|:-:|:-:|:-:|:-:|:-:|
@@ -198,7 +202,12 @@ Note:
 |-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
 |QF=10|0.826|0.292|62.206|5.662|4.863|6.033|6.232|
 
-**HEVC**:
+</p>
+</details>
+
+<details>
+<summary><b>HEVC</b></summary>
+<p>
 
 |QP|22|27|32|37|42|
 |-:|:-:|:-:|:-:|:-:|:-:|
@@ -207,6 +216,9 @@ Note:
 |metric|SSIM|LPIPS|FID|NIQE-M|PI|NIQE|MA|
 |-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
 |QP=42|0.890|0.204|41.886|3.697|3.986|4.308|6.257|
+
+</p>
+</details>
 
 ### Non-blind image quality enhancement
 
@@ -222,7 +234,7 @@ Note:
 
 ### Blind image quality enhancement
 
-**CBDNet***:
+**CBDNet**
 
 |params|FPS|R11|R12|R13|R14|R15|R21|R22|R23|R24|R25|
 |-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
@@ -232,31 +244,51 @@ Note:
 - R11-15: PSNR (dB) of enhanced JPEG QF=10/20/30/40/50 images.
 - R21-25: PSNR (dB) of enhanced HEVC QP=22/27/32/37/42 images.
 
-**RBQE**:
+</p>
+</details>
+
+**RBQE**
+
+Take a 5-level RBQE network as an example.
 
 |metric|R11|R12|R13|R14|R15|R21|R22|R23|R24|R25|
 |-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-|PSNR|27.|29.|31.|32.|32.|40.|37.|34.|31.|29.|
+|PSNR|27.78|30.00|31.24|32.07|32.74|40.15|37.69|34.77|31.90|29.24|
 |PSNR-non-blind|27.89|30.05|31.23|31.96|32.43|40.04|37.68|34.84|32.01|29.35|
-|FPS*|||||||||||
+|FPS*|28.3|28.6|28.3|30.0|24.3|50.02|23.8|27.6|23.6|24.2|
 
 |exit|4|3|2|1|0|
 |-:|:-:|:-:|:-:|:-:|:-:|
 |params|3,553,430|2,333,996|1,409,672|743,594|298,898|
 
 - PSNR-non-blind: images with QF=50/40/30/20/10 or QP=22/27/32/37/42 exit at exit 1/2/3/4/5 without IQA module.
-- FPS*: In the official repo, the MATLAB-based IQAM is fed with Y channel input. Here for simplicity, we re-implement IQAM with Python (much slower) and feed it with R channel input (hyper-parameters such as exit thresholds have been tuned over the new input dataset). Since the re-implemented Python-based IQAM is much much slower than the official MATLAB-based one, we record the FPS without IQAM as FPS*.
+- FPS*: In the official repo, the MATLAB-based IQAM is fed with Y channel input. Here for simplicity, we re-implement IQAM with Python and feed it with R channel input. Hyper-parameters such as exit thresholds have been tuned over the new input dataset. Since the re-implemented Python-based IQAM is much, much slower than the official MATLAB-based one, we record the FPS without IQAM as FPS*.
+
+<details>
+<summary><b>Trade-off</b></summary>
+<p>
+
+Fig: ave. delta PSNR of all JPEG-compressed images vs. exit threshold.
+
+![dpsnr-vs-threshold-jpeg](https://user-images.githubusercontent.com/34084019/116222277-09162c80-a781-11eb-832e-1b4c5aa52b33.png)
+
+Fig: ave. delta PSNR of all HEVC-compressed images vs. exit threshold.
+
+![dpsnr-vs-threshold-hevc](https://user-images.githubusercontent.com/34084019/116222260-03b8e200-a781-11eb-8b42-c2aeaacf81a1.png)
+
+</p>
+</details>
 
 ### Non-blind image perceptual quality enhancement
 
-**JPEG** (QF=10):
+JPEG (QF=10)
 
 |method|params|FPS|PSNR|SSIM|LPIPS|FID|NIQE-M|PI|NIQE|MA|
 |-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
 |**ESRGAN***|1,451,011|51.4|25.624|0.822|0.147|39.773|3.527|3.226|3.658|7.127|
 |**S2G**|18,168,546|4.9|26.048|0.835|0.139|32.601|3.430|3.117|3.500|7.140|
 
-**HEVC** (QP=42):
+HEVC (QP=42)
 
 |method|PSNR|SSIM|LPIPS|FID|NIQE-M|PI|NIQE|MA|
 |-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
