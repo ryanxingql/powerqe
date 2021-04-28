@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from utils import BaseNet
 
 class Up(nn.Module):
-    def __init__(self, nf_in, method):
+    def __init__(self, method, nf_in=None):
         assert method in ['upsample','transpose2d'], '> not supported yet.'
 
         super().__init__()

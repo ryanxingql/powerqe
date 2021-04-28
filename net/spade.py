@@ -72,8 +72,8 @@ class SPADEResNetBlock(nn.Module):
 
         if self.learned_shortcut:
             self.conv_s = nn.Conv2d(self.ninc, self.noutc, kernel_size=1, bias=False)
-        self.conv_0 = nn.Conv2d(self.ninc, self.nmidc, kernel_size=3, stride=1, padding=1)
-        self.conv_1 = nn.Conv2d(self.nmidc, self.noutc, kernel_size=3, stride=1, padding=1)
+        self.conv_0 = nn.Conv2d(self.ninc, self.nmidc, kernel_size=3, stride=1, padding=3//2)
+        self.conv_1 = nn.Conv2d(self.nmidc, self.noutc, kernel_size=3, stride=1, padding=3//2)
 
         # spectral norm, applied to the module params. can stabilize GAN training
         if self.if_spectral:
