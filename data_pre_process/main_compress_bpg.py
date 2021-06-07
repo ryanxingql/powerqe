@@ -1,6 +1,5 @@
 import os
 import sys
-import subprocess
 from pathlib import Path
 
 dataset = sys.argv[1]  # div2k
@@ -33,7 +32,7 @@ for idx, im_path_src in enumerate(src_im_lst):
         f'{bpgenc_path} {im_path_src} -m 1 -b 8 -q {qp} -f 420 -c ycbcr -o {tmp_path} && '
         f'{bpgdec_path} {tmp_path} -b 8 -o {im_path_tar}'
     )
-    subprocess.run(command_, shell=True)
+    os.system(command_)
 
     print(f'{idx + 1} / {num}: {im_path_tar}')
 

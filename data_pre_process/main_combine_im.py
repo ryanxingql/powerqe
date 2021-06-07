@@ -1,6 +1,5 @@
 import os
 import sys
-
 from pathlib import Path
 
 dataset = sys.argv[1]  # div2k

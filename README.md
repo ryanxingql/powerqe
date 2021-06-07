@@ -112,10 +112,10 @@ For blind QE tasks, we combine images of different QP/QFs into new dirs by symli
 ```bash
 cd <path-to-PowerQE>/data_pre_process/
 
-# compress qf=10, 20, 30, 40 and 50 first
+python main_compress_jpeg_blind.py div2k raw jpeg  # compress images with qf=10, 20, 30, 40 and 50 first
 python main_combine_im.py div2k raw jpeg
 
-# compress qp=42, 37, 32, 27 and 22 first
+python main_compress_bpg_blind.py div2k raw bpg <dir-to-libbpg>  # compress images with qp=42, 37, 32, 27 and 22 first
 python main_combine_im.py div2k raw bpg
 ```
 
