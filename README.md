@@ -154,8 +154,6 @@ cd <path-to-PowerQE>
 CUDA_VISIBLE_DEVICES=0 python test.py -opt opts/arcnn.yml -case div2k_qf10
 ```
 
-Pre-trained models: see Releases.
-
 ## 6. Results
 
 Numeric results: updating. Will be presented at [here](https://github.com/RyanXingQL/PowerQE/wiki/Results).
