@@ -28,13 +28,15 @@
 - [ ] [MFQE](https://github.com/RyanXingQL/MFQEv2.0)
 - [ ] [STDF](https://github.com/RyanXingQL/STDF-PyTorch)
 
-:e-mail: Feel free to contact: `ryanxingql@gmail.com`.
+Current version: [v2.0.0] [[v1.0.0]](https://github.com/RyanXingQL/PowerQE/tree/ea903fd0d04154c95b321b5100540249856bd44b)
 
 This repository adopts [PythonUtils](https://github.com/RyanXingQL/PythonUtils) as a sub-module. You may clone PowerQE by:
 
 ```bash
 git clone git@github.com:RyanXingQL/PowerQE.git --depth=1 --recursive
 ```
+
+:e-mail: Feel free to contact: `ryanxingql@gmail.com`.
 
 ## 1. Dependencies
 
@@ -177,5 +179,3 @@ If you find this repository helpful, you may cite:
 ```
 
 If you want to learn more about this repository, check [here](https://github.com/RyanXingQL/PowerQE/wiki/Learn-More).
-
-[[v1.0.0]](https://github.com/RyanXingQL/PowerQE/tree/ea903fd0d04154c95b321b5100540249856bd44b)
