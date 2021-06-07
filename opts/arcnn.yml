@@ -96,7 +96,7 @@ div2k_qf10:
 
       niter:
         name: [run]
-        niter: [!!float 1e+6]
+        niter: [!!float 8e+5]
 
       loss:
         run:
