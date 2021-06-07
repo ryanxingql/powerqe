@@ -2,7 +2,7 @@ import math
 import torch
 import numbers
 import torch.nn as nn
-import torch.nn.functional as F
+import torch.nn.functional as nnf
 
 from .ecanet import ECA
 
@@ -11,7 +11,7 @@ from utils import BaseNet, Timer
 
 class Up(nn.Module):
     def __init__(self, nf_in_s, nf_in, nf_out, method, if_separable, if_eca):
-        assert method in ['upsample','transpose2d'], '> not supported yet.'
+        assert method in ['upsample', 'transpose2d'], '> not supported yet.'
 
         super().__init__()
 
@@ -97,22 +97,22 @@ class Up(nn.Module):
         if len(normal_t_lst) > 0:
             h_s, w_s = feat.size()[2:]  # B C H W
             h, w = normal_t_lst[0].size()[2:]
-            diffH = h - h_s
-            diffW = w - w_s
-            if diffH < 0:
-                feat = feat[:,:,:h,:]
-                diffH = 0
-            if diffW < 0:
-                feat = feat[:,:,:,:w]
-                diffW = 0
-            feat = F.pad(
+            dh = h - h_s
+            dw = w - w_s
+            if dh < 0:
+                feat = feat[:, :, :h, :]
+                dh = 0
+            if dw < 0:
+                feat = feat[:, :, :, :w]
+                dw = 0
+            feat = nnf.pad(
                 input=feat,
-                pad=(
-                    diffW//2, (diffW-diffW//2),  # only pad H and W; left (diffW//2); right remaining (diffW - diffW//2)
-                    diffH//2, (diffH-diffH//2),
-                ),
+                pad=[
+                    dw//2, (dw-dw//2),  # only pad H and W; left (diffW//2); right remaining (diffW - diffW//2)
+                    dh//2, (dh-dh//2)
+                ],
                 mode='constant',
-                value=0, # pad with constant 0
+                value=0,  # pad with constant 0
             )
 
             feat = torch.cat((feat, *normal_t_lst), dim=1)
@@ -122,6 +122,7 @@ class Up(nn.Module):
         out_t = feat
 
         return out_t
+
 
 class Down(nn.Module):
     def __init__(self, nf_in, nf_out, method, if_separable, if_eca):
@@ -210,6 +211,7 @@ class Down(nn.Module):
         out_t = feat
         return out_t
 
+
 class SeparableConv2d(nn.Module):
     def __init__(self, nf_in, nf_out):
         super().__init__()
@@ -221,18 +223,19 @@ class SeparableConv2d(nn.Module):
                 kernel_size=3,
                 padding=3//2,
                 groups=nf_in,
-            ), # groups=inch: each channel is convolved with its own filter
+            ),  # groups=inch: each channel is convolved with its own filter
             nn.Conv2d(
                 in_channels=nf_in,
                 out_channels=nf_out,
                 kernel_size=1,
                 groups=1,
-            ) # then point-wise
+            )  # then point-wise
         )
     
     def forward(self, inp_t):
         out_t = self.separable_conv(inp_t)
         return out_t
+
 
 class GaussianSmoothing(nn.Module):
     """
@@ -265,11 +268,10 @@ class GaussianSmoothing(nn.Module):
         )
         for size, std, mgrid in zip(kernel_size, sigma, meshgrids):
             mean = (size - 1) / 2
-            kernel *= 1 / (std * math.sqrt(2 * math.pi)) * \
-                      torch.exp(-((mgrid - mean) / std) ** 2 / 2)
+            kernel *= 1 / (std * math.sqrt(2 * math.pi)) * torch.exp(-((mgrid - mean) / std) ** 2 / 2)  # ignore the warning: it is a tensor
 
         # Make sure sum of values in gaussian kernel equals 1.
-        kernel = kernel / torch.sum(kernel)
+        kernel = kernel / torch.sum(kernel)  # ignore the warning: it is a tensor
 
         # Reshape to depthwise convolutional weight
         kernel = kernel.view(1, 1, *kernel.size())
@@ -280,41 +282,40 @@ class GaussianSmoothing(nn.Module):
         self.padding = padding
 
         if dim == 1:
-            self.conv = F.conv1d
+            self.conv = nnf.conv1d
         elif dim == 2:
-            self.conv = F.conv2d
+            self.conv = nnf.conv2d
         elif dim == 3:
-            self.conv = F.conv3d
+            self.conv = nnf.conv3d
         else:
-            raise RuntimeError(
-                'Only 1, 2 and 3 dimensions are supported. Received {}.'.format(dim)
-            )
+            raise RuntimeError('Only 1, 2 and 3 dimensions are supported. Received {}.'.format(dim))
 
-    def forward(self, input):
+    def forward(self, inp):
         """
         Apply gaussian filter to input.
         Arguments:
-            input (torch.Tensor): Input to apply gaussian filter on.
+            inp (torch.Tensor): Input to apply gaussian filter on.
         Returns:
             filtered (torch.Tensor): Filtered output.
         """
-        return self.conv(input, weight=self.weight, groups=self.groups, padding=self.padding)
+        return self.conv(inp, weight=self.weight, groups=self.groups, padding=self.padding)
 
-class IQAM():
+
+class IQAM:
     def __init__(self, comp_type='jpeg'):
         if comp_type == 'jpeg':
             self.patch_sz = 8
 
             self.tche_poly = torch.tensor(
                 [
-                    [0.3536,0.3536,0.3536,0.3536,0.3536,0.3536,0.3536,0.3536],
-                    [-0.5401,-0.3858,-0.2315,-0.0772,0.0772,0.2315,0.3858,0.5401],
-                    [0.5401,0.0772,-0.2315,-0.3858,-0.3858,-0.2315,0.0772,0.5401],
-                    [-0.4308,0.3077,0.4308,0.1846,-0.1846,-0.4308,-0.3077,0.4308],
-                    [0.2820,-0.5238,-0.1209,0.3626,0.3626,-0.1209,-0.5238,0.2820],
-                    [-0.1498,0.4922,-0.3638,-0.3210,0.3210,0.3638,-0.4922,0.1498],
-                    [0.0615,-0.3077,0.5539,-0.3077,-0.3077,0.5539,-0.3077,0.0615],
-                    [-0.0171,0.1195,-0.3585,0.5974,-0.5974,0.3585,-0.1195,0.0171],
+                    [0.3536, 0.3536, 0.3536, 0.3536, 0.3536, 0.3536, 0.3536, 0.3536],
+                    [-0.5401, -0.3858, -0.2315, -0.0772, 0.0772, 0.2315, 0.3858, 0.5401],
+                    [0.5401, 0.0772, -0.2315, -0.3858, -0.3858, -0.2315, 0.0772, 0.5401],
+                    [-0.4308, 0.3077, 0.4308, 0.1846, -0.1846, -0.4308, -0.3077, 0.4308],
+                    [0.2820, -0.5238, -0.1209, 0.3626, 0.3626, -0.1209, -0.5238, 0.2820],
+                    [-0.1498, 0.4922, -0.3638, -0.3210, 0.3210, 0.3638, -0.4922, 0.1498],
+                    [0.0615, -0.3077, 0.5539, -0.3077, -0.3077, 0.5539, -0.3077, 0.0615],
+                    [-0.0171, 0.1195, -0.3585, 0.5974, -0.5974, 0.3585, -0.1195, 0.0171],
                 ], dtype=torch.float32
             ).cuda()
 
@@ -325,10 +326,10 @@ class IQAM():
 
             self.tche_poly = torch.tensor(
                 [
-                    [0.5000,0.5000,0.5000,0.5000],
-                    [-0.6708,-0.2236,0.2236,0.6708],
-                    [0.5000,-0.5000,-0.5000,0.5000],
-                    [-0.2236,0.6708,-0.6708,0.2236],
+                    [0.5000, 0.5000, 0.5000, 0.5000],
+                    [-0.6708, -0.2236, 0.2236, 0.6708],
+                    [0.5000, -0.5000, -0.5000, 0.5000],
+                    [-0.2236, 0.6708, -0.6708, 0.2236],
                 ], dtype=torch.float32
             ).cuda()
             
@@ -366,9 +367,10 @@ class IQAM():
         score_blurred_textured = 0.
         
         start_h = self.patch_sz // 2 - 1
-        while (start_h + self.patch_sz <= h_cut):
+        while start_h + self.patch_sz <= h_cut:
             start_w = self.patch_sz // 2 - 1
-            while (start_w + self.patch_sz <= w_cut):
+
+            while start_w + self.patch_sz <= w_cut:
                 patch = inp_t[start_h:(start_h + self.patch_sz), start_w:(start_w + self.patch_sz)]
 
                 sum_patch = torch.sum(torch.abs(patch))
@@ -393,8 +395,8 @@ class IQAM():
                         num_smooth += 1
 
                         sum_moments = torch.sum(torch.abs(moments_patch))
-                        strength_vertical = torch.sum(torch.abs(moments_patch[self.patch_sz-1, :])) / sum_moments - torch.abs(moments_patch[0,0]) + self.bigc
-                        strength_horizontal = torch.sum(torch.abs(moments_patch[:, self.patch_sz-1])) / sum_moments - torch.abs(moments_patch[0,0]) + self.bigc
+                        strength_vertical = torch.sum(torch.abs(moments_patch[self.patch_sz-1, :])) / sum_moments - torch.abs(moments_patch[0, 0]) + self.bigc
+                        strength_horizontal = torch.sum(torch.abs(moments_patch[:, self.patch_sz-1])) / sum_moments - torch.abs(moments_patch[0, 0]) + self.bigc
                         
                         strength_vertical = strength_vertical if strength_vertical <= self.thr_jnd else self.thr_jnd
                         strength_horizontal = strength_horizontal if strength_horizontal <= self.thr_jnd else self.thr_jnd
@@ -420,22 +422,11 @@ class IQAM():
         else:
             return False
 
-class Network(BaseNet):
-    def __init__(
-            self,
-            if_train,
-            nf_in=3,
-            nf_base=32,
-            nlevel=5,  # 5 outputs
-            down_method='strideconv',
-            up_method='transpose2d',
-            if_separable=False,
-            if_eca=False,
-            nf_out=3,
-            if_residual=True,
-            comp_type='hevc',
-        ):
-        assert down_method in ['avepool2d','strideconv'], '> not supported!'
+
+class Network(nn.Module):
+    def __init__(self, if_train, nf_in=3, nf_base=32, nlevel=5, down_method='strideconv', up_method='transpose2d',
+                 if_separable=False, if_eca=False, nf_out=3, if_residual=True, comp_type='hevc'):
+        assert down_method in ['avepool2d', 'strideconv'], '> not supported!'
         
         super().__init__()
 
@@ -451,6 +442,7 @@ class Network(BaseNet):
                     SeparableConv2d(nf_in=nf_base, nf_out=nf_base),
                 ]
             )
+
         else:
             self.inconv_lst = nn.ModuleList([
                     nn.Conv2d(
@@ -491,7 +483,7 @@ class Network(BaseNet):
         # out
         self.outconv_lst = nn.ModuleList([])
         for _ in range(nlevel):
-            outconv_lst= [nn.ReLU(inplace=False)]
+            outconv_lst = [nn.ReLU(inplace=False)]
             if if_separable:
                 if if_eca:
                     outconv_lst += [
@@ -525,18 +517,18 @@ class Network(BaseNet):
             self.outconv_lst.append(nn.Sequential(*outconv_lst))
 
         # IQA module
-        self.iqam = IQAM(
-            comp_type=comp_type,
-        )
+        self.iqam = IQAM(comp_type=comp_type)
 
-    def forward(self, inp_t, idx_out=-1):
+    def forward(self, inp_t, idx_out=-1, **_):
         """
         idx_out:
             -1, output all images from all outputs for training.
             -2, judge by IQAM.
             0-4, output from the assigned exit.
         """
-        if idx_out == -2:
+        if_iqa = True if idx_out == -2 else False
+
+        if if_iqa:
             timer_wo_iqam = Timer()
             timer_wo_iqam.record()
 
@@ -546,7 +538,9 @@ class Network(BaseNet):
         for module_ in self.inconv_lst:
             feat = module_(feat)
         feat_lst = [feat]
-        
+
+        out_t = None
+
         out_t_lst = []
         for idx_level in range(self.nlevel):
             feat_lst_lst.append(feat_lst)
@@ -569,47 +563,35 @@ class Network(BaseNet):
                 )
                 feat_lst.append(feat)
 
-            if (idx_out == -1):
+            if idx_out == -1 or if_iqa or idx_level == idx_out:
                 out_conv = self.outconv_lst[idx_level]
                 out_t = out_conv(feat_lst[-1])
                 if self.if_residual:
                     out_t += inp_t
-                out_t_lst.append(out_t)
 
-            elif (idx_out == -2):
-                out_conv = self.outconv_lst[idx_level]
-                out_t = out_conv(feat_lst[-1])
-                if self.if_residual:
-                    out_t += inp_t
-                timer_wo_iqam.record_inter()
-                if_out = self.iqam.forward(out_t)
-                if (idx_level == (self.nlevel - 1)) or if_out:
+                if idx_out == -1:
+                    out_t_lst.append(out_t)
+
+                elif if_iqa:
+                    timer_wo_iqam.record_inter()
+                    if_out = self.iqam.forward(out_t)
+                    if (idx_level == (self.nlevel - 1)) or if_out:
+                        break
+                    else:
+                        timer_wo_iqam.record()
+
+                elif idx_level == idx_out:
                     break
-                else:
-                    timer_wo_iqam.record()
 
-            elif (idx_level == idx_out):
-                out_conv = self.outconv_lst[idx_level]
-                out_t = out_conv(feat_lst[-1])
-                if self.if_residual:
-                    out_t += inp_t
-                break
-
-        if (idx_out == -1):
+        if idx_out == -1:
             return torch.stack(out_t_lst, dim=0)  # nlevel B C H W
-        elif (idx_out == -2):
+        elif if_iqa:
             return sum(timer_wo_iqam.inter_lst), out_t  # B=1 C H W
         else:
             return out_t  # B=1 C H W
 
-class RBQEModel(nn.Module):
-    def __init__(self, opts_dict, if_train=True):
-        super().__init__()
-        
-        self.opts_dict = opts_dict
 
-        net = Network(if_train, **self.opts_dict)
-        self.module_lst = dict(net=net)
-        self.msg_lst = dict(
-            net=f'> RBQE model is created with {net.cal_num_params():d} params (rank 0 solely).'
-        )
+class RBQEModel(BaseNet):
+    def __init__(self, opts_dict, if_train=False):
+        self.net = dict(net=Network(if_train, **opts_dict['net']))
+        super().__init__(opts_dict=opts_dict, if_train=if_train, infer_subnet='net')

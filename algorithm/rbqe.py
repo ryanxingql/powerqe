@@ -3,219 +3,181 @@ import torch
 from cv2 import cv2
 from tqdm import tqdm
 
-from utils import BaseAlg, Timer, Recorder, tensor2im
+from utils import BaseAlg, CUDATimer, Recorder, tensor2im
 
 
 class RBQEAlgorithm(BaseAlg):
-    """use most of the BaseAlg functions."""
-    def __init__(self, opts_dict, if_train):
-        self.opts_dict = opts_dict
-        self.if_train = if_train
+    def __init__(self, opts_dict, if_train, if_dist):
+        model_cls = getattr(net, 'RBQEModel')  # !!!
+        super().__init__(opts_dict=opts_dict, model_cls=model_cls, if_train=if_train, if_dist=if_dist)
 
-        model_cls = getattr(net, 'RBQEModel')
-        self.create_model(
-            model_cls=model_cls,
-            opts_dict=self.opts_dict['network'],
-            if_train=self.if_train,
-        )
-
-        super().__init__()  # to further obtain optim, loss, etc.
-
-    def test(
-            self, test_fetcher, nsample_test, mod='normal', if_return_each=False, img_save_folder=None, if_train=True,
-        ):
-        """
-        baseline mod: test between src and dst.
-        normal mod: test between src and tar.
-        if_return_each: return result of each sample.
-
-        note: temporally support bs=1, i.e., test one by one.
-        """
-        self.set_eval_mode()
-        msg = ''
-        write_dict_lst = []
-        timer = Timer()
-        timer_wo_iqam = Recorder()  # for idx_out = -2
-
-        with torch.no_grad():
-            flag_save_im = True
-
-            # assume that validation must have criterions
-            if self.crit_lst is not None:
-                for crit_name in self.crit_lst:
-                    crit_fn = self.crit_lst[crit_name]['fn']
-                    crit_unit = self.crit_lst[crit_name]['unit']
-                    crit_if_focus = self.crit_lst[crit_name]['if_focus']
-
-                    pbar = tqdm(total=nsample_test, ncols=80)
-                    recorder = Recorder()
-                    
-                    test_fetcher.reset()
-                    
-                    test_data = test_fetcher.next()
-                    assert len(test_data['name']) == 1, 'Only support bs=1 for test!'
-                    while test_data is not None:
-                        im_gt = test_data['gt'].cuda(non_blocking=True)  # assume bs=1
-                        im_lq = test_data['lq'].cuda(non_blocking=True)  # assume bs=1
-                        im_name = test_data['name'][0]  # assume bs=1
-                        
-                        if mod == 'normal':
-                            if if_train:  # parse from im name
-                                im_cmp_type = im_name.split('-')[-1].split('.')[0]
-                                if im_cmp_type in ['qf50','qp22']:
-                                    idx_out = 0
-                                elif im_cmp_type in ['qf40','qp27']:
-                                    idx_out = 1
-                                elif im_cmp_type in ['qf30','qp32']:
-                                    idx_out = 2
-                                elif im_cmp_type in ['qf20','qp37']:
-                                    idx_out = 3
-                                elif im_cmp_type in ['qf10','qp42']:
-                                    idx_out = 4
-
-                            else:
-                                idx_out = -2  # judge by IQAM
-                                #idx_out = 0  # (0|1|2|3|4): for non-blind test, assign exit
-
-                            timer.record()
-                            if idx_out == -2:
-                                time_wo_iqam, im_out = self.model.module_lst['net'](im_lq, idx_out=idx_out)
-                                im_out.clamp_(0., 1.)  # nlevel B=1 C H W
-                                timer_wo_iqam.record(time_wo_iqam)
-                            else:
-                                im_out = self.model.module_lst['net'](im_lq, idx_out=idx_out).clamp_(0., 1.)  # nlevel B=1 C H W
-                            timer.record_inter()
-
-                            perfm = crit_fn(
-                                torch.squeeze(im_out, 0), torch.squeeze(im_gt, 0)
-                            )
-                            
-                            if flag_save_im and (img_save_folder is not None):  # save im
-                                im = tensor2im(torch.squeeze(im_out, 0))
-                                save_path = img_save_folder / (str(im_name) + '.png')
-                                cv2.imwrite(str(save_path), im)
-                        
-                        elif mod == 'baseline':
-                            timer.record()
-                            perfm = crit_fn(
-                                torch.squeeze(im_lq, 0), torch.squeeze(im_gt, 0)
-                            )
-                            timer.record_inter()
-                        recorder.record(perfm)
-                        
-                        _msg = f'{im_name}: [{perfm:.3e}] {crit_unit:s}'
-                        if if_return_each:
-                            msg += _msg + '\n'
-                        pbar.set_description(_msg)
-                        pbar.update()
-                        
-                        test_data = test_fetcher.next()
-
-                    flag_save_im = False
-                    
-                    # cal ave
-                    ave_perfm = recorder.get_ave()
-                    write_dict_lst.append(
-                        dict(
-                            tag=f'{crit_name} (val)',
-                            scalar=ave_perfm,
-                        )
-                    )  # only for validation during training
-                    pbar.close()
-                    if mod == 'normal':
-                        if idx_out == -2:
-                            ave_time_wo_iqam = timer_wo_iqam.get_ave()
-                            fps_wo_iqam = 1. / ave_time_wo_iqam
-                            msg += f'fps without IQAM: {fps_wo_iqam:.1f}; fps with Python-based IQAM is much slower than the official implementation of MATLAB-based IQAM.\n'
-                        msg += f'> {crit_name}: [{ave_perfm:.3e}] {crit_unit}\n'
-                    elif mod == 'baseline':
-                        msg += f'> baseline {crit_name}: [{ave_perfm:.3e}] {crit_unit}\n'
-                    
-                    if crit_if_focus:
-                        report_perfrm = ave_perfm
-                        if_lower = crit_fn.if_lower
-                
-                if if_train:  # validation
-                    return if_lower, report_perfrm, msg.rstrip(), write_dict_lst
-                else:  # test
-                    return msg.rstrip(), timer.get_ave_inter()
-        
-            else:  # only get tar (available only for test)
-                pbar = tqdm(total=nsample_test, ncols=80)
-                test_fetcher.reset()
-                test_data = test_fetcher.next()
-                assert len(test_data['name']) == 1, 'Only support bs=1 for test!'
-
-                while test_data is not None:
-                    im_lq = test_data['lq'].cuda(non_blocking=True)  # assume bs=1
-                    im_name = test_data['name'][0]  # assume bs=1
-
-                    timer.record()
-                    im_out = self.model.module_lst['net'](im_lq).clamp_(0., 1.)
-                    timer.record_inter()
-
-                    if img_save_folder is not None:  # save im
-                        im = tensor2im(torch.squeeze(im_out, 0))
-                        save_path = img_save_folder / (str(im_name) + '.png')
-                        cv2.imwrite(str(save_path), im)
-                    
-                    pbar.update()
-                    test_data = test_fetcher.next()
-
-                pbar.close()
-                msg += f'> no ground-truth data; test done.\n'
-
-                return msg.rstrip(), timer.get_ave_inter()
-
-    def update_net_params(
-            self,
-            data,
-            flag_step,
-            inter_step,
-            additional
-        ):
-        """available for simple loss func. for complex loss such as relativeganloss, please write your own func."""
+    def accum_gradient(self, module, stage, group, data, inter_step, additional):
         data_lq = data['lq'].cuda(non_blocking=True)
         data_gt = data['gt'].cuda(non_blocking=True)
+        data_out_lst = module(inp_t=data_lq, if_train=True)
 
-        data_out_lst = self.model.module_lst['net'](data_lq)  # nlevel B C H W
-        nl, nb = data_out_lst.shape[0:2]
+        nl, nb = data_out_lst.shape[0:2]  # nlevel, batch size
 
-        # select the images from the last output as demos
-        self.gen_im_lst = dict(
-            data_lq=data['lq'][:3],
-            data_gt=data['gt'][:3],
-            generated=data_out_lst[-1].detach()[:3].cpu().clamp_(0., 1.),
-        )  # for torch.utils.tensorboard.writer.SummaryWriter.add_images: NCHW tensor is ok
+        num_show = 3
+        self._im_lst = dict(
+            data_lq=data['lq'][:num_show],
+            data_gt=data['gt'][:num_show],
+            generated=data_out_lst[-1].detach()[:num_show].cpu().clamp_(0., 1.),
+        )  # show images from the last exit
 
-        data_name_lst = data['name']
-        loss_total = 0
-        for loss_item in self.loss_lst.keys():
-            loss_dict = self.loss_lst[loss_item]
+        loss_total = torch.tensor(0., device="cuda")
+        for loss_name in self.loss_lst[stage][group]:
+            loss_dict = self.loss_lst[stage][group][loss_name]
 
-            loss_unweighted = 0
+            loss_unweighted = 0.
             for idx_data in range(nb):
-                cmp_type = data_name_lst[idx_data].split('-')[-1].split('.')[0]
-                loss_weight_lst = additional['weight_out'][cmp_type]
+                im_type = data['name'][idx_data].split('_')[-1].split('.')[0]
+                loss_weight_lst = additional['weight_out'][im_type]
 
-                for idx_l in range(nl):
+                for idx_level in range(nl):
                     opts_dict_ = dict(
-                        inp=data_out_lst[idx_l, idx_data, ...],
+                        inp=data_out_lst[idx_level, idx_data, ...],
                         ref=data_gt[idx_data, ...],
                     )
-                    loss_unweighted += loss_weight_lst[idx_l] * loss_dict['fn'](**opts_dict_)
-            
+                    loss_unweighted += loss_weight_lst[idx_level] * loss_dict['fn'](**opts_dict_)
             loss_unweighted /= float(nb)
-            setattr(self, loss_item, loss_unweighted.item())  # for recorder
+
+            setattr(self, f'{loss_name}_{group}', loss_unweighted.item())  # for recorder
 
             loss_ = loss_dict['weight'] * loss_unweighted
             loss_total += loss_
 
         loss_total /= float(inter_step)  # multiple backwards and step once, thus mean
         loss_total.backward()  # must backward only once; otherwise the graph is freed after the first backward
-        setattr(self, 'net_loss', loss_total.item())  # for recorder
+        setattr(self, f'loss_{group}', loss_total.item())  # for recorder
 
-        setattr(self, 'net_lr', self.optim_lst['net'].param_groups[0]['lr'])  # for recorder
-        if flag_step:
-            self.optim_lst['net'].step()
-            self.optim_lst['net'].zero_grad()
+    @torch.no_grad()
+    def test(self, data_fetcher, num_samples, if_baseline=False, if_return_each=False, img_save_folder=None,
+             if_train=True):
+        """
+        val (in training): idx_out=0/1/2/3/4
+        test: idx_out=-2, record time wo. iqa
+        """
+        if if_baseline or if_train:
+            assert self.crit_lst is not None, 'NO METRICS!'
+
+        if self.crit_lst is not None:
+            if_tar_only = False
+            msg = 'dst vs. src | ' if if_baseline else 'tar vs. src | '
+        else:
+            if_tar_only = True
+            msg = 'only get dst | '
+
+        report_dict = None
+
+        recorder_dict = dict()
+        for crit_name in self.crit_lst:
+            recorder_dict[crit_name] = Recorder()
+
+        write_dict_lst = []
+        timer = CUDATimer()
+
+        if_iqa = False if if_train or if_baseline else True
+        if if_iqa:
+            timer_wo_iqam = Recorder()
+            idx_out = -2  # testing; judge by IQAM
+
+        self.set_eval_mode()
+
+        data_fetcher.reset()
+        test_data = data_fetcher.next()
+        assert len(test_data['name']) == 1, 'ONLY SUPPORT bs==1!'
+
+        pbar = tqdm(total=num_samples, ncols=100)
+
+        while test_data is not None:
+            im_lq = test_data['lq'].cuda(non_blocking=True)  # assume bs=1
+            im_name = test_data['name'][0]  # assume bs=1
+
+            if not if_iqa:  # val in training
+                im_type = im_name.split('_')[-1].split('.')[0]
+                if im_type in ['qf50', 'qp22']:
+                    idx_out = 0
+                elif im_type in ['qf40', 'qp27']:
+                    idx_out = 1
+                elif im_type in ['qf30', 'qp32']:
+                    idx_out = 2
+                elif im_type in ['qf20', 'qp37']:
+                    idx_out = 3
+                elif im_type in ['qf10', 'qp42']:
+                    idx_out = 4
+                else:
+                    raise Exception("NO MATCHING TYPE!")
+
+            timer.start_record()
+            if if_tar_only:
+                if if_iqa:
+                    time_wo_iqa, im_out = self.model.net[self.model.infer_subnet](inp_t=im_lq, idx_out=idx_out).clamp_(0., 1.)
+                else:
+                    im_out = self.model.net[self.model.infer_subnet](inp_t=im_lq, idx_out=idx_out).clamp_(0., 1.)
+                timer.record_inter()
+            else:
+                im_gt = test_data['gt'].cuda(non_blocking=True)  # assume bs=1
+                if if_baseline:
+                    im_out = im_lq
+                else:
+                    if if_iqa:
+                        time_wo_iqa, im_out = self.model.net[self.model.infer_subnet](inp_t=im_lq, idx_out=idx_out).clamp_(0., 1.)
+                    else:
+                        im_out = self.model.net[self.model.infer_subnet](inp_t=im_lq, idx_out=idx_out).clamp_(0., 1.)
+                timer.record_inter()
+
+                _msg = f'{im_name} | '
+
+                for crit_name in self.crit_lst:
+                    crit_fn = self.crit_lst[crit_name]['fn']
+                    crit_unit = self.crit_lst[crit_name]['unit']
+
+                    perfm = crit_fn(torch.squeeze(im_out, 0), torch.squeeze(im_gt, 0))
+                    recorder_dict[crit_name].record(perfm)
+
+                    _msg += f'[{perfm:.3e}] {crit_unit:s} | '
+
+                _msg = _msg[:-3]
+                if if_return_each:
+                    msg += _msg + '\n'
+                pbar.set_description(_msg)
+
+            if if_iqa:
+                timer_wo_iqam.record(time_wo_iqa)
+
+            if img_save_folder is not None:  # save im
+                im = tensor2im(torch.squeeze(im_out, 0))
+                save_path = img_save_folder / (str(im_name) + '.png')
+                cv2.imwrite(str(save_path), im)
+
+            pbar.update()
+            test_data = data_fetcher.next()
+        pbar.close()
+
+        if not if_tar_only:
+            for crit_name in self.crit_lst:
+                crit_unit = self.crit_lst[crit_name]['unit']
+                crit_if_focus = self.crit_lst[crit_name]['if_focus']
+
+                ave_perfm = recorder_dict[crit_name].get_ave()
+                msg += f'{crit_name} | [{ave_perfm:.3e}] {crit_unit} | '
+
+                write_dict_lst.append(dict(tag=f'{crit_name} (val)', scalar=ave_perfm))
+
+                if crit_if_focus:
+                    report_dict = dict(ave_perfm=ave_perfm, lsb=self.crit_lst[crit_name]['fn'].lsb)
+
+        ave_fps = 1. / timer.get_ave_inter()
+        msg += f'ave. fps | [{ave_fps:.1f}]'
+
+        if if_iqa:
+            ave_time_wo_iqam = timer_wo_iqam.get_ave()
+            fps_wo_iqam = 1. / ave_time_wo_iqam
+            msg += f' | ave. fps wo. IQAM | [{fps_wo_iqam:.1f}]'
+
+        if if_train:
+            assert report_dict is not None
+            return msg.rstrip(), write_dict_lst, report_dict
+        else:
+            return msg.rstrip()
