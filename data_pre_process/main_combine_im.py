@@ -4,60 +4,60 @@ import sys
 from pathlib import Path
 
 dataset = sys.argv[1]  # div2k
-ref_name = sys.argv[2]  # raw
-src_name = sys.argv[3]  # jpeg
+src_name = sys.argv[2]  # raw
+dst_name = sys.argv[3]  # jpeg
 
 current_dir = Path(__file__).resolve().parent
-ref_dir = (current_dir / '..' / 'data' / dataset / ref_name).resolve()
-comb_ref_dir = (current_dir / '..' / 'data' / dataset / (ref_name + '_combined')).resolve()
-
-if not comb_ref_dir.exists():
-    comb_ref_dir.mkdir()
-
-if src_name == 'jpeg':
-    src_dir_lst = [
-        (current_dir / '..' / 'data' / dataset / src_name / 'qf10').resolve(),
-        (current_dir / '..' / 'data' / dataset / src_name / 'qf20').resolve(),
-        (current_dir / '..' / 'data' / dataset / src_name / 'qf30').resolve(),
-        (current_dir / '..' / 'data' / dataset / src_name / 'qf40').resolve(),
-        (current_dir / '..' / 'data' / dataset / src_name / 'qf50').resolve()
-    ]
-
-elif src_name == 'bpg':
-    src_dir_lst = [
-        (current_dir / '..' / 'data' / dataset / src_name / 'qp22').resolve(),
-        (current_dir / '..' / 'data' / dataset / src_name / 'qp27').resolve(),
-        (current_dir / '..' / 'data' / dataset / src_name / 'qp32').resolve(),
-        (current_dir / '..' / 'data' / dataset / src_name / 'qp37').resolve(),
-        (current_dir / '..' / 'data' / dataset / src_name / 'qp42').resolve()
-    ]
-
+src_dir = (current_dir / '..' / 'data' / dataset / src_name).resolve()
 comb_src_dir = (current_dir / '..' / 'data' / dataset / (src_name + '_combined')).resolve()
 
 if not comb_src_dir.exists():
     comb_src_dir.mkdir()
 
-ref_lst = sorted(ref_dir.glob('*.png'))
-ref_num = len(ref_lst)
-print(f'{ref_num} ref images are found.')
+if dst_name == 'jpeg':
+    dst_dir_lst = [
+        (current_dir / '..' / 'data' / dataset / dst_name / 'qf10').resolve(),
+        (current_dir / '..' / 'data' / dataset / dst_name / 'qf20').resolve(),
+        (current_dir / '..' / 'data' / dataset / dst_name / 'qf30').resolve(),
+        (current_dir / '..' / 'data' / dataset / dst_name / 'qf40').resolve(),
+        (current_dir / '..' / 'data' / dataset / dst_name / 'qf50').resolve()
+    ]
 
-for ref_path in ref_lst:
-    im_name = ref_path.stem
+elif dst_name == 'bpg':
+    dst_dir_lst = [
+        (current_dir / '..' / 'data' / dataset / dst_name / 'qp22').resolve(),
+        (current_dir / '..' / 'data' / dataset / dst_name / 'qp27').resolve(),
+        (current_dir / '..' / 'data' / dataset / dst_name / 'qp32').resolve(),
+        (current_dir / '..' / 'data' / dataset / dst_name / 'qp37').resolve(),
+        (current_dir / '..' / 'data' / dataset / dst_name / 'qp42').resolve()
+    ]
 
-    for src_dir in src_dir_lst:
-        src_path = src_dir / (str(im_name) + '.png')
-        src_type = src_dir.stem
+comb_dst_dir = (current_dir / '..' / 'data' / dataset / (dst_name + '_combined')).resolve()
 
-        new_name = f'{str(im_name)}_{str(src_type)}.png'
+if not comb_dst_dir.exists():
+    comb_dst_dir.mkdir()
 
-        new_path = comb_ref_dir / new_name
-        command_ = f'ln -s {ref_path} {new_path}'
+src_lst = sorted(src_dir.glob('*.png'))
+src_num = len(src_lst)
+print(f'{src_num} ref images are found.')
+
+for src_path in src_lst:
+    im_name = src_path.stem
+
+    for dst_dir in dst_dir_lst:
+        dst_path = dst_dir / (str(im_name) + '.png')
+        dst_type = dst_dir.stem
+
+        new_name = f'{str(im_name)}_{str(dst_type)}.png'
+
+        new_path = comb_src_dir / new_name
+        command_ = f'ln -s {src_path} {new_path}'
         os.system(command_)
 
         print(command_)
 
-        new_path = comb_src_dir / new_name
-        command_ = f'ln -s {src_path} {new_path}'
+        new_path = comb_dst_dir / new_name
+        command_ = f'ln -s {dst_path} {new_path}'
         os.system(command_)
 
         print(command_)
