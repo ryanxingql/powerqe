@@ -1,45 +1,37 @@
+from pathlib import Path
+
 import torch
+
 import dataset
 import algorithm
-from pathlib import Path
-from utils import Recorder, arg2dict, init_dist, get_timestr, dict2str, print_n_log, create_dataloader, CPUPrefetcher, Timer
+from utils import create_logger, arg2dict, dict2str, create_dataloader, CPUPrefetcher, CUDATimer
 
-def create_logger(opts_dict):
-    """Make log dir -> log params."""
-    exp_name = get_timestr() if opts_dict['algorithm']['exp_name'] == None else opts_dict['algorithm']['exp_name']
+
+def mkdir_and_create_logger(opts_dict, rank):
+    exp_name = opts_dict['algorithm']['exp_name']
     log_dir = Path("exp") / exp_name
-    img_save_folder = log_dir / 'test_im_enhanced'
+
+    img_save_folder = log_dir / 'enhanced_images'
     if opts_dict['algorithm']['test']['if_save_im'] and not (img_save_folder.exists()):
         img_save_folder.mkdir(parents=True)
 
-    log_path = log_dir / "log-val.log"
-    log_fp = open(log_path, 'w')
-    msg = (
-        f'> hi - {get_timestr()}\n\n'
-        f'> options\n'
-        f'{dict2str(opts_dict).rstrip()}'  # remove \n from dict2str()
-        )
-    print_n_log(msg, log_fp)
+    log_path = log_dir / "log_test.log"
+    logger = create_logger(log_path, rank=rank, mode='w')
 
-    return log_fp, img_save_folder
+    return img_save_folder, logger
 
-def create_data_fetcher(
-        ds_type=None,
-        ds_opts=None,
-        ):
-    """Define dataset -> dataloader -> CPU datafetcher."""
+
+def create_data_fetcher(ds_type=None, ds_opts=None):
+    """Define data-set, data-loader and CPU-based data-fetcher."""
     ds_cls = getattr(dataset, ds_type)
     ds = ds_cls(ds_opts)
-    nsample = len(ds)
+    num_samples = len(ds)
     
-    loader = create_dataloader(
-        if_train=False,
-        dataset=ds,
-        )
+    loader = create_dataloader(if_train=False, dataset=ds)
     
     data_fetcher = CPUPrefetcher(loader)
+    return num_samples, data_fetcher
 
-    return data_fetcher, nsample
 
 def main():
     torch.backends.cudnn.benchmark = False
@@ -47,46 +39,48 @@ def main():
 
     opts_dict, _ = arg2dict()
 
-    init_dist(local_rank=0, backend='nccl')
+    num_gpu = torch.cuda.device_count()
+    assert num_gpu == 1, 'ONLY SUPPORT SINGLE-GPU TEST!'
 
-    log_fp, img_save_folder = create_logger(opts_dict)
+    img_save_folder, logger = mkdir_and_create_logger(opts_dict, rank=0)
 
-    # datafetcher
-    test_fetcher, nsample_test = create_data_fetcher(**opts_dict['dataset']['test'])
+    # record hyper-params
+
+    msg = f'hyper parameters\n{dict2str(opts_dict).rstrip()}'  # remove \n from dict2str()
+    logger.info(msg)
+
+    # create data-fetcher
+
+    num_samples_test, test_fetcher = create_data_fetcher(**opts_dict['dataset']['test'])
 
     # create algorithm
-    alg_cls = getattr(algorithm, opts_dict['algorithm']['type'])
-    opts_dict_ = dict(
-        if_train=False,
-        opts_dict=opts_dict['algorithm'],
-        )
+
+    alg_cls = getattr(algorithm, opts_dict['algorithm']['name'])
+    opts_dict_ = dict(if_train=False, if_dist=False, opts_dict=opts_dict['algorithm'])
     alg = alg_cls(**opts_dict_)
-    
-    alg.print_net(log_fp)  # print para message
+    alg.model.print_module(logger)
 
-    msg = f'> testing'
-    print_n_log(msg, log_fp, if_new_line=False)
+    timer = CUDATimer()
+    timer.start_record()
 
-    timer = Timer()
+    if_return_each = opts_dict['algorithm']['test']['if_return_each']
 
-    # test baseline criterion
+    # test baseline: dst vs. src
+
     if opts_dict['algorithm']['test']['criterion'] is not None:
-        msg, ave_spf = alg.test(test_fetcher, nsample_test, mod='baseline', if_return_each=False, if_train=False)
-        print_n_log(msg, log_fp)
+        msg = alg.test(test_fetcher, num_samples_test, if_baseline=True, if_return_each=if_return_each, if_train=False)
+        logger.info(msg)
 
-    # test
-    msg, ave_spf = alg.test(
-        test_fetcher, nsample_test, mod='normal', if_return_each=False, img_save_folder=img_save_folder, if_train=False
-    )
-    ave_fps = 1. / ave_spf
-    msg += (
-        f'\nave. fps by model: [{ave_fps:.1f}]\n' 
-        f'\n> total time: [{timer.get_total() / 3600:.1f}] h\n'
-        f'> bye - {get_timestr()}'
-    )
-    print_n_log(msg, log_fp)
+    # test: tar vs. src
 
-    log_fp.close()
+    msg = alg.test(test_fetcher, num_samples_test, if_baseline=False, if_return_each=if_return_each,
+                   img_save_folder=img_save_folder, if_train=False)
+
+    timer.get_inter()
+    total_time = timer.get_sum_inter() / 3600.
+    msg += f'\ntotal time: [{total_time:.1f}] h'
+    logger.info(msg)
+
 
 if __name__ == '__main__':
     main()

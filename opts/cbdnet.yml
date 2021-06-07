@@ -1,13 +1,16 @@
-div2k-jpeg:
-  note: ~
+div2k_jpeg:
+  note: 2 cards.
+
   dataset:
     train:
       ds_type: ImTrainingSet
+
       ds_opts:
-        gt_path: data/div2k/raw_ds_2_combined/
-        lq_path: data/div2k/jpeg_ds_2_combined/
+        gt_path: data/div2k/raw_combined/
+        lq_path: data/div2k/jpeg_combined/
         max_num: 3500  # 700*5
         start_idx: 0
+
         aug:
           if_aug: True
           opts:
@@ -16,83 +19,114 @@ div2k-jpeg:
             if_flip: True
             if_rot: True
       
-      # for datasampler
       enlarge_ratio: 100
-
-      # for dataloader
-      bs_pg: 8  # batch size per gpu
-      nworker_pg: 8
+      bs_pg: 8  # batch size per gpu  # !!!
+      nworker_pg: 8  # !!!
 
     val:
       ds_type: ImTestSet
+
       ds_opts:
-        gt_path: data/div2k/raw_ds_2_combined/
-        lq_path: data/div2k/jpeg_ds_2_combined/
+        gt_path: data/div2k/raw_combined/
+        lq_path: data/div2k/jpeg_combined/
         max_num: 500  # 100*5
         start_idx: 3500  # 700*5
 
+        center_crop:
+          if_crop: False
+          opts:
+            h: ~
+            w: ~
+
+        padding:
+          if_pad: False
+          opts:
+            mul: ~
+
     test:
       ds_type: ImTestSet
+
       ds_opts:
-        gt_path: data/div2k/raw_ds_2/
-        lq_path: data/div2k/jpeg_ds_2/qf10/
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/jpeg/qf10/  # you should run 5 times for 5 qfs
         max_num: 100
         start_idx: 800
 
+        center_crop:
+          if_crop: False
+          opts:
+            h: ~
+            w: ~
+
+        padding:
+          if_pad: False
+          opts:
+            mul: ~
+
   algorithm:
-    type: CBDNetAlgorithm
-    exp_name: cbdnet-div2k-jpeg
+    name: CBDNetAlgorithm
+    exp_name: cbdnet_div2k_jpeg
 
     network:
-      nf_in: 3
-      nf_estimate: 32
-      nf_out: 3
-      nlevel_denoise: 3
-      nf_base_denoise: 64
-      nf_gr_denoise: 2
-      nl_base_denoise: 1
-      nl_gr_denoise: 2
-      down_denoise: avepool2d
-      up_denoise: transpose2d
-      reduce_denoise: add
+      net:
+        nf_in: 3
+        nf_estimate: 32
+        nf_out: 3
+        nlevel_denoise: 3
+        nf_base_denoise: 64
+        nf_gr_denoise: 2
+        nl_base_denoise: 1
+        nl_gr_denoise: 2
+        down_denoise: avepool2d
+        up_denoise: transpose2d
+        reduce_denoise: add
 
     train:
-      if_cudnn: False  # True to speed up; if use BN, set to False
+      seed: 7
+      if_cudnn: True  # !!!
       if_show_graph: True
-
-      real_bs_pg: 8  # multiple backwards and step/zero once
+      real_bs_pg: 8  # multiple backwards -> step once  # !!!
 
       load_state:
-        if_keep_dir: True
         if_load: False
-        ckp_load_path: exp/cbdnet-div2k-jpeg/ckp-last.pt
+        opts:
+          if_load_optim: True
+          if_keep_dir: True
+          ckp_load_path: ~  # default: exp/<exp_name>/ckp_last.pt
 
-      niter: !!float 4e+6  # under real_bs_per_pg
+      if_test_baseline: True
       inter_print: 100
       inter_val: 5000
-      if_test_baseline: True
+
+      niter:
+        name: [run]
+        niter: [!!float 1e+6]
 
       loss:
-        MSELoss:
-          weight: 1.
-          opts:
-            reduction: mean
+        run:
+          net:
+            MSELoss:
+              weight: 1.
+              opts:
+                reduction: mean
 
       optimizer:
-        net:
-          type: Adam
-          opts:
-            lr: !!float 1e-4
-            betas: [0.9, 0.999] # (0., 0.9)
+        run:
+          net:
+            name: Adam
+            opts:
+              lr: !!float 1e-4
+              betas: [0.9, 0.999]
 
       scheduler:
         if_sched: False
 
-        net:
-          type: MultiStepLR
-          opts:
-            milestones: [200000,350000,450000,500000]  # .step() after each iter, not epoch
-            gamma: 0.5
+        run:
+          net:
+            name: MultiStepLR
+            opts:
+              milestones: [200000,350000,450000,500000]  # .step() after each iter, not epoch
+              gamma: 0.5
 
     val:
       if_save_im: False
@@ -105,121 +139,8 @@ div2k-jpeg:
 
     test:
       if_save_im: True
-      ckp_load_path: exp/cbdnet-div2k-jpeg/ckp-first-best.pt
-
-      criterion:
-        PSNR:
-          unit: dB
-          opts: ~
-
-div2k-hevc:
-  note: ~
-  dataset:
-    train:
-      ds_type: ImTrainingSet
-      ds_opts:
-        gt_path: data/div2k/raw_ds_2_combined/
-        lq_path: data/div2k/bpg_ds_2_combined/
-        max_num: 3500  # 700*5
-        start_idx: 0
-        aug:
-          if_aug: True
-          opts:
-            gt_h: 128
-            gt_w: 128
-            if_flip: True
-            if_rot: True
-      
-      # for datasampler
-      enlarge_ratio: 100
-
-      # for dataloader
-      bs_pg: 8  # batch size per gpu
-      nworker_pg: 8
-
-    val:
-      ds_type: ImTestSet
-      ds_opts:
-        gt_path: data/div2k/raw_ds_2_combined/
-        lq_path: data/div2k/bpg_ds_2_combined/
-        max_num: 500  # 100*5
-        start_idx: 3500  # 700*5
-
-    test:
-      ds_type: ImTestSet
-      ds_opts:
-        gt_path: data/div2k/raw_ds_2/
-        lq_path: data/div2k/bpg_ds_2/qp42/
-        max_num: 100
-        start_idx: 800
-
-  algorithm:
-    type: CBDNetAlgorithm
-    exp_name: cbdnet-div2k-hevc
-
-    network:
-      nf_in: 3
-      nf_estimate: 32
-      nf_out: 3
-      nlevel_denoise: 3
-      nf_base_denoise: 64
-      nf_gr_denoise: 2
-      nl_base_denoise: 1
-      nl_gr_denoise: 2
-      down_denoise: avepool2d
-      up_denoise: transpose2d
-      reduce_denoise: add
-      
-    train:
-      if_cudnn: False  # True to speed up; if use BN, set to False
-      if_show_graph: True
-
-      real_bs_pg: 8  # multiple backwards and step/zero once
-
-      load_state:
-        if_keep_dir: True
-        if_load: False
-        ckp_load_path: exp/cbdnet-div2k-hevc/ckp-last.pt
-
-      niter: !!float 4e+6  # under real_bs_per_pg
-      inter_print: 100
-      inter_val: 5000
-      if_test_baseline: True
-
-      loss:
-        MSELoss:
-          weight: 1.
-          opts:
-            reduction: mean
-
-      optimizer:
-        net:
-          type: Adam
-          opts:
-            lr: !!float 1e-4
-            betas: [0.9, 0.999] # (0., 0.9)
-
-      scheduler:
-        if_sched: False
-
-        net:
-          type: MultiStepLR
-          opts:
-            milestones: [200000,350000,450000,500000]  # .step() after each iter, not epoch
-            gamma: 0.5
-
-    val:
-      if_save_im: False
-
-      criterion:
-        PSNR:
-          if_focus: True
-          unit: dB
-          opts: ~
-
-    test:
-      if_save_im: True
-      ckp_load_path: exp/cbdnet-div2k-hevc/ckp-first-best.pt
+      if_return_each: False
+      ckp_load_path: ~  # default: exp/<exp_name>/ckp_first_best.pt
 
       criterion:
         PSNR:

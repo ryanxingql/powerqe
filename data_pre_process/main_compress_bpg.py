@@ -1,33 +1,40 @@
-import glob
 import os
 import sys
-import os.path as op
+import subprocess
+from pathlib import Path
 
-src_name = sys.argv[1]
-libbpg_dir = sys.argv[2]
-qp = sys.argv[3]  # qp, e.g., 22, 27, 32, ...
-tar_name = sys.argv[4]
+dataset = sys.argv[1]  # div2k
+src_name = sys.argv[2]  # raw
+tar_name = sys.argv[3]  # bpg
+qp = sys.argv[4]  # 37
+libbpg_dir = sys.argv[5]  # /xxx/libbpg-0.9.8
 
-cwd = op.split(op.realpath(__file__))[0]
-src_folder = os.path.join(cwd, f'../data/{src_name}')
-tar_folder = os.path.join(cwd, f'../data/{tar_name}/qp' + qp)
-bpgenc_path = os.path.join(libbpg_dir, 'bpgenc')
-bpgdec_path = os.path.join(libbpg_dir, 'bpgdec')
-if not os.path.exists(tar_folder):
-    os.makedirs(tar_folder)
+current_dir = Path(__file__).resolve().parent
+src_im_dir = (current_dir / '..' / 'data' / dataset / src_name).resolve()
+tar_im_dir = (current_dir / '..' / 'data' / dataset / tar_name / ('qp' + qp)).resolve()
+bpgenc_path = Path(libbpg_dir) / 'bpgenc'
+bpgdec_path = Path(libbpg_dir) / 'bpgdec'
+if not tar_im_dir.exists():
+    tar_im_dir.mkdir(parents=True)
 
-im_lst_src = sorted(glob.glob(os.path.join(src_folder, '*.png')))
-num = len(im_lst_src)
-for idx, im_path_src in enumerate(im_lst_src):
-    im_name = im_path_src.split('/')[-1]
-    im_path_tar = os.path.join(tar_folder, im_name)
+src_im_lst = sorted(src_im_dir.glob('*.png'))
+tmp_path = current_dir / 'tmp.bpg'
+
+num = len(src_im_lst)
+for idx, im_path_src in enumerate(src_im_lst):
+    im_name = im_path_src.name
+    im_path_tar = tar_im_dir / im_name
     
     # m: 1, fastest but worst (big); 9, slowest but good (small); default 8
     # qp: 0-51
     # ycbcr 420p
-    command_ = f'{bpgenc_path} {im_path_src} -m 1 -b 8 -q {qp} -f 420 -c ycbcr -o ./tmp.bpg && {bpgdec_path} ./tmp.bpg -b 8 -o {im_path_tar}'  # 
-    os.system(command_)
+
+    command_ = (
+        f'{bpgenc_path} {im_path_src} -m 1 -b 8 -q {qp} -f 420 -c ycbcr -o {tmp_path} && '
+        f'{bpgdec_path} {tmp_path} -b 8 -o {im_path_tar}'
+    )
+    subprocess.run(command_, shell=True)
 
     print(f'{idx + 1} / {num}: {im_path_tar}')
 
-os.remove('./tmp.bpg')
+os.remove(tmp_path)

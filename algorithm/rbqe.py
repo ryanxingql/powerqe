@@ -2,7 +2,9 @@ import net
 import torch
 from cv2 import cv2
 from tqdm import tqdm
+
 from utils import BaseAlg, Timer, Recorder, tensor2im
+
 
 class RBQEAlgorithm(BaseAlg):
     """use most of the BaseAlg functions."""

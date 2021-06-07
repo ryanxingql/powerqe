@@ -1,23 +1,15 @@
 import torch
 import torch.nn as nn
-from utils import BaseNet
+
 from .unet import UNet
 
-class Network(BaseNet):
-    def __init__(
-            self,
-            nf_in=3,
-            nf_estimate=32,
-            nf_out=3,
-            nlevel_denoise=3,
-            nf_base_denoise=64,
-            nf_gr_denoise=2,
-            nl_base_denoise=1,
-            nl_gr_denoise=2,
-            down_denoise='avepool2d',
-            up_denoise='transpose2d',
-            reduce_denoise='add',
-            ):
+from utils import BaseNet
+
+
+class Network(nn.Module):
+    def __init__(self, nf_in=3, nf_estimate=32, nf_out=3, nlevel_denoise=3, nf_base_denoise=64, nf_gr_denoise=2,
+                 nl_base_denoise=1, nl_gr_denoise=2, down_denoise='avepool2d', up_denoise='transpose2d',
+                 reduce_denoise='add'):
         super().__init__()
 
         estimate_lst = [
@@ -58,21 +50,15 @@ class Network(BaseNet):
             residual=False,
         )
 
-    def forward(self, inp_t):
+    def forward(self, inp_t, **_):
         estimated_noise_map = self.estimate(inp_t)
         concat_inp_t = torch.cat([inp_t, estimated_noise_map], dim=1)
         feat = self.denoise(concat_inp_t)
         out_t = feat + inp_t
-        return out_t#, estimated_noise_map
+        return out_t
 
-class CBDNetModel(nn.Module):
-    def __init__(self, opts_dict, if_train=True):
-        super().__init__()
-        
-        self.opts_dict = opts_dict
 
-        net = Network(**self.opts_dict)
-        self.module_lst = dict(net=net)
-        self.msg_lst = dict(
-            net=f'> CBDNet model is created with {net.cal_num_params():d} params (rank 0 solely).'
-        )
+class CBDNetModel(BaseNet):
+    def __init__(self, opts_dict, if_train=False):
+        self.net = dict(net=Network(**opts_dict['net']))
+        super().__init__(opts_dict=opts_dict, if_train=if_train, infer_subnet='net')

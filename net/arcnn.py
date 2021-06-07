@@ -1,7 +1,9 @@
 import torch.nn as nn
+
 from utils import BaseNet
 
-class Network(BaseNet):
+
+class Network(nn.Module):
     def __init__(self, nf_in=3, nf_out=3, nf1=64, nf2=32, ks1=9, ks2=1, ks3=5):
         super().__init__()
 
@@ -30,18 +32,12 @@ class Network(BaseNet):
         
         self.blk_lst = nn.Sequential(*blk_lst)
 
-    def forward(self, inp_t):
+    def forward(self, inp_t, **_):
         out_t = self.blk_lst(inp_t)
         return out_t
 
-class ARCNNModel(nn.Module):
-    def __init__(self, opts_dict, if_train=True):
-        super().__init__()
-        
-        self.opts_dict = opts_dict
 
-        net = Network(**self.opts_dict)
-        self.module_lst = dict(net=net)
-        self.msg_lst = dict(
-            net=f'> ARCNN model is created with {net.cal_num_params():d} params (rank 0 solely).'
-        )
+class ARCNNModel(BaseNet):
+    def __init__(self, opts_dict, if_train=False):
+        self.net = dict(net=Network(**opts_dict['net']))
+        super().__init__(opts_dict=opts_dict, if_train=if_train, infer_subnet='net')

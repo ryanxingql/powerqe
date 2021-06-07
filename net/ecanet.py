@@ -25,4 +25,3 @@ class ECA(nn.Module):
 
         out_t = inp_t * logic.expand_as(inp_t)
         return out_t
-        

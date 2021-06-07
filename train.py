@@ -1,315 +1,302 @@
 import math
-import torch
 import shutil
+from pathlib import Path
+
+import torch
+from torch.utils.tensorboard import SummaryWriter
+
 import dataset
 import algorithm
-from pathlib import Path
-from torch.utils.tensorboard import SummaryWriter
-from utils import print_n_log, get_timestr, mkdir_archived, dict2str, DistSampler, create_dataloader, arg2dict, CPUPrefetcher, init_dist, set_random_seed, Timer
+from utils import mkdir_archived, dict2str, DistSampler, create_dataloader, arg2dict, \
+    CPUPrefetcher, init_dist, set_random_seed, CUDATimer, create_logger
 
-def create_logger(opts_dict):
-    """Make log dir -> log params -> define tensorboard writer."""
-    exp_name = get_timestr() if opts_dict['algorithm']['exp_name'] == None else opts_dict['algorithm']['exp_name']
+
+def mkdir_and_create_logger(opts_dict, if_del_arc=False, rank=0):
+    """Make log dir (also used when testing) and tensorboard writer."""
+    exp_name = opts_dict['algorithm']['exp_name']
     log_dir = Path("exp") / exp_name
-    # if train from scratch, or (resume training and not keep dir)
-    if (not opts_dict['algorithm']['train']['load_state']['if_load']) or \
-        (
-            (opts_dict['algorithm']['train']['load_state']['if_load']) and \
-            (not opts_dict['algorithm']['train']['load_state']['if_keep_dir'])
-        ):
-        mkdir_archived(log_dir)
 
-    log_path = log_dir / "log.log"
-    log_fp = open(log_path, 'a')
-    msg = (
-        f'> hi - {get_timestr()}\n\n'
-        f'> options\n'
-        f'{dict2str(opts_dict).rstrip()}'  # remove \n from dict2str()
-    )
-    print_n_log(msg, log_fp)
+    if_load_ = opts_dict['algorithm']['train']['load_state']['if_load']
+    if not if_load_:
+        if_mkdir_ = True
+    else:
+        if opts_dict['algorithm']['train']['load_state']['opts']['if_keep_dir']:
+            if_mkdir_ = False
+        else:
+            if_mkdir_ = True
 
-    writer = SummaryWriter(log_dir)
+    if if_mkdir_:
+        mkdir_archived(log_dir, if_del_arc=if_del_arc)
 
-    ckp_save_path_pre = log_dir / 'ckp-'
+    log_path = log_dir / "log_train.log"
+    logger = create_logger(log_path, rank=rank, mode='a')
 
-    return log_fp, writer, ckp_save_path_pre
+    tb_writer = SummaryWriter(log_dir) if rank == 0 else None
 
-def create_data_fetcher(
-        if_train=False,
-        seed=None,
-        num_gpu=None,
-        rank=None,
-        ds_type=None,
-        ds_opts=None,
-        enlarge_ratio=None,
-        nworker_pg=None,
-        bs_pg=None,
-    ):
-    """Define dataset -> sampler -> dataloader -> CPU datafetcher."""
+    ckp_save_path_pre = log_dir / 'ckp_'
+    return logger, tb_writer, ckp_save_path_pre
+
+
+def create_data_fetcher(if_train=False, seed=None, num_gpu=None, rank=None, ds_type=None, ds_opts=None,
+                        enlarge_ratio=None, nworker_pg=None, bs_pg=None):
+    """Define data-set, data-sampler, data-loader and CPU-based data-fetcher."""
     ds_cls = getattr(dataset, ds_type)
     ds = ds_cls(ds_opts)
-    nsample = len(ds)
-    
-    if if_train:
-        sampler = DistSampler(
-            num_replicas=num_gpu,
-            rank=rank,
-            ratio=enlarge_ratio,
-            ds_size=nsample,
-        )
-    else:
-        sampler = None  # no need to sample val data
-    
-    loader = create_dataloader(
-        if_train=if_train,
-        seed=seed,
-        rank=rank,
-        num_worker=nworker_pg,
-        batch_size=bs_pg,
-        dataset=ds,
-        sampler=sampler,
-    )
-    
-    data_fetcher = CPUPrefetcher(loader)
-    return data_fetcher, sampler, nsample
+    num_samples = len(ds)
 
-def cal_state(bs_pg, num_gpu, nsample, enlarge_ratio, niter, done_niter):
-    bs_pe_all_gpu = bs_pg * num_gpu  # pe: per epoch
-    enlarge_nsample_pe = nsample * enlarge_ratio
-    niter_pe = math.ceil(enlarge_nsample_pe / bs_pe_all_gpu)  # also batch num
-    nepoch = math.ceil(niter / niter_pe)
-    done_nepoch = done_niter // niter_pe
+    sampler = DistSampler(num_replicas=num_gpu, rank=rank, ratio=enlarge_ratio, ds_size=num_samples) if if_train\
+        else None
+
+    loader = create_dataloader(if_train=if_train, seed=seed, rank=rank, num_worker=nworker_pg, batch_size=bs_pg,
+                               dataset=ds, sampler=sampler)
+
+    data_fetcher = CPUPrefetcher(loader)
+    return num_samples, sampler, data_fetcher
+
+
+def cal_state(batch_size_per_gpu, num_gpus, num_samples, enlarge_ratio, num_iters, done_num_iters):
+    bs_per_epoch_all_gpu = batch_size_per_gpu * num_gpus
+    enlarge_num_samples_pe = num_samples * enlarge_ratio
+    niter_per_epoch = math.ceil(enlarge_num_samples_pe / bs_per_epoch_all_gpu)  # also batch num
+    num_epochs = math.ceil(num_iters / niter_per_epoch)
+    done_num_epochs = done_num_iters // niter_per_epoch
     msg = (
-        f'> dataloader\n'
-        f'total samples: [{nsample}]\n'
-        f'total niter: [{niter}]\n'
-        f'total nepoch: [{nepoch}]\n'
-        f'done niter: [{done_niter}]\n'
-        f'done nepoch: [{done_nepoch}]'
+        f'data-loader for training\n'
+        f'[{num_samples}] training samples in total.\n'
+        f'[{num_epochs}] epochs in total, [{done_num_epochs}] epochs finished.\n'
+        f'[{num_iters}] iterations in total, [{done_num_iters}] iterations finished.'
     )
-    return done_nepoch, msg
+    return done_num_epochs, msg
+
 
 def main():
-    seed = 7
+    opts_dict, opts_aux_dict = arg2dict()
+
+    torch.backends.cudnn.benchmark = True if opts_dict['algorithm']['train']['if_cudnn'] else False
+    torch.backends.cudnn.deterministic = True if not opts_dict['algorithm']['train']['if_cudnn'] else False
 
     num_gpu = torch.cuda.device_count()
-    opts_dict, rank = arg2dict()
+    log_paras = dict(num_gpu=num_gpu)
+    opts_dict.update(log_paras)
 
-    # cudnn
-    if opts_dict['algorithm']['train']['if_cudnn']:
-        torch.backends.cudnn.benchmark = True  # speed up
-    else:
-        torch.backends.cudnn.benchmark = False  # reproduce
-        torch.backends.cudnn.deterministic = True  # reproduce
+    if_dist = True if num_gpu > 1 else False
+    rank = opts_aux_dict['rank']
+    if if_dist:
+        init_dist(local_rank=rank, backend='nccl')
 
-    # init distributed training
-    init_dist(local_rank=rank, backend='nccl')
+    # Create logger
 
-    # create logger
-    if rank == 0:
-        log_paras = dict(num_gpu=num_gpu)
-        opts_dict.update(log_paras)
-        log_fp, writer, ckp_save_path_pre = create_logger(opts_dict)
+    if_del_arc = opts_aux_dict['if_del_arc']
+    logger, tb_writer, ckp_save_path_pre = mkdir_and_create_logger(opts_dict, if_del_arc=if_del_arc, rank=rank)
 
-    # enlarge niter and niter_warmup
+    # Record hyper-params
+
+    msg = opts_aux_dict['note']
+    msg += f'\nhyper parameters\n{dict2str(opts_dict).rstrip()}'  # remove \n from dict2str()
+    logger.info(msg)
+
+    # Enlarge niter
+
     bs_pg = opts_dict['dataset']['train']['bs_pg']
     real_bs_pg = opts_dict['algorithm']['train']['real_bs_pg']
-    assert bs_pg <= real_bs_pg and real_bs_pg % bs_pg == 0, '> Check your bs and real bs!'
+    assert bs_pg <= real_bs_pg and real_bs_pg % bs_pg == 0, 'CHECK bs AND real bs!'
     inter_step = real_bs_pg // bs_pg
-    opts_dict['algorithm']['train']['niter_warmup'] = opts_dict['algorithm']['train']['niter_warmup'] * inter_step if 'niter_warmup' in opts_dict['algorithm']['train'] else None  # if exists
-    niter = math.ceil(opts_dict['algorithm']['train']['niter'] * inter_step)  # enlarge niter
 
-    # set random seed for this process
+    opts_ = opts_dict['algorithm']['train']['niter']
+    niter_lst = list(map(int, opts_['niter']))
+    niter_name_lst = opts_['name']
+    num_stage = len(niter_lst)
+    end_niter_lst = [sum(niter_lst[:is_]) for is_ in range(1, num_stage+1)]
+    niter = end_niter_lst[-1]  # all stages
+    niter = math.ceil(niter * inter_step)  # enlarge niter
+
+    # Set random seed for this process
+
+    seed = opts_dict['algorithm']['train']['seed']
     set_random_seed(seed + rank)  # if not set, seeds for numpy.random in each process are the same
 
-    # create datafetcher
-    opts_dict_ = dict(
-        if_train=True,
-        seed=seed,
-        num_gpu=num_gpu,
-        rank=rank,
-        **opts_dict['dataset']['train'],
-    )
-    train_fetcher, train_sampler, nsample_train = create_data_fetcher(**opts_dict_)
-    opts_dict_ = dict(
-        if_train=False,
-        **opts_dict['dataset']['val'],
-    )
-    val_fetcher, _, nsample_val = create_data_fetcher(**opts_dict_)
+    # Create data-fetcher
 
-    # create algorithm
-    alg_cls = getattr(algorithm, opts_dict['algorithm']['type'])
-    opts_dict_ = dict(
-        if_train=True,
-        opts_dict=opts_dict['algorithm'],
-    )
+    opts_dict_ = dict(if_train=True, seed=seed, num_gpu=num_gpu, rank=rank, **opts_dict['dataset']['train'])
+    num_samples_train, train_sampler, train_fetcher = create_data_fetcher(**opts_dict_)
+    opts_dict_ = dict(if_train=False, **opts_dict['dataset']['val'])
+    num_samples_val, _, val_fetcher = create_data_fetcher(**opts_dict_)
+
+    # Create algorithm
+
+    alg_cls = getattr(algorithm, opts_dict['algorithm']['name'])
+    opts_dict_ = dict(opts_dict=opts_dict['algorithm'], if_train=True, if_dist=if_dist)
     alg = alg_cls(**opts_dict_)
-    if rank == 0:
-        alg.print_net(log_fp)
+    alg.model.print_module(logger)
 
-    # calculate epoch num
-    best_val_perfrm = alg.best_val_perfrm
+    # Calculate epoch num
+
+    enlarge_ratio = opts_dict['dataset']['train']['enlarge_ratio']
     done_niter = alg.done_niter
-    opts_dict_ = dict(
-        bs_pg=bs_pg,
-        num_gpu=num_gpu,
-        nsample=nsample_train,
-        enlarge_ratio=opts_dict['dataset']['train']['enlarge_ratio'],
-        niter=niter,
-        done_niter=done_niter,
-    )
-    done_nepoch, msg = cal_state(**opts_dict_)
-    if rank == 0:
-        print_n_log(msg, log_fp)
+    opts_dict_ = dict(batch_size_per_gpu=bs_pg, num_gpus=num_gpu, num_samples=num_samples_train,
+                      enlarge_ratio=enlarge_ratio, num_iters=niter, done_num_iters=done_niter)
+    done_num_epochs, msg = cal_state(**opts_dict_)
+    logger.info(msg)
 
-    # create timer
-    if rank == 0:
-        timer = Timer()
+    # Create timer
 
-    #torch.distributed.barrier()  # all processes wait for ending
-    if rank == 0:
-        msg = f'> training'
-        print_n_log(msg, log_fp, if_new_line=False)
+    timer = CUDATimer()
+    timer.start_record()
 
-    alg.set_train_mode()
-    flag_over = False
+    # Train
+
+    best_val_perfrm = alg.best_val_perfrm
+
     inter_print = opts_dict['algorithm']['train']['inter_print']
     inter_val = opts_dict['algorithm']['train']['inter_val']
     if_test_baseline = opts_dict['algorithm']['train']['if_test_baseline']
+    additional = opts_dict['algorithm']['train']['additional'] if 'additional' in \
+                                                                  opts_dict['algorithm']['train'] else dict()
 
+    alg.set_train_mode()
+    if_all_over = False
+    if_val_end_of_stage = False
     while True:
-        if flag_over:
-            break
+        if if_all_over:
+            break  # leave the training process
 
-        # shuffle distributed subsamplers before each epoch
-        train_sampler.set_epoch(done_nepoch)
-
-        # fetch the first batch
+        train_sampler.set_epoch(done_num_epochs)  # shuffle distributed sub-samplers before each epoch
         train_fetcher.reset()
-        train_data = train_fetcher.next()
-        
+        train_data = train_fetcher.next()  # fetch the first batch
+
         while train_data is not None:
-            # validate
-            if (rank == 0) and \
-                (
-                    (done_niter == 0 and if_test_baseline)  # (1) beginning: test baseline
-                    or (done_niter == niter)  # (2) the last iter
-                    or ((done_niter % inter_val == 0) and (done_niter > 0))  # (3) inter_val
-                ):
-                
+            # Validate
+
+            if (done_niter == 0) and if_test_baseline:  # test baseline at the beginning
+                if_val = True
+            elif if_val_end_of_stage:  # at the last iter of each stage
+                if_val = True
+            elif (done_niter > 0) and (done_niter % inter_val == 0):  # inter_val
+                if_val = True
+            else:
+                if_val = False
+
+            if (rank == 0) and if_val:
                 if done_niter == 0:  # (1)
-                    _, ave_val_perfm, msg, write_dict_lst = alg.test(val_fetcher, nsample_val, mod='baseline')
-                    print_n_log(msg, log_fp)
-                    best_val_perfrm = dict(iter_lst=[0], perfrm=ave_val_perfm)
+                    msg, tb_write_dict_lst, report_dict = alg.test(val_fetcher, num_samples_val, if_baseline=True)
+                    logger.info(msg)
+                    best_val_perfrm = dict(iter_lst=[0], perfrm=report_dict['ave_perfm'])
+
                 else:  # (2,3)
-                    if_lower, ave_val_perfm, msg2, write_dict_lst = alg.test(
-                        val_fetcher, nsample_val, mod='normal'
-                    )  # test
+                    msg, tb_write_dict_lst, report_dict = alg.test(val_fetcher, num_samples_val, if_baseline=False)
 
                     ckp_save_path = f'{ckp_save_path_pre}{done_niter}.pt'
                     last_ckp_save_path = f'{ckp_save_path_pre}last.pt'
-                    msg = f'\n> model is saved at {ckp_save_path} and {last_ckp_save_path}.\n' + msg2
+                    msg = f'model is saved at [{ckp_save_path}] and [{last_ckp_save_path}].\n' + msg
 
-                    if_save_best = False
-                    if best_val_perfrm == None:  # no pre_val
-                        best_val_perfrm = dict(
-                            iter_lst=[done_niter],
-                            perfrm=ave_val_perfm
-                        )
+                    perfrm = report_dict['ave_perfm']
+                    lsb = report_dict['lsb']
+                    if best_val_perfrm is None:  # no pre_val
+                        best_val_perfrm = dict(iter_lst=[done_niter], perfrm=perfrm)
                         if_save_best = True
-                    elif ave_val_perfm == best_val_perfrm['perfrm']:
+                    elif perfrm == best_val_perfrm['perfrm']:
                         best_val_perfrm['iter_lst'].append(done_niter)
-                    elif (ave_val_perfm > best_val_perfrm['perfrm'] and (not if_lower)) or (ave_val_perfm < best_val_perfrm['perfrm'] and if_lower):
-                        best_val_perfrm['iter_lst'] = [done_niter]
-                        best_val_perfrm['perfrm'] = ave_val_perfm
-                        if_save_best = True
-                    msg += f"\n> best val iter lst: {best_val_perfrm['iter_lst']}; best val perfrm: {best_val_perfrm['perfrm']:.3e}"
+                        if_save_best = False
+                    else:
+                        if_save_best = False
+                        if (not lsb) and (perfrm > best_val_perfrm['perfrm']):
+                            if_save_best = True
+                            best_val_perfrm = dict(iter_lst=[done_niter], perfrm=perfrm)
+                        elif lsb and (perfrm < best_val_perfrm['perfrm']):
+                            if_save_best = True
+                            best_val_perfrm = dict(iter_lst=[done_niter], perfrm=perfrm)
+                    msg += f"\nbest iterations: [{best_val_perfrm['iter_lst']}]" \
+                           f" | validation performance: [{best_val_perfrm['perfrm']:.3e}]"
 
                     alg.save_state(
-                        ckp_save_path=ckp_save_path, iter=done_niter, best_val_perfrm=best_val_perfrm, if_sched=alg.if_sched
+                        ckp_save_path=ckp_save_path, idx_iter=done_niter, best_val_perfrm=best_val_perfrm,
+                        if_sched=alg.if_sched
                     )  # save model
                     shutil.copy(ckp_save_path, last_ckp_save_path)  # copy as the last model
                     if if_save_best:
-                        best_ckp_save_path = f'{ckp_save_path_pre}first-best.pt'
+                        best_ckp_save_path = f'{ckp_save_path_pre}first_best.pt'
                         shutil.copy(ckp_save_path, best_ckp_save_path)  # copy as the best model
 
-                    print_n_log(msg, log_fp)
+                    logger.info(msg)
 
-                for write_dict in write_dict_lst:
-                    writer.add_scalar(write_dict['tag'], write_dict['scalar'], done_niter)
+                for tb_write_dict in tb_write_dict_lst:
+                    tb_writer.add_scalar(tb_write_dict['tag'], tb_write_dict['scalar'], done_niter)
 
-            # show network structure
+            # Show network structure
+
             if (rank == 0) and \
-                opts_dict['algorithm']['train']['if_show_graph'] and \
-                ((done_niter == inter_val) or (done_niter == alg.done_niter)):
-                alg.add_graph(writer=writer, data=train_data['lq'].cuda())
+                    opts_dict['algorithm']['train']['if_show_graph'] and \
+                    ((done_niter == inter_val) or (done_niter == alg.done_niter)):
+                alg.add_graph(writer=tb_writer, data=train_data['lq'].cuda())
 
-            #torch.distributed.barrier()  # all processes wait for ending
+            # Check the current stage
 
-            # training
+            if done_niter == niter:
+                if_all_over = True  # no more training after the validation
+                break  # leave the data-fetcher
 
-            if done_niter >= niter:
-                flag_over = True
-                break
+            if_val_end_of_stage = False
+            stage_now = niter_name_lst[0]
+            end_niter_this_stage = 0
+            for is_, end_niter in enumerate(end_niter_lst):
+                if done_niter < end_niter:
+                    stage_now = niter_name_lst[is_]
+                    end_niter_this_stage = end_niter
+                    if done_niter == end_niter - 1:
+                        if_val_end_of_stage = True
+                    break
+
+            # Train one batch/iteration
 
             alg.set_train_mode()
 
-            flag_step = True if (done_niter + 1) % inter_step == 0 else False
-            if 'additional' in opts_dict['algorithm']['train']: 
-                msg, write_dict_lst, gen_im_lst = alg.update_params(
-                    data=train_data,
-                    iter=done_niter,
-                    flag_step=flag_step,
-                    inter_step=inter_step,
-                    additional=opts_dict['algorithm']['train']['additional']
-                )
-            else:
-                msg, write_dict_lst, gen_im_lst = alg.update_params(
-                    data=train_data,
-                    iter=done_niter,
-                    flag_step=flag_step,
-                    inter_step=inter_step
-                )
+            if_step = True if (done_niter + 1) % inter_step == 0 else False
+            msg, tb_write_dict_lst, im_lst = alg.update_params(
+                stage=stage_now,
+                data=train_data,
+                if_step=if_step,
+                inter_step=inter_step,
+                additional=additional,
+            )
 
             done_niter += 1
 
-            #torch.distributed.barrier()  # all processes wait for ending
-            if (done_niter % inter_print == 0) and (rank == 0):
-                used_time = timer.get_inter()
-                eta = used_time / inter_print * (niter - done_niter)
-                
-                msg = f'{get_timestr()}; iter: [{done_niter}]/{niter}; eta: [{eta / 3600.:.1f}] h; ' + msg
-                print_n_log(msg, log_fp, if_new_line=False)
-                for write_dict in write_dict_lst:
-                    writer.add_scalar(write_dict['tag'], write_dict['scalar'], done_niter)
-                for gen_im_item in gen_im_lst:
-                    ims = gen_im_lst[gen_im_item]
-                    writer.add_images(gen_im_item, ims, done_niter, dataformats='NCHW')
+            # Record & Display
 
-                timer.record()
+            if done_niter % inter_print == 0 or if_val_end_of_stage:
+                used_time = timer.record_and_get_inter()
+                et = timer.get_sum_inter() / 3600
+                timer.start_record()
 
-            # fetch the next batch
-            train_data = train_fetcher.next()
+                eta = used_time / inter_print * (niter - done_niter) / 3600
+                msg = (f'{stage_now} | iter [{done_niter}]/{end_niter_this_stage}/{niter} | '
+                       f'eta/et: [{eta:.1f}]/{et:.1f} h | ' + msg)
+                logger.info(msg)
 
-            # update learning rate after each iter by scheduler
-            if alg.if_sched:
-                alg.update_lr()
-        # > end of this epoch
-        done_nepoch += 1
-    # > end of all epochs
+                if rank == 0:
+                    for tb_write_dict in tb_write_dict_lst:
+                        tb_writer.add_scalar(tb_write_dict['tag'], tb_write_dict['scalar'], done_niter)
+                    for im_item in im_lst:
+                        ims = im_lst[im_item]
+                        tb_writer.add_images(im_item, ims, done_niter, dataformats='NCHW')
 
-    # final log
-    #torch.distributed.barrier()
-    if rank == 0:
+            train_data = train_fetcher.next()  # fetch the next batch
+
+        # end of this epoch
+
+        done_num_epochs += 1
+
+    # end of all epochs
+
+    if rank == 0:  # only rank0 conduct tests and record the best_val_perfrm
+        timer.record_inter()
+        tot_time = timer.get_sum_inter() / 3600
         msg = (
-            f'> total time: [{timer.get_total() / 3600:.1f}] h\n'
-            f"> best val iter lst: {best_val_perfrm['iter_lst']}; best val perfrm: {best_val_perfrm['perfrm']}\n"
-            f'> bye - {get_timestr()}'
+            f"best iterations: {best_val_perfrm['iter_lst']} | validation performance: {best_val_perfrm['perfrm']}\n"
+            f'total time: [{tot_time:.1f}] h'
         )
-        print_n_log(msg, log_fp)
+        logger.info(msg)
 
-        writer.close()
-        log_fp.close()
 
 if __name__ == '__main__':
     main()

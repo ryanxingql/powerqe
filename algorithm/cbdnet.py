@@ -1,17 +1,9 @@
 import net
+
 from utils import BaseAlg
 
+
 class CBDNetAlgorithm(BaseAlg):
-    """use most of the BaseAlg functions."""
-    def __init__(self, opts_dict, if_train):
-        self.opts_dict = opts_dict
-        self.if_train = if_train
-
-        model_cls = getattr(net, 'CBDNetModel')
-        self.create_model(
-            model_cls=model_cls,
-            opts_dict=self.opts_dict['network'],
-            if_train=self.if_train,
-        )
-
-        super().__init__()  # to further obtain optim, loss, etc.
+    def __init__(self, opts_dict, if_train, if_dist):
+        model_cls = getattr(net, 'CBDNetModel')  # !!!
+        super().__init__(opts_dict=opts_dict, model_cls=model_cls, if_train=if_train, if_dist=if_dist)

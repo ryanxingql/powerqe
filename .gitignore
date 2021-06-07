@@ -1,8 +1,10 @@
-exp
-data
+__pycache__/
+
+.vscode/
+.idea/
+
+exp/
+data/
 
 *.csv
 *.so
-
-__pycache__
-.vscode

@@ -4,7 +4,7 @@ from .dcad import DCADModel
 from .dncnn import DnCNNModel
 from .esrgan import ESRGANModel
 from .rbqe import RBQEModel
-#from .s2g import S2GModel
+# from .s2g import S2GModel
 
 __all__ = [
     'ARCNNModel',
@@ -13,5 +13,5 @@ __all__ = [
     'DnCNNModel',
     'ESRGANModel',
     'RBQEModel',
-    #'S2GModel',
+    # 'S2GModel',
 ]

@@ -1,7 +1,7 @@
 import torch.nn as nn
-from utils import BaseNet
 
-class VGGStyleDiscriminator(BaseNet):
+
+class VGGStyleDiscriminator(nn.Module):
     def __init__(self, ninc, nf, nhidc, gt_h, gt_w):
         super().__init__()
 
@@ -43,13 +43,13 @@ class VGGStyleDiscriminator(BaseNet):
     def forward(self, input_t):
         feat = self.lrelu(self.conv0_0(input_t))  # (B ? 128 128)
         feat = self.lrelu(self.bn0_1(self.conv0_1(feat)))  # (B ? 64 64)
-        
+
         feat = self.lrelu(self.bn1_0(self.conv1_0(feat)))
         feat = self.lrelu(self.bn1_1(self.conv1_1(feat)))  # (B ? 32 32)
-        
+
         feat = self.lrelu(self.bn2_0(self.conv2_0(feat)))
         feat = self.lrelu(self.bn2_1(self.conv2_1(feat)))  # (B ? 16 16)
-        
+
         feat = self.lrelu(self.bn3_0(self.conv3_0(feat)))
         feat = self.lrelu(self.bn3_1(self.conv3_1(feat)))  # (B ? 8 8)
 
@@ -60,4 +60,3 @@ class VGGStyleDiscriminator(BaseNet):
         feat = self.lrelu(self.linear1(feat))
         out_t = self.linear2(feat)
         return out_t
-    

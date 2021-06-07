@@ -1,64 +1,63 @@
 import os
 import sys
-import os.path as op
-from glob import glob as glob
 
-cwd = op.split(op.realpath(__file__))[0]
-raw_dir = op.join(cwd, '../data/div2k/raw_ds_2/')
+from pathlib import Path
 
-sep_lst = [700,100,100]  # tra, val, test
+dataset = sys.argv[1]  # div2k
+ref_name = sys.argv[2]  # raw
+src_name = sys.argv[3]  # jpeg
 
-type = sys.argv[1]
+current_dir = Path(__file__).resolve().parent
+ref_dir = (current_dir / '..' / 'data' / dataset / ref_name).resolve()
+comb_ref_dir = (current_dir / '..' / 'data' / dataset / (ref_name + '_combined')).resolve()
 
-tar_raw_dir = op.join(cwd, '../data/div2k/raw_ds_2_combined')
+if not comb_ref_dir.exists():
+    comb_ref_dir.mkdir()
 
-if type == 'jpeg':
-    cmp_dir_lst = [
-        op.join(cwd, '../data/div2k/jpeg_ds_2/qf10'),
-        op.join(cwd, '../data/div2k/jpeg_ds_2/qf20'),
-        op.join(cwd, '../data/div2k/jpeg_ds_2/qf30'),
-        op.join(cwd, '../data/div2k/jpeg_ds_2/qf40'),
-        op.join(cwd, '../data/div2k/jpeg_ds_2/qf50'),
+if src_name == 'jpeg':
+    src_dir_lst = [
+        (current_dir / '..' / 'data' / dataset / src_name / 'qf10').resolve(),
+        (current_dir / '..' / 'data' / dataset / src_name / 'qf20').resolve(),
+        (current_dir / '..' / 'data' / dataset / src_name / 'qf30').resolve(),
+        (current_dir / '..' / 'data' / dataset / src_name / 'qf40').resolve(),
+        (current_dir / '..' / 'data' / dataset / src_name / 'qf50').resolve()
     ]
-    tar_cmp_dir = op.join(cwd, '../data/div2k/jpeg_ds_2_combined')
-elif type == 'hevc':
-    cmp_dir_lst = [
-        op.join(cwd, '../data/div2k/bpg_ds_2/qp22'),
-        op.join(cwd, '../data/div2k/bpg_ds_2/qp27'),
-        op.join(cwd, '../data/div2k/bpg_ds_2/qp32'),
-        op.join(cwd, '../data/div2k/bpg_ds_2/qp37'),
-        op.join(cwd, '../data/div2k/bpg_ds_2/qp42'),
+
+elif src_name == 'bpg':
+    src_dir_lst = [
+        (current_dir / '..' / 'data' / dataset / src_name / 'qp22').resolve(),
+        (current_dir / '..' / 'data' / dataset / src_name / 'qp27').resolve(),
+        (current_dir / '..' / 'data' / dataset / src_name / 'qp32').resolve(),
+        (current_dir / '..' / 'data' / dataset / src_name / 'qp37').resolve(),
+        (current_dir / '..' / 'data' / dataset / src_name / 'qp42').resolve()
     ]
-    tar_cmp_dir = op.join(cwd, '../data/div2k/bpg_ds_2_combined')
 
-if not op.exists(tar_raw_dir):
-    os.makedirs(tar_raw_dir)
-if not op.exists(tar_cmp_dir):
-    os.makedirs(tar_cmp_dir)
+comb_src_dir = (current_dir / '..' / 'data' / dataset / (src_name + '_combined')).resolve()
 
-src_raw_lst = sorted(glob(op.join(raw_dir, '*.png')))
-src_num = len(src_raw_lst)
-print(f'{src_num} images per subdir are found.')
+if not comb_src_dir.exists():
+    comb_src_dir.mkdir()
 
-tar_num = 0
-acc_num = 0
-for sep in sep_lst:
-    tar_num += sep
-    while True:
-        acc_num += 1
-        if acc_num > tar_num:
-            break
-    
-        src_raw_path = src_raw_lst[acc_num-1]
-        im_name = src_raw_path.split('/')[-1].split('.')[0]
-        for cmp_dir in cmp_dir_lst:
-            src_cmp_path = op.join(cmp_dir, im_name + '.png')
-            cmp_dir_name = cmp_dir.split('/')[-1]
-            
-            new_path = op.join(tar_cmp_dir, f'{im_name}-{cmp_dir_name}.png')
-            command_ = f'ln -s {src_cmp_path} {new_path}'
-            os.system(command_)
+ref_lst = sorted(ref_dir.glob('*.png'))
+ref_num = len(ref_lst)
+print(f'{ref_num} ref images are found.')
 
-            new_path = op.join(tar_raw_dir, f'{im_name}-{cmp_dir_name}.png')
-            command_ = f'ln -s {src_raw_path} {new_path}'
-            os.system(command_)
+for ref_path in ref_lst:
+    im_name = ref_path.stem
+
+    for src_dir in src_dir_lst:
+        src_path = src_dir / (str(im_name) + '.png')
+        src_type = src_dir.stem
+
+        new_name = f'{str(im_name)}_{str(src_type)}.png'
+
+        new_path = comb_ref_dir / new_name
+        command_ = f'ln -s {ref_path} {new_path}'
+        os.system(command_)
+
+        print(command_)
+
+        new_path = comb_src_dir / new_name
+        command_ = f'ln -s {src_path} {new_path}'
+        os.system(command_)
+
+        print(command_)

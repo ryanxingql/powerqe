@@ -1,13 +1,16 @@
-div2k-qf10:
-  note: ~
+div2k_qf10:
+  note: 2 cards.
+
   dataset:
     train:
       ds_type: ImTrainingSet
+
       ds_opts:
-        gt_path: data/div2k/raw_ds_2/
-        lq_path: data/div2k/jpeg_ds_2/qf10/
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/jpeg/qf10/
         max_num: 700
         start_idx: 0
+
         aug:
           if_aug: True
           opts:
@@ -15,127 +18,158 @@ div2k-qf10:
             gt_w: 128
             if_flip: True
             if_rot: True
-      
-      # for datasampler
-      enlarge_ratio: 100
 
-      # for dataloader
-      bs_pg: 4  # batch size per gpu
-      nworker_pg: 4
+      enlarge_ratio: 100
+      bs_pg: 8  # batch size per gpu  # !!!
+      nworker_pg: 8  # !!!
 
     val:
       ds_type: ImTestSet
+
       ds_opts:
-        gt_path: data/div2k/raw_ds_2/
-        lq_path: data/div2k/jpeg_ds_2/qf10/
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/jpeg/qf10/
         max_num: 100
         start_idx: 700
 
+        center_crop:
+          if_crop: False
+          opts:
+            h: ~
+            w: ~
+
+        padding:
+          if_pad: False
+          opts:
+            mul: ~
+
     test:
       ds_type: ImTestSet
+
       ds_opts:
-        gt_path: data/div2k/raw_ds_2/
-        lq_path: data/div2k/jpeg_ds_2/qf10/
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/jpeg/qf10/
         max_num: 100
         start_idx: 800
 
+        center_crop:
+          if_crop: False
+          opts:
+            h: ~
+            w: ~
+
+        padding:
+          if_pad: False
+          opts:
+            mul: ~
+
   algorithm:
-    type: ESRGANAlgorithm
-    exp_name: esrgan-div2k-qf10
+    name: ESRGANAlgorithm
+    exp_name: esrgan_div2k_qf10
 
     network:
       generator:
-        opts:
-          num_in_ch: 3
-          num_feat: 32
-          num_block: 8  # 23 originally. 30GB memory for bs=8 per gpu...
-          num_out_ch: 3
-          num_grow_ch: 16
+        num_in_ch: 3
+        num_feat: 32
+        num_block: 8  # 23 originally. 30GB memory for bs=8 per gpu...
+        num_out_ch: 3
+        num_grow_ch: 16
 
       discriminator:
-        opts:
-          ninc: 3
-          nf: 32
-          nhidc: 128
-          gt_w: 128  # !!!
-          gt_h: 128  # !!!
+        ninc: 3
+        nf: 16  # dis should be simpler than gen
+        nhidc: 64
+        gt_w: 128  # !!!
+        gt_h: 128  # !!!
       
     train:
-      if_cudnn: False  # True to speed up; if use BN, set to False
+      seed: 7
+      if_cudnn: True  # !!!
       if_show_graph: True
-
-      real_bs_pg: 4  # multiple backwards and step/zero once
+      real_bs_pg: 8  # multiple backwards -> step once  # !!!
 
       load_state:
-        if_keep_dir: True
         if_load: False
-        ckp_load_path: exp/esrgan-div2k-qf10/ckp-last.pt
+        opts:
+          if_load_optim: True
+          if_keep_dir: True
+          ckp_load_path: ~  # default: exp/<exp_name>/ckp_last.pt
 
-      niter: !!float 1e+6  # under real_bs_per_pg
-      niter_warmup: !!float 5e+5  # only train gen with L1 loss
+      if_test_baseline: True
       inter_print: 100
       inter_val: 5000
-      if_test_baseline: True
+
+      niter:
+        name: [warmup, run]
+        niter: [!!float 4e+5, !!float 4e+5]
 
       loss:
-        CharbonnierLoss:
-          weight: !!float 1e-2
-          opts:
-            eps: !!float 1e-6
-          
-        VGGLoss:
-          weight: 1.
-          opts:
-            vgg_type: vgg19
-            layer_weights:
-              conv5_4: 1.
-            use_input_norm: True
-            perceptual_weight: 1.
-            style_weight: 0.
-          
-        RelativisticGANLoss:  # for dis and also gen
-          weight: !!float 5e-3
-          opts:
-            real_label_val: 1.
-            fake_label_val: 0.
+        warmup:
+          gen:
+            CharbonnierLoss:
+              weight: 1.
+              opts:
+                eps: !!float 1e-6
+
+        run:
+          gen:
+            CharbonnierLoss:
+              weight: !!float 1e-2
+              opts:
+                eps: !!float 1e-6
+
+            VGGLoss:
+              weight: 1.
+              opts:
+                vgg_type: vgg19
+                layer_weights:
+                  conv5_4: 1.
+                use_input_norm: True
+                perceptual_weight: 1.
+                style_weight: 0.
+
+            RelativisticGANLoss:  # for dis and also gen
+              weight: !!float 5e-3
+
+          dis:
+            RelativisticGANLoss:  # for dis and also gen
+              weight: 1.
 
       optimizer:
-        TTUR:  # two time-scale update rule for GANs
-          if_ttur: True
-          lr: !!float 2e-4
+        warmup:
+          gen:
+            name: Adam
+            opts:
+              lr: !!float 2e-4
+              betas: [0.9, 0.999]
 
-        warmup:  # warm up gen
-          type: Adam
-          opts:
-            lr: !!float 2e-4
-            betas: [0.9, 0.999] # (0., 0.9)        
+        run:
+          gen:
+            name: Adam
+            opts:
+              lr: !!float 1e-4
+              betas: [0.9, 0.999]
 
-        gen:
-          type: Adam
-          opts:
-            lr: !!float 1e-4
-            betas: [0.9, 0.999] # (0., 0.9)
-
-        dis:
-          type: Adam
-          opts:
-            lr: !!float 1e-4
-            betas: [0.9, 0.999] # (0., 0.9)
+          dis:
+            name: Adam
+            opts:
+              lr: !!float 2e-4  # ttur: lr of dis is 2x lr of gen
+              betas: [0.9, 0.999]
 
       scheduler:
         if_sched: False
 
-        gen:
-          type: MultiStepLR
-          opts:
-            milestones: [200000,350000,450000,500000]  # .step() after each iter, not epoch
-            gamma: 0.5
+        warmup:
+          gen: ~
 
-        dis:
-          type: MultiStepLR
-          opts:
-            milestones: [200000,350000,450000,500000]  # .step() after each iter, not epoch
-            gamma: 0.5
+        run:
+          gen:
+            name: MultiStepLR
+            opts:
+              milestones: [200000,350000,450000,500000]  # .step() after each iter, not epoch
+              gamma: 0.5
+
+          dis: ~
             
     val:
       if_save_im: False
@@ -152,182 +186,12 @@ div2k-qf10:
           opts:
             net: alex
             if_cuda: True
-            if_spatial: False  # return a score or a map of scores
+            if_spatial: False
 
     test:
       if_save_im: True
-      ckp_load_path: exp/esrgan-div2k-qf10/ckp-first-best.pt
-
-      criterion:
-        PSNR:
-          unit: dB
-          opts: ~
-        
-        LPIPS:
-          unit: (lpips)
-          opts:
-            net: alex
-            if_cuda: True
-            if_spatial: False  # return a score or a map of scores
-
-div2k-qp42:
-  note: ~
-  dataset:
-    train:
-      ds_type: ImTrainingSet
-      ds_opts:
-        gt_path: data/div2k/raw_ds_2/
-        lq_path: data/div2k/bpg_ds_2/qp42/
-        max_num: 700
-        start_idx: 0
-        aug:
-          if_aug: True
-          opts:
-            gt_h: 128
-            gt_w: 128
-            if_flip: True
-            if_rot: True
-      
-      # for datasampler
-      enlarge_ratio: 100
-
-      # for dataloader
-      bs_pg: 4  # batch size per gpu
-      nworker_pg: 4
-
-    val:
-      ds_type: ImTestSet
-      ds_opts:
-        gt_path: data/div2k/raw_ds_2/
-        lq_path: data/div2k/bpg_ds_2/qp42/
-        max_num: 100
-        start_idx: 700
-
-    test:
-      ds_type: ImTestSet
-      ds_opts:
-        gt_path: data/div2k/raw_ds_2/
-        lq_path: data/div2k/bpg_ds_2/qp42/
-        max_num: 100
-        start_idx: 800
-
-  algorithm:
-    type: ESRGANAlgorithm
-    exp_name: esrgan-div2k-qp42
-
-    network:
-      generator:
-        opts:
-          num_in_ch: 3
-          num_feat: 32
-          num_block: 8  # 23 originally. 30GB memory for bs=8 per gpu...
-          num_out_ch: 3
-          num_grow_ch: 16
-
-      discriminator:
-        opts:
-          ninc: 3
-          nf: 32
-          nhidc: 128
-          gt_w: 128  # !!!
-          gt_h: 128  # !!!
-      
-    train:
-      if_cudnn: False  # True to speed up; if use BN, set to False
-      if_show_graph: True
-
-      real_bs_pg: 4  # multiple backwards and step/zero once
-
-      load_state:
-        if_keep_dir: True
-        if_load: False
-        ckp_load_path: exp/esrgan-div2k-qp42/ckp-last.pt
-
-      niter: !!float 1e+6  # under real_bs_per_pg
-      niter_warmup: !!float 5e+5  # only train gen with L1 loss
-      inter_print: 100
-      inter_val: 5000
-      if_test_baseline: True
-
-      loss:
-        CharbonnierLoss:
-          weight: !!float 1e-2
-          opts:
-            eps: !!float 1e-6
-          
-        VGGLoss:
-          weight: 1.
-          opts:
-            vgg_type: vgg19
-            layer_weights:
-              conv5_4: 1.
-            use_input_norm: True
-            perceptual_weight: 1.
-            style_weight: 0.
-          
-        RelativisticGANLoss:  # for dis and also gen
-          weight: !!float 5e-3
-          opts:
-            real_label_val: 1.
-            fake_label_val: 0.
-
-      optimizer:
-        TTUR:  # two time-scale update rule for GANs
-          if_ttur: True
-          lr: !!float 2e-4
-
-        warmup:  # warm up gen
-          type: Adam
-          opts:
-            lr: !!float 2e-4
-            betas: [0.9, 0.999] # (0., 0.9)        
-
-        gen:
-          type: Adam
-          opts:
-            lr: !!float 1e-4
-            betas: [0.9, 0.999] # (0., 0.9)
-
-        dis:
-          type: Adam
-          opts:
-            lr: !!float 1e-4
-            betas: [0.9, 0.999] # (0., 0.9)
-
-      scheduler:
-        if_sched: False
-
-        gen:
-          type: MultiStepLR
-          opts:
-            milestones: [200000,350000,450000,500000]  # .step() after each iter, not epoch
-            gamma: 0.5
-
-        dis:
-          type: MultiStepLR
-          opts:
-            milestones: [200000,350000,450000,500000]  # .step() after each iter, not epoch
-            gamma: 0.5
-            
-    val:
-      if_save_im: False
-
-      criterion:
-        PSNR:
-          if_focus: False
-          unit: dB
-          opts: ~
-        LPIPS:
-          if_focus: True
-          unit: (lpips)
-          opts:
-            net: alex
-            if_cuda: True
-            if_spatial: False  # return a score or a map of scores
-
-    test:
-      if_save_im: True
-      ckp_load_path: exp/esrgan-div2k-qp42/ckp-first-best.pt
+      if_return_each: False
+      ckp_load_path: ~  # default: exp/<exp_name>/ckp_first_best.pt
 
       criterion:
         PSNR:

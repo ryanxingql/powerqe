@@ -3,9 +3,11 @@ import torch
 import numbers
 import torch.nn as nn
 import torch.nn.functional as F
-from utils import Timer
-from utils import BaseNet
+
 from .ecanet import ECA
+
+from utils import BaseNet, Timer
+
 
 class Up(nn.Module):
     def __init__(self, nf_in_s, nf_in, nf_out, method, if_separable, if_eca):
