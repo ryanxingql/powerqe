@@ -119,9 +119,8 @@ class Up(nn.Module):
 
         for module_ in self.conv_lst:
             feat = module_(feat)
-        out_t = feat
 
-        return out_t
+        return feat
 
 
 class Down(nn.Module):
@@ -139,6 +138,7 @@ class Down(nn.Module):
                 self.down_lst.append(
                     SeparableConv2d(nf_in=nf_in, nf_out=nf_in)
                 )
+
         else:
             if if_eca:
                 self.down_lst += [
@@ -150,6 +150,7 @@ class Down(nn.Module):
                         padding=3//2,
                     ),
                 ]
+
             else:
                 self.down_lst.append(
                     nn.Conv2d(
@@ -158,10 +159,13 @@ class Down(nn.Module):
                         kernel_size=3,
                         padding=3//2,
                     )
-                )                
+                )
+
         self.down_lst.append(nn.ReLU(inplace=False))
+
         if method == 'avepool2d':
             self.down_lst.append(nn.AvgPool2d(kernel_size=2))
+
         elif method == 'strideconv':
             self.down_lst += [
                 nn.Conv2d(
@@ -173,6 +177,7 @@ class Down(nn.Module):
                 ),
                 nn.ReLU(inplace=False),
             ]
+
         if if_separable:
             if if_eca:
                 self.down_lst += [
@@ -183,6 +188,7 @@ class Down(nn.Module):
                 self.down_lst.append(
                     SeparableConv2d(nf_in=nf_out, nf_out=nf_in)
                 )
+
         else:
             if if_eca:
                 self.down_lst += [
@@ -194,6 +200,7 @@ class Down(nn.Module):
                         padding=3//2,
                     ),
                 ]
+
             else:
                 self.down_lst.append(
                     nn.Conv2d(
@@ -208,8 +215,7 @@ class Down(nn.Module):
         feat = inp_t
         for module_ in self.down_lst:
             feat = module_(feat)
-        out_t = feat
-        return out_t
+        return feat
 
 
 class SeparableConv2d(nn.Module):
@@ -493,7 +499,8 @@ class Network(nn.Module):
                 else:
                     outconv_lst.append(
                         SeparableConv2d(nf_in=nf_base, nf_out=nf_out)
-                    )                
+                    )
+
             else:
                 if if_eca:
                     outconv_lst += [
