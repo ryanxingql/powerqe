@@ -167,11 +167,11 @@ def main():
         while train_data is not None:
             # Validate
 
-            if (done_niter == 0) and if_test_baseline:  # test baseline at the beginning
+            if (done_niter == alg.done_niter) and if_test_baseline:  # test baseline at the beginning
                 if_val = True
             elif if_val_end_of_stage:  # at the last iter of each stage
                 if_val = True
-            elif (done_niter > 0) and (done_niter % inter_val == 0):  # inter_val
+            elif (done_niter != alg.done_niter) and (done_niter % inter_val == 0):  # inter_val
                 if_val = True
             else:
                 if_val = False
