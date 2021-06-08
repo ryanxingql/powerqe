@@ -93,7 +93,7 @@ div2k_jpeg:
           if_keep_dir: True
           ckp_load_path: ~  # default: exp/<exp_name>/ckp_last.pt
 
-      if_test_baseline: True
+      if_test_baseline: True  # if you load ckp, you may set it to be False to save memory
       inter_print: 100
       inter_val: 5000
 
