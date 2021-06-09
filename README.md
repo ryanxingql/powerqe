@@ -12,7 +12,8 @@
   - [4. Train](#4-train)
   - [5. Test](#5-test)
   - [6. Results](#6-results)
-  - [7. License](#7-license)
+  - [7. Learn More](#7-learn-more)
+  - [8. License](#8-license)
 
 :running: An **unified** framework for training/testing blind/non-blind fidelity/perception-oriented **quality enhancement** approaches for compressed images/videos based on PyTorch.
 
@@ -28,7 +29,7 @@
 - [ ] [MFQE](https://github.com/RyanXingQL/MFQEv2.0)
 - [ ] [STDF](https://github.com/RyanXingQL/STDF-PyTorch)
 
-Current version: [v2] [[v1]](https://github.com/RyanXingQL/PowerQE/tree/ea903fd0d04154c95b321b5100540249856bd44b)
+Current version: [v2]; archived version: [[v1]](https://github.com/RyanXingQL/PowerQE/tree/ea903fd0d04154c95b321b5100540249856bd44b)
 
 This repository adopts [PythonUtils](https://github.com/RyanXingQL/PythonUtils) as a sub-module. You may clone PowerQE by:
 
@@ -164,7 +165,11 @@ Tensorboard figures: updating. Will be presented at [here](https://github.com/Ry
 
 Pre-trained models: updating. Will be presented at Releases.
 
-## 7. License
+## 7. Learn More
+
+If you want to learn more about this repository, check [here](https://github.com/RyanXingQL/PowerQE/wiki/Learn-More).
+
+## 8. License
 
 If you find this repository helpful, you may cite:
 
@@ -177,5 +182,3 @@ If you find this repository helpful, you may cite:
   note = "[Online; accessed 11-April-2021]"
 }
 ```
-
-If you want to learn more about this repository, check [here](https://github.com/RyanXingQL/PowerQE/wiki/Learn-More).
