@@ -159,11 +159,17 @@ CUDA_VISIBLE_DEVICES=0 python test.py -opt opts/arcnn.yml -case div2k_qf10
 
 ## 6. Results
 
-Numeric results: updating. Will be presented at [here](https://github.com/RyanXingQL/PowerQE/wiki/Results).
+I'm still training, testing and conducting IQA. The DIV2K images are big in resolution, and thus all the processes are time-consuming.
 
-Tensorboard figures: updating. Will be presented at [here](https://github.com/RyanXingQL/PowerQE/issues/2).
+Results are updating.
 
-Pre-trained models: updating. Will be presented at Releases.
+[[Numeric results]](https://github.com/RyanXingQL/PowerQE/wiki/Results)
+
+[[Pre-trained models]](https://github.com/RyanXingQL/PowerQE/releases)
+
+[[Tensorboard figures]](https://github.com/RyanXingQL/PowerQE/issues/2)
+
+If you want to use down-sampled DIV2K data-set and corresponding pre-trained models, check PowerQE [v1](https://github.com/RyanXingQL/PowerQE/tree/ea903fd0d04154c95b321b5100540249856bd44b).
 
 ## 7. Learn More
 
