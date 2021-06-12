@@ -44,8 +44,7 @@ git clone git@github.com:RyanXingQL/PowerQE.git --depth=1 --recursive
 ### Basis
 
 ```bash
-conda create -n pqe python=3.7 -y
-conda activate pqe
+conda create -n pqe python=3.7 -y && conda activate pqe
 
 # given CUDA 10.1
 python -m pip install torch==1.6.0+cu101 torchvision==0.7.0+cu101 -f https://download.pytorch.org/whl/torch_stable.html
@@ -70,8 +69,7 @@ We take the DIV2K dataset for an example.
 
 ```bash
 cd <any-path-to-your-database>
-mkdir div2k
-cd div2k/
+mkdir div2k && cd div2k/
 
 # 800 2K images for training and validation (3.3 GB)
 wget http://data.vision.ee.ethz.ch/cvl/DIV2K/DIV2K_train_HR.zip
