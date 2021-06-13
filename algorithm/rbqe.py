@@ -77,10 +77,15 @@ class RBQEAlgorithm(BaseAlg):
         write_dict_lst = []
         timer = CUDATimer()
 
-        if_iqa = False if if_train or if_baseline else True
+        # validation baseline: no iqa, no parse name
+        # validation, not baseline: no iqa, parse name
+        # test baseline: no iqa, no parse name
+        # test, not baseline, iqa, not parse name
+        if_iqa = True if (not if_train) and (not if_baseline) else False
         if if_iqa:
             timer_wo_iqam = Recorder()
             idx_out = -2  # testing; judge by IQAM
+        if_parse_name = True if if_train and (not if_baseline) else False
 
         self.set_eval_mode()
 
@@ -94,7 +99,7 @@ class RBQEAlgorithm(BaseAlg):
             im_lq = test_data['lq'].cuda(non_blocking=True)  # assume bs=1
             im_name = test_data['name'][0]  # assume bs=1
 
-            if not if_iqa:  # val in training
+            if if_parse_name:
                 im_type = im_name.split('_')[-1].split('.')[0]
                 if im_type in ['qf50', 'qp22']:
                     idx_out = 0
@@ -107,7 +112,7 @@ class RBQEAlgorithm(BaseAlg):
                 elif im_type in ['qf10', 'qp42']:
                     idx_out = 4
                 else:
-                    raise Exception("NO MATCHING TYPE!")
+                    raise Exception(f"im_type IS {im_type}, NO MATCHING TYPE!")
 
             timer.start_record()
             if if_tar_only:
@@ -122,7 +127,8 @@ class RBQEAlgorithm(BaseAlg):
                     im_out = im_lq
                 else:
                     if if_iqa:
-                        time_wo_iqa, im_out = self.model.net[self.model.infer_subnet](inp_t=im_lq, idx_out=idx_out).clamp_(0., 1.)
+                        time_wo_iqa, im_out = self.model.net[self.model.infer_subnet](inp_t=im_lq, idx_out=idx_out)
+                        im_out = im_out.clamp_(0., 1.)
                     else:
                         im_out = self.model.net[self.model.infer_subnet](inp_t=im_lq, idx_out=idx_out).clamp_(0., 1.)
                 timer.record_inter()
