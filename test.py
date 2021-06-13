@@ -76,8 +76,7 @@ def main():
     msg = alg.test(test_fetcher, num_samples_test, if_baseline=False, if_return_each=if_return_each,
                    img_save_folder=img_save_folder, if_train=False)
 
-    timer.get_inter()
-    total_time = timer.get_sum_inter() / 3600.
+    total_time = timer.get_inter() / 3600.
     msg += f'\ntotal time: [{total_time:.1f}] h'
     logger.info(msg)
 
