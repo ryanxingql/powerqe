@@ -155,7 +155,7 @@ def main():
 
     alg.set_train_mode()
     if_all_over = False
-    if_val_end_of_stage = False
+    if_val_end_of_stage = False  # invalid at the start of training
     while True:
         if if_all_over:
             break  # leave the training process
@@ -166,20 +166,24 @@ def main():
 
         while train_data is not None:
             # Validate
+            # done_niter == alg.done_niter == 0, if_test_baseline == True: test baseline (to be recorded at tb as step 0)
+            # done_niter == alg.done_niter != 0, if_keep_dir == False: val (to be recorded at tb as step alg.done_niter)
+            # done_niter != alg.done_niter, done_niter % inter_val == 0: val
+            # done_niter != alg.done_niter, if_val_end_of_stage == True: val
 
-            if_baseline = False
-            if (done_niter == alg.done_niter) and if_test_baseline:  # test baseline at the beginning
-                if_val = True
-                if_baseline = True
-            elif if_val_end_of_stage:  # at the last iter of each stage
-                if_val = True
-            elif (done_niter != alg.done_niter) and (done_niter % inter_val == 0):  # inter_val
-                if_val = True
+            _if_test_baseline = False
+            _if_val = False
+            if done_niter == alg.done_niter:
+                if alg.done_niter == 0 and if_test_baseline:
+                    _if_test_baseline = True
+                elif alg.done_niter != 0 and not opts_dict['algorithm']['train']['load_state']['opts']['if_keep_dir']:
+                    _if_val = True
             else:
-                if_val = False
+                if (done_niter % inter_val == 0) or if_val_end_of_stage:
+                    _if_val = True
 
-            if (rank == 0) and if_val:
-                if if_baseline:
+            if rank == 0 and (_if_test_baseline or _if_val):
+                if _if_test_baseline:
                     msg, tb_write_dict_lst, report_dict = alg.test(val_fetcher, num_samples_val, if_baseline=True)
                     logger.info(msg)
                     if done_niter == 0:
@@ -245,8 +249,7 @@ def main():
                 if done_niter < end_niter:
                     stage_now = niter_name_lst[is_]
                     end_niter_this_stage = end_niter
-                    if done_niter == end_niter - 1:
-                        if_val_end_of_stage = True
+                    if_val_end_of_stage = True if done_niter == (end_niter - 1) else False
                     break
 
             # Train one batch/iteration
