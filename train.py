@@ -167,8 +167,10 @@ def main():
         while train_data is not None:
             # Validate
 
+            if_baseline = False
             if (done_niter == alg.done_niter) and if_test_baseline:  # test baseline at the beginning
                 if_val = True
+                if_baseline = True
             elif if_val_end_of_stage:  # at the last iter of each stage
                 if_val = True
             elif (done_niter != alg.done_niter) and (done_niter % inter_val == 0):  # inter_val
@@ -177,12 +179,13 @@ def main():
                 if_val = False
 
             if (rank == 0) and if_val:
-                if done_niter == 0:  # (1)
+                if if_baseline:
                     msg, tb_write_dict_lst, report_dict = alg.test(val_fetcher, num_samples_val, if_baseline=True)
                     logger.info(msg)
-                    best_val_perfrm = dict(iter_lst=[0], perfrm=report_dict['ave_perfm'])
+                    if done_niter == 0:
+                        best_val_perfrm = dict(iter_lst=[0], perfrm=report_dict['ave_perfm'])
 
-                else:  # (2,3)
+                else:
                     msg, tb_write_dict_lst, report_dict = alg.test(val_fetcher, num_samples_val, if_baseline=False)
 
                     ckp_save_path = f'{ckp_save_path_pre}{done_niter}.pt'
