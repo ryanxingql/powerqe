@@ -1,20 +1,5 @@
 # PowerQE: An Open Framework for Quality Enhancement of Compressed Visual Data
 
-- [PowerQE: An Open Framework for Quality Enhancement of Compressed Visual Data](#powerqe-an-open-framework-for-quality-enhancement-of-compressed-visual-data)
-  - [1. Dependencies](#1-dependencies)
-    - [Basis](#basis)
-    - [Deformable Convolutions V2 (required only for S2G and STDF)](#deformable-convolutions-v2-required-only-for-s2g-and-stdf)
-  - [2. Image Data](#2-image-data)
-    - [Download & Unzip & Symlink](#download--unzip--symlink)
-    - [Compress](#compress)
-    - [Combine images of different distortions (required only for blind QE)](#combine-images-of-different-distortions-required-only-for-blind-qe)
-  - [3. Video Data](#3-video-data)
-  - [4. Train](#4-train)
-  - [5. Test](#5-test)
-  - [6. Results](#6-results)
-  - [7. Learn More](#7-learn-more)
-  - [8. License](#8-license)
-
 :running: An **unified** framework for training/testing blind/non-blind fidelity/perception-oriented **quality enhancement** approaches for compressed images/videos based on PyTorch.
 
 :hammer_and_wrench: Support now:
