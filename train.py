@@ -167,16 +167,16 @@ def main():
         while train_data is not None:
             # Validate
             # done_niter == alg.done_niter == 0, if_test_baseline == True: test baseline (to be recorded at tb as step 0)
-            # done_niter == alg.done_niter != 0, if_keep_dir == False: val (to be recorded at tb as step alg.done_niter)
+            # done_niter == alg.done_niter != 0, if_keep_dir == False: test baseline and val (to be recorded at tb as step alg.done_niter)
             # done_niter != alg.done_niter, done_niter % inter_val == 0: val
             # done_niter != alg.done_niter, if_val_end_of_stage == True: val
-
             _if_test_baseline = False
             _if_val = False
             if done_niter == alg.done_niter:
                 if alg.done_niter == 0 and if_test_baseline:
                     _if_test_baseline = True
                 elif alg.done_niter != 0 and not opts_dict['algorithm']['train']['load_state']['opts']['if_keep_dir']:
+                    _if_test_baseline = True
                     _if_val = True
             else:
                 if (done_niter % inter_val == 0) or if_val_end_of_stage:
@@ -189,7 +189,10 @@ def main():
                     if done_niter == 0:
                         best_val_perfrm = dict(iter_lst=[0], perfrm=report_dict['ave_perfm'])
 
-                else:
+                    for tb_write_dict in tb_write_dict_lst:
+                        tb_writer.add_scalar(tb_write_dict['tag'], tb_write_dict['scalar'], global_step=0)
+
+                if _if_val:
                     msg, tb_write_dict_lst, report_dict = alg.test(val_fetcher, num_samples_val, if_baseline=False)
 
                     ckp_save_path = f'{ckp_save_path_pre}{done_niter}.pt'
@@ -226,8 +229,8 @@ def main():
 
                     logger.info(msg)
 
-                for tb_write_dict in tb_write_dict_lst:
-                    tb_writer.add_scalar(tb_write_dict['tag'], tb_write_dict['scalar'], done_niter)
+                    for tb_write_dict in tb_write_dict_lst:
+                        tb_writer.add_scalar(tb_write_dict['tag'], tb_write_dict['scalar'], done_niter)
 
             # Show network structure
 
