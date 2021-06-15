@@ -16,7 +16,18 @@ def mkdir_and_create_logger(opts_dict, if_del_arc=False, rank=0):
     exp_name = opts_dict['algorithm']['exp_name']
     log_dir = Path("exp") / exp_name
 
-    if_load_ = opts_dict['algorithm']['train']['load_state']['if_load']
+    if_load_ = False
+    if_warn_ = False
+    if opts_dict['algorithm']['train']['load_state']['if_load']:
+        ckp_load_path = opts_dict['algorithm']['train']['load_state']['opts']['ckp_load_path']
+        if ckp_load_path is None:
+            ckp_load_path = Path('exp') / opts_dict['algorithm']['exp_name'] / 'ckp_last.pt'
+
+        if ckp_load_path.exists():
+            if_load_ = True
+        else:
+            if_warn_ = True
+
     if not if_load_:
         if_mkdir_ = True
     else:
@@ -34,7 +45,7 @@ def mkdir_and_create_logger(opts_dict, if_del_arc=False, rank=0):
     tb_writer = SummaryWriter(log_dir) if rank == 0 else None
 
     ckp_save_path_pre = log_dir / 'ckp_'
-    return logger, tb_writer, ckp_save_path_pre
+    return logger, tb_writer, ckp_save_path_pre, if_warn_
 
 
 def create_data_fetcher(if_train=False, seed=None, num_gpu=None, rank=None, ds_type=None, ds_opts=None,
@@ -87,7 +98,10 @@ def main():
     # Create logger
 
     if_del_arc = opts_aux_dict['if_del_arc']
-    logger, tb_writer, ckp_save_path_pre = mkdir_and_create_logger(opts_dict, if_del_arc=if_del_arc, rank=rank)
+    logger, tb_writer, ckp_save_path_pre, if_warn_ = mkdir_and_create_logger(opts_dict, if_del_arc=if_del_arc, rank=rank)
+
+    if if_warn_:
+        logger.info('if_load is True, but NO PRE-TRAINED MODEL!')
 
     # Record hyper-params
 
