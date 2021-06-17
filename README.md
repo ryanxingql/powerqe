@@ -10,7 +10,6 @@
 - [x] [CBDNet](https://arxiv.org/abs/1807.04686)
 - [x] [RBQE](https://github.com/RyanXingQL/RBQE)
 - [x] [ESRGAN](https://github.com/RyanXingQL/SubjectiveQE-ESRGAN)
-- [x] S2G: to be released soon.
 - [ ] [MFQE](https://github.com/RyanXingQL/MFQEv2.0)
 - [ ] [STDF](https://github.com/RyanXingQL/STDF-PyTorch)
 
@@ -39,8 +38,8 @@ python -m pip install tqdm lmdb pyyaml opencv-python scikit-image tensorboard lp
 ### Deformable Convolutions V2 (required only for S2G and STDF)
 
 ```bash
-cd <path-to-PowerQE>/net/ops/dcn
-sh build.sh
+cd ./net/ops/dcn
+conda activate pqe && sh build.sh
 
 # check (optional)
 python simple_check.py
@@ -67,8 +66,7 @@ unzip -j DIV2K_train_HR.zip -d raw/
 unzip -j DIV2K_valid_HR.zip -d raw/
 
 cd <path-to-PowerQE>
-mkdir data
-ln -s <path-to-div2k> data/
+mkdir data && ln -s <path-to-div2k> data/
 ```
 
 We take `{0001-0700}.png` for training, `{0701-0800}.png` for validation, and `{0801-0900}.png` for test.
@@ -80,7 +78,7 @@ We take JPEG (QF=10) and BPG (HEVC-MSP, QP=42) as examples.
 [[How to install BPG]](https://github.com/RyanXingQL/PowerQE/wiki/How-to-install-BPG%3F)
 
 ```bash
-cd <path-to-PowerQE>/data_pre_process/
+cd ./data_pre_process/ && conda activate pqe
 
 # JPEG QF=10
 python main_compress_jpeg.py div2k raw jpeg 10
@@ -94,7 +92,7 @@ python main_compress_bpg.py div2k raw bpg 42 <dir-to-libbpg>
 For blind QE tasks, we combine images of different QP/QFs into new dirs by symlink.
 
 ```bash
-cd <path-to-PowerQE>/data_pre_process/
+cd ./data_pre_process/ && conda activate pqe
 
 python main_compress_jpeg_blind.py div2k raw jpeg  # compress images with qf=10, 20, 30, 40 and 50 first
 python main_combine_im.py div2k raw jpeg
@@ -114,21 +112,20 @@ It may take days to compress videos due to the low speed of the HM codec.
 Edit YML in `opts/`, then run:
 
 ```bash
-cd <path-to-PowerQE>
-CUDA_VISIBLE_DEVICES=0 python train.py -opt opts/arcnn.yml -case div2k_qf10
+conda activate pqe && CUDA_VISIBLE_DEVICES=0 python train.py -opt opts/arcnn.yml -case div2k_qf10
 ```
 
 You can also use multiple gpus:
 
 ```bash
-CUDA_VISIBLE_DEVICES=0,1,2,3 python -m torch.distributed.launch --nproc_per_node=4 --master_port=1111 train.py -opt opts/arcnn.yml -case div2k_qf10
+conda activate pqe && CUDA_VISIBLE_DEVICES=0,1,2,3 python -m torch.distributed.launch --nproc_per_node=4 --master_port=1111 train.py -opt opts/arcnn.yml -case div2k_qf10
 ```
 
 Tensorboard:
 
 ```bash
-cd <path-to-PowerQE>/exp/arcnn_div2k_qf10
-tensorboard --logdir=./ --port=10001 --bind_all
+cd ./exp/arcnn_div2k_qf10
+conda activate pqe && tensorboard --logdir=./ --port=10001 --bind_all
 ```
 
 ## 5. Test
@@ -136,15 +133,10 @@ tensorboard --logdir=./ --port=10001 --bind_all
 Edit YML in `opts/`, then run:
 
 ```bash
-cd <path-to-PowerQE>
-CUDA_VISIBLE_DEVICES=0 python test.py -opt opts/arcnn.yml -case div2k_qf10
+conda activate pqe && CUDA_VISIBLE_DEVICES=0 python test.py -opt opts/arcnn.yml -case div2k_qf10
 ```
 
 ## 6. Results
-
-I'm still training, testing and conducting IQA. The DIV2K images are big in resolution, and thus all the processes are time-consuming.
-
-Results are updating.
 
 [[Numeric results]](https://github.com/RyanXingQL/PowerQE/wiki/Results)
 
