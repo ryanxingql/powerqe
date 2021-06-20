@@ -80,7 +80,7 @@ class RBQEAlgorithm(BaseAlg):
         # validation baseline: no iqa, no parse name
         # validation, not baseline: no iqa, parse name
         # test baseline: no iqa, no parse name
-        # test, not baseline, iqa, not parse name
+        # test, no baseline, iqa, no parse name
         if_iqa = True if (not if_train) and (not if_baseline) else False
         if if_iqa:
             timer_wo_iqam = Recorder()
