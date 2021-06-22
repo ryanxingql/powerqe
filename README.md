@@ -35,7 +35,7 @@ python -m pip install torch==1.6.0+cu101 torchvision==0.7.0+cu101 -f https://dow
 python -m pip install tqdm lmdb pyyaml opencv-python scikit-image tensorboard lpips
 ```
 
-### Deformable Convolutions V2 (required only for S2G and STDF)
+### Deformable Convolutions V2 (required only for STDF)
 
 ```bash
 cd ./net/ops/dcn
