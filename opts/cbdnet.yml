@@ -88,7 +88,7 @@ div2k_jpeg:
       real_bs_pg: 8  # multiple backwards -> step once  # !!!
 
       load_state:
-        if_load: False
+        if_load: True
         opts:
           if_load_optim: True
           if_keep_dir: True
@@ -100,7 +100,7 @@ div2k_jpeg:
 
       niter:
         name: [run]
-        niter: [!!float 1e+6]
+        niter: [!!float 13e+5]
 
       loss:
         run:
@@ -136,6 +136,155 @@ div2k_jpeg:
           if_focus: True
           unit: dB
           opts: ~ 
+
+    test:
+      if_save_im: True
+      if_return_each: False
+      ckp_load_path: ~  # default: exp/<exp_name>/ckp_first_best.pt
+
+      criterion:
+        PSNR:
+          unit: dB
+          opts: ~
+
+div2k_bpg:
+  note: 2 cards.
+
+  dataset:
+    train:
+      ds_type: ImTrainingSet
+
+      ds_opts:
+        gt_path: data/div2k/raw_combined/
+        lq_path: data/div2k/bpg_combined/
+        max_num: 3500  # 700*5
+        start_idx: 0
+
+        aug:
+          if_aug: True
+          opts:
+            gt_h: 128
+            gt_w: 128
+            if_flip: True
+            if_rot: True
+
+      enlarge_ratio: 100
+      bs_pg: 8  # batch size per gpu  # !!!
+      nworker_pg: 8  # !!!
+
+    val:
+      ds_type: ImTestSet
+
+      ds_opts:
+        gt_path: data/div2k/raw_combined/
+        lq_path: data/div2k/bpg_combined/
+        max_num: 500  # 100*5
+        start_idx: 3500  # 700*5
+
+        center_crop:
+          if_crop: False
+          opts:
+            h: ~
+            w: ~
+
+        padding:
+          if_pad: False
+          opts:
+            mul: ~
+
+    test:
+      ds_type: ImTestSet
+
+      ds_opts:
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/bpg/qp42/  # you should run 5 times for 5 qfs
+        max_num: 100
+        start_idx: 800
+
+        center_crop:
+          if_crop: False
+          opts:
+            h: ~
+            w: ~
+
+        padding:
+          if_pad: False
+          opts:
+            mul: ~
+
+  algorithm:
+    name: CBDNetAlgorithm
+    exp_name: cbdnet_div2k_bpg
+
+    network:
+      net:
+        nf_in: 3
+        nf_estimate: 32
+        nf_out: 3
+        nlevel_denoise: 3
+        nf_base_denoise: 64
+        nf_gr_denoise: 2
+        nl_base_denoise: 1
+        nl_gr_denoise: 2
+        down_denoise: avepool2d
+        up_denoise: transpose2d
+        reduce_denoise: add
+
+    train:
+      seed: 7
+      if_cudnn: True  # !!!
+      if_show_graph: True
+      real_bs_pg: 8  # multiple backwards -> step once  # !!!
+
+      load_state:
+        if_load: True
+        opts:
+          if_load_optim: True
+          if_keep_dir: True
+          ckp_load_path: ~  # default: exp/<exp_name>/ckp_last.pt
+
+      if_test_baseline: True
+      inter_print: 100
+      inter_val: 5000
+
+      niter:
+        name: [run]
+        niter: [!!float 13e+5]
+
+      loss:
+        run:
+          net:
+            MSELoss:
+              weight: 1.
+              opts:
+                reduction: mean
+
+      optimizer:
+        run:
+          net:
+            name: Adam
+            opts:
+              lr: !!float 1e-4
+              betas: [0.9, 0.999]
+
+      scheduler:
+        if_sched: False
+
+        run:
+          net:
+            name: MultiStepLR
+            opts:
+              milestones: [200000,350000,450000,500000]  # .step() after each iter, not epoch
+              gamma: 0.5
+
+    val:
+      if_save_im: False
+
+      criterion:
+        PSNR:
+          if_focus: True
+          unit: dB
+          opts: ~
 
     test:
       if_save_im: True

@@ -81,19 +81,19 @@ div2k_qf10:
       real_bs_pg: 8  # multiple backwards -> step once  # !!!
 
       load_state:
-        if_load: False
+        if_load: True
         opts:
           if_load_optim: True
           if_keep_dir: True
           ckp_load_path: ~  # default: exp/<exp_name>/ckp_last.pt
 
-      if_test_baseline: False
+      if_test_baseline: True
       inter_print: 100
       inter_val: 5000
 
       niter:
         name: [run]
-        niter: [!!float 8e+5]
+        niter: [!!float 25e+5]
 
       loss:
         run:
@@ -121,6 +121,148 @@ div2k_qf10:
               milestones: [200000,350000,450000,500000]  # .step() after each iter, not epoch
               gamma: 0.5
             
+    val:
+      if_save_im: False
+
+      criterion:
+        PSNR:
+          if_focus: True
+          unit: dB
+          opts: ~
+
+    test:
+      if_save_im: True
+      if_return_each: False
+      ckp_load_path: ~  # default: exp/<exp_name>/ckp_first_best.pt
+
+      criterion:
+        PSNR:
+          unit: dB
+          opts: ~
+
+div2k_qp42:
+  note: 2 cards.
+
+  dataset:
+    train:
+      ds_type: ImTrainingSet
+
+      ds_opts:
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/bpg/qp42/
+        max_num: 700
+        start_idx: 0
+
+        aug:
+          if_aug: True
+          opts:
+            gt_h: 128
+            gt_w: 128
+            if_flip: True
+            if_rot: True
+
+      enlarge_ratio: 100
+      bs_pg: 8  # batch size per gpu  # !!!
+      nworker_pg: 8  # !!!
+
+    val:
+      ds_type: ImTestSet
+
+      ds_opts:
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/bpg/qp42/
+        max_num: 100
+        start_idx: 700
+
+        center_crop:
+          if_crop: False
+          opts:
+            h: ~
+            w: ~
+
+        padding:
+          if_pad: False
+          opts:
+            mul: ~
+
+    test:
+      ds_type: ImTestSet
+
+      ds_opts:
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/bpg/qp42/
+        max_num: 100
+        start_idx: 800
+
+        center_crop:
+          if_crop: False
+          opts:
+            h: ~
+            w: ~
+
+        padding:
+          if_pad: False
+          opts:
+            mul: ~
+
+  algorithm:
+    name: DCADAlgorithm
+    exp_name: dcad_div2k_qp42
+
+    network:
+      net:
+        nf_in: 3
+        nf: 64
+        nf_out: 3
+        nblk: 8
+
+    train:
+      seed: 7
+      if_cudnn: True  # !!!
+      if_show_graph: True
+      real_bs_pg: 8  # multiple backwards -> step once  # !!!
+
+      load_state:
+        if_load: True
+        opts:
+          if_load_optim: True
+          if_keep_dir: True
+          ckp_load_path: ~  # default: exp/<exp_name>/ckp_last.pt
+
+      if_test_baseline: True
+      inter_print: 100
+      inter_val: 5000
+
+      niter:
+        name: [run]
+        niter: [!!float 15e+5]
+
+      loss:
+        run:
+          net:
+            MSELoss:
+              weight: 1.
+              opts:
+                reduction: mean
+
+      optimizer:
+        run:
+          net:
+            name: Adam
+            opts:
+              lr: !!float 1e-4
+              betas: [0.9, 0.999]
+
+      scheduler:
+        if_sched: False
+
+        run:
+          net:
+            name: MultiStepLR
+            opts:
+              milestones: [200000,350000,450000,500000]  # .step() after each iter, not epoch
+              gamma: 0.5
+
     val:
       if_save_im: False
 
