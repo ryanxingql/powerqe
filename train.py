@@ -55,7 +55,7 @@ def create_data_fetcher(if_train=False, seed=None, num_gpu=None, rank=None, ds_t
     ds = ds_cls(ds_opts)
     num_samples = len(ds)
 
-    sampler = DistSampler(num_replicas=num_gpu, rank=rank, ratio=enlarge_ratio, ds_size=num_samples) if if_train\
+    sampler = DistSampler(num_replicas=num_gpu, rank=rank, ratio=enlarge_ratio, ds_size=num_samples) if if_train \
         else None
 
     loader = create_dataloader(if_train=if_train, seed=seed, rank=rank, num_worker=nworker_pg, batch_size=bs_pg,
@@ -98,7 +98,8 @@ def main():
     # Create logger
 
     if_del_arc = opts_aux_dict['if_del_arc']
-    logger, tb_writer, ckp_save_path_pre, if_warn_ = mkdir_and_create_logger(opts_dict, if_del_arc=if_del_arc, rank=rank)
+    logger, tb_writer, ckp_save_path_pre, if_warn_ = mkdir_and_create_logger(opts_dict, if_del_arc=if_del_arc,
+                                                                             rank=rank)
 
     if if_warn_:
         logger.info('if_load is True, but NO PRE-TRAINED MODEL!')
@@ -120,7 +121,7 @@ def main():
     niter_lst = list(map(int, opts_['niter']))
     niter_name_lst = opts_['name']
     num_stage = len(niter_lst)
-    end_niter_lst = [sum(niter_lst[:is_]) for is_ in range(1, num_stage+1)]
+    end_niter_lst = [sum(niter_lst[:is_]) for is_ in range(1, num_stage + 1)]
     niter = end_niter_lst[-1]  # all stages
     niter = math.ceil(niter * inter_step)  # enlarge niter
 

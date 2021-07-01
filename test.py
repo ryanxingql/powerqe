@@ -26,9 +26,7 @@ def create_data_fetcher(ds_type=None, ds_opts=None):
     ds_cls = getattr(dataset, ds_type)
     ds = ds_cls(ds_opts)
     num_samples = len(ds)
-    
     loader = create_dataloader(if_train=False, dataset=ds)
-    
     data_fetcher = CPUPrefetcher(loader)
     return num_samples, data_fetcher
 
