@@ -36,7 +36,7 @@ def mkdir_and_create_logger(opts_dict, if_del_arc=False, rank=0):
         else:
             if_mkdir_ = True
 
-    if if_mkdir_:
+    if if_mkdir_ and rank == 0:
         mkdir_archived(log_dir, if_del_arc=if_del_arc)
 
     log_path = log_dir / "log_train.log"
