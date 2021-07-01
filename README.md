@@ -30,8 +30,12 @@ git clone git@github.com:RyanXingQL/PowerQE.git --depth=1 --recursive
 ```bash
 conda create -n pqe python=3.7 -y && conda activate pqe
 
-# given CUDA 10.1
+# case 1: given CUDA 10.x
 python -m pip install torch==1.6.0+cu101 torchvision==0.7.0+cu101 -f https://download.pytorch.org/whl/torch_stable.html
+python -m pip install tqdm lmdb pyyaml opencv-python scikit-image tensorboard lpips
+
+# case 2: given CUDA 11.x
+python -m pip install torch==1.9.0+cu111 torchvision==0.10.0+cu111 torchaudio==0.9.0 -f https://download.pytorch.org/whl/torch_stable.html
 python -m pip install tqdm lmdb pyyaml opencv-python scikit-image tensorboard lpips
 ```
 
