@@ -163,7 +163,7 @@ If you find this repository helpful, you may cite:
   author = {Qunliang Xing},
   title = {PowerQE: An Open Framework for Quality Enhancement of Compressed Visual Data},
   howpublished = "\url{https://github.com/RyanXingQL/PowerQE}",
-  year = {2021}, 
+  year = {2021},
   note = "[Online; accessed 11-April-2021]"
 }
 ```
