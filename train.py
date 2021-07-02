@@ -316,7 +316,7 @@ def main():
         timer.record_inter()
         tot_time = timer.get_sum_inter() / 3600
         msg = (
-            f"best iterations: [{best_val_perfrm['iter_lst']}] | validation performance: [{best_val_perfrm['perfrm']}]\n"
+            f"best iterations: [{best_val_perfrm['iter_lst']}] | validation performance: [{best_val_perfrm['perfrm']:.3e}]\n"
             f'total time: [{tot_time:.1f}] h'
         )
         logger.info(msg)
