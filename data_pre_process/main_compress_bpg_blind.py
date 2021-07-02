@@ -15,3 +15,6 @@ for quality in ['42', '37', '32', '27', '22']:
     if not tar_im_dir.exists():
         py_path = current_dir / 'main_compress_bpg.py'
         os.system(f'python {py_path} {dataset} {src_name} {tar_name} {quality} {libbpg_dir}')
+
+    else:
+        print(f'skip {tar_im_dir}: already exists.')

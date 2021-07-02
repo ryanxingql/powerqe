@@ -14,3 +14,6 @@ for quality in ['10', '20', '30', '40', '50']:
     if not tar_im_dir.exists():
         py_path = current_dir / 'main_compress_jpeg.py'
         os.system(f'python {py_path} {dataset} {src_name} {tar_name} {quality}')
+
+    else:
+        print(f'skip {tar_im_dir}: already exists.')

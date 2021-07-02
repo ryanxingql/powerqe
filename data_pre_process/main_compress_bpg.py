@@ -23,7 +23,7 @@ num = len(src_im_lst)
 for idx, im_path_src in enumerate(src_im_lst):
     im_name = im_path_src.name
     im_path_tar = tar_im_dir / im_name
-    
+
     # m: 1, fastest but worst (big); 9, slowest but good (small); default 8
     # qp: 0-51
     # ycbcr 420p
