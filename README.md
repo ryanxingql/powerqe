@@ -28,7 +28,7 @@ git clone git@github.com:RyanXingQL/PowerQE.git --depth=1 --recursive
 - v2: support full-resolution DIV2K data-set.
 - [v1](https://github.com/RyanXingQL/PowerQE/tree/ea903fd0d04154c95b321b5100540249856bd44b): support down-sampled DIV2K data-set.
 
-## 1. Dependencies
+## 1. Dependency
 
 ### Basis
 
@@ -145,7 +145,7 @@ Edit YML in `opts/`, then run:
 conda activate pqe && CUDA_VISIBLE_DEVICES=0 python test.py -opt opts/arcnn.yml -case div2k_qf10
 ```
 
-## 6. Results
+## 6. Result
 
 - [[Numeric results]](https://github.com/RyanXingQL/PowerQE/wiki/Results)
 - [[Pre-trained models]](https://github.com/RyanXingQL/PowerQE/releases)
