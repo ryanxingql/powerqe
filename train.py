@@ -71,13 +71,14 @@ def cal_state(batch_size_per_gpu, num_gpus, num_samples, enlarge_ratio, num_iter
     niter_per_epoch = math.ceil(enlarge_num_samples_pe / bs_per_epoch_all_gpu)  # also batch num
     num_epochs = math.ceil(num_iters / niter_per_epoch)
     done_num_epochs = done_num_iters // niter_per_epoch
+    done_iter_this_epoch = done_num_iters % niter_per_epoch
     msg = (
         f'data-loader for training\n'
         f'[{num_samples}] training samples in total.\n'
         f'[{num_epochs}] epochs in total, [{done_num_epochs}] epochs finished.\n'
         f'[{num_iters}] iterations in total, [{done_num_iters}] iterations finished.'
     )
-    return done_num_epochs, msg
+    return done_iter_this_epoch, done_num_epochs, msg
 
 
 def main():
@@ -120,6 +121,7 @@ def main():
     opts_ = opts_dict['algorithm']['train']['niter']
     niter_lst = list(map(int, opts_['niter']))
     niter_name_lst = opts_['name']
+    if_75 = True if ('if_75' in opts_) and opts_['if_75'] else False
     num_stage = len(niter_lst)
     end_niter_lst = [sum(niter_lst[:is_]) for is_ in range(1, num_stage + 1)]
     niter = end_niter_lst[-1]  # all stages
@@ -150,7 +152,7 @@ def main():
     done_niter = alg.done_niter
     opts_dict_ = dict(batch_size_per_gpu=bs_pg, num_gpus=num_gpu, num_samples=num_samples_train,
                       enlarge_ratio=enlarge_ratio, num_iters=niter, done_num_iters=done_niter)
-    done_num_epochs, msg = cal_state(**opts_dict_)
+    done_iter_this_epoch, done_num_epochs, msg = cal_state(**opts_dict_)
     logger.info(msg)
 
     # Create timer
@@ -254,21 +256,32 @@ def main():
                     ((done_niter == inter_val) or (done_niter == alg.done_niter)):
                 alg.add_graph(writer=tb_writer, data=train_data['lq'].cuda())
 
-            # Check the current stage
+            # Determine whether to exit or not
 
-            if done_niter == niter:
-                if_all_over = True  # no more training after the validation
-                break  # leave the data-fetcher
+            if done_niter >= niter:
+                if not if_75:  # done_niter == niter
+                    if_all_over = True  # no more training after the upper validation
+                    break  # leave the training data fetcher, but still in the training-validation loop
+                else:
+                    if _if_val and (best_val_perfrm['iter_lst'][0] / done_niter <= 0.75):
+                        if_all_over = True
+                        print('qualified for exit.')
+                        break
+
+            # Figure out the current stage
 
             if_val_end_of_stage = False
-            stage_now = niter_name_lst[0]
-            end_niter_this_stage = 0
-            for is_, end_niter in enumerate(end_niter_lst):
-                if done_niter < end_niter:
-                    stage_now = niter_name_lst[is_]
-                    end_niter_this_stage = end_niter
-                    if_val_end_of_stage = True if done_niter == (end_niter - 1) else False
-                    break
+            if done_niter < niter:
+                stage_now = niter_name_lst[0]
+                end_niter_this_stage = 0
+                for is_, end_niter in enumerate(end_niter_lst):
+                    if done_niter < end_niter:
+                        stage_now = niter_name_lst[is_]
+                        end_niter_this_stage = end_niter
+                        if_val_end_of_stage = True if done_niter == (end_niter - 1) else False
+                        break
+            else:
+                stage_now = niter_name_lst[-1]  # keep using the optim/scheduler of the last stage when training
 
             # Train one batch/iteration
 
@@ -292,9 +305,12 @@ def main():
                 et = timer.get_sum_inter() / 3600
                 timer.start_record()
 
-                eta = used_time / inter_print * (niter - done_niter) / 3600
-                msg = (f'{stage_now} | iter [{done_niter}]/{end_niter_this_stage}/{niter} | '
-                       f'eta/et: [{eta:.1f}]/{et:.1f} h | ' + msg)
+                if done_niter < niter:
+                    eta = used_time / inter_print * (niter - done_niter) / 3600
+                    msg = (f'{stage_now} | iter [{done_niter}]/{end_niter_this_stage}/{niter} | '
+                           f'eta/et: [{eta:.1f}]/{et:.1f} h | ' + msg)
+                else:
+                    msg = (f'automatically stop if qualified | iter [{done_niter}]/{niter} | ' + msg)
                 logger.info(msg)
 
                 if rank == 0:
