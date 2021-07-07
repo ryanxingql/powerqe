@@ -1,6 +1,6 @@
 # PowerQE: An Open Framework for Quality Enhancement of Compressed Visual Data
 
-:running: An **unified** framework for training/testing blind/non-blind fidelity/perception-oriented **quality enhancement** approaches for compressed images/videos based on PyTorch.
+:muscle: An **unified** framework for training/testing blind/non-blind fidelity/perception-oriented **quality enhancement** approaches for compressed images/videos based on PyTorch.
 
 :hammer_and_wrench: Support now:
 
@@ -13,15 +13,20 @@
 - [ ] [MFQE](https://github.com/RyanXingQL/MFQEv2.0)
 - [ ] [STDF](https://github.com/RyanXingQL/STDF-PyTorch)
 
-Current version: [v2]; archived version: [[v1]](https://github.com/RyanXingQL/PowerQE/tree/ea903fd0d04154c95b321b5100540249856bd44b)
-
-This repository adopts [PythonUtils](https://github.com/RyanXingQL/PythonUtils) as a sub-module. You may clone PowerQE by:
+:rocket: Clone: this repository adopts [PythonUtils](https://github.com/RyanXingQL/PythonUtils) as a sub-module. You may clone PowerQE by:
 
 ```bash
 git clone git@github.com:RyanXingQL/PowerQE.git --depth=1 --recursive
 ```
 
+:notebook: [[Wiki]](https://github.com/RyanXingQL/PowerQE/wiki)
+
 :e-mail: Feel free to contact: `ryanxingql@gmail.com`.
+
+## 0. Archive
+
+- v2: support full-resolution DIV2K data-set.
+- [v1](https://github.com/RyanXingQL/PowerQE/tree/ea903fd0d04154c95b321b5100540249856bd44b): support down-sampled DIV2K data-set.
 
 ## 1. Dependencies
 
@@ -142,19 +147,13 @@ conda activate pqe && CUDA_VISIBLE_DEVICES=0 python test.py -opt opts/arcnn.yml 
 
 ## 6. Results
 
-[[Numeric results]](https://github.com/RyanXingQL/PowerQE/wiki/Results)
-
-[[Pre-trained models]](https://github.com/RyanXingQL/PowerQE/releases)
-
-[[Tensorboard figures]](https://github.com/RyanXingQL/PowerQE/issues/2)
+- [[Numeric results]](https://github.com/RyanXingQL/PowerQE/wiki/Results)
+- [[Pre-trained models]](https://github.com/RyanXingQL/PowerQE/releases)
+- [[Tensorboard figures]](https://github.com/RyanXingQL/PowerQE/issues/2)
 
 If you want to use down-sampled DIV2K data-set and corresponding pre-trained models, check PowerQE [v1](https://github.com/RyanXingQL/PowerQE/tree/ea903fd0d04154c95b321b5100540249856bd44b).
 
-## 7. Learn More
-
-If you want to learn more about this repository, check [here](https://github.com/RyanXingQL/PowerQE/wiki/Learn-More).
-
-## 8. License
+## 7. License
 
 If you find this repository helpful, you may cite:
 
