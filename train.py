@@ -69,7 +69,7 @@ def cal_state(batch_size_per_gpu, num_gpus, num_samples, enlarge_ratio, num_iter
     bs_per_epoch_all_gpu = batch_size_per_gpu * num_gpus
     enlarge_num_samples_pe = num_samples * enlarge_ratio
     niter_per_epoch = math.ceil(enlarge_num_samples_pe / bs_per_epoch_all_gpu)  # also batch num
-    num_epochs = math.ceil(num_iters / niter_per_epoch)
+    num_epochs = math.floor(num_iters / niter_per_epoch)
     done_num_epochs = done_num_iters // niter_per_epoch
     done_iter_this_epoch = done_num_iters % niter_per_epoch
     msg = (
@@ -179,6 +179,8 @@ def main():
 
         train_sampler.set_epoch(done_num_epochs)  # shuffle distributed sub-samplers before each epoch
         train_fetcher.reset()
+        if done_niter == alg.done_niter:
+            [train_fetcher.next() for _ in range(done_iter_this_epoch)]  # skip done training data
         train_data = train_fetcher.next()  # fetch the first batch
 
         while train_data is not None:
