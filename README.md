@@ -147,11 +147,8 @@ conda activate pqe && CUDA_VISIBLE_DEVICES=0 python test.py -opt opts/arcnn.yml 
 
 ## 6. Result
 
-- [[Numeric results]](https://github.com/RyanXingQL/PowerQE/wiki/Results)
-- [[Pre-trained models]](https://github.com/RyanXingQL/PowerQE/releases)
-- [[Tensorboard figures]](https://github.com/RyanXingQL/PowerQE/issues/2)
-
-If you want to use down-sampled DIV2K data-set and corresponding pre-trained models, check PowerQE [v1](https://github.com/RyanXingQL/PowerQE/tree/ea903fd0d04154c95b321b5100540249856bd44b).
+- [[Numeric result]](https://github.com/RyanXingQL/PowerQE/wiki/Result)
+- [[Pre-trained model]](https://github.com/RyanXingQL/PowerQE/releases)
 
 ## 7. License
 
