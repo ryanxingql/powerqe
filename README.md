@@ -152,6 +152,8 @@ conda activate pqe && CUDA_VISIBLE_DEVICES=0 python test.py -opt opts/arcnn.yml 
 
 ## 7. License
 
+We adopt Apache License v2.0.
+
 If you find this repository helpful, you may cite:
 
 ```tex
