@@ -84,9 +84,6 @@ def cal_state(batch_size_per_gpu, num_gpus, num_samples, enlarge_ratio, num_iter
 def main():
     opts_dict, opts_aux_dict = arg2dict()
 
-    torch.backends.cudnn.benchmark = True if opts_dict['algorithm']['train']['if_cudnn'] else False
-    torch.backends.cudnn.deterministic = True if not opts_dict['algorithm']['train']['if_cudnn'] else False
-
     num_gpu = torch.cuda.device_count()
     log_paras = dict(num_gpu=num_gpu)
     opts_dict.update(log_paras)
@@ -95,6 +92,9 @@ def main():
     rank = opts_aux_dict['rank']
     if if_dist:
         init_dist(local_rank=rank, backend='nccl')
+
+    torch.backends.cudnn.benchmark = True if opts_dict['algorithm']['train']['if_cudnn'] else False
+    torch.backends.cudnn.deterministic = True if not opts_dict['algorithm']['train']['if_cudnn'] else False
 
     # Create logger
 
