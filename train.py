@@ -180,7 +180,11 @@ def main():
         train_sampler.set_epoch(done_num_epochs)  # shuffle distributed sub-samplers before each epoch
         train_fetcher.reset()
         if done_niter == alg.done_niter:
+            if done_iter_this_epoch > 0:
+                logger.info(f'skip {done_iter_this_epoch} iteration(s) to meet the pre-trained status...')
             [train_fetcher.next() for _ in range(done_iter_this_epoch)]  # skip done training data
+            if done_iter_this_epoch > 0:
+                logger.info(f'done.')
         train_data = train_fetcher.next()  # fetch the first batch
 
         while train_data is not None:
