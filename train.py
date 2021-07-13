@@ -276,7 +276,7 @@ def main():
                 else:
                     if _if_val:
                         best_iter_ = best_val_perfrm['iter_lst'][0]
-                        start_niter_lst = [0] + end_niter_lst
+                        start_niter_lst = [0] + end_niter_lst[:-1]
                         last_stage_start_iter = start_niter_lst[-1]
                         last_stage_niter = end_niter_lst[-1] - start_niter_lst[-1]
                         if best_iter_ < last_stage_start_iter:
