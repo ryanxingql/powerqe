@@ -276,15 +276,14 @@ def main():
                 else:
                     if _if_val:
                         best_iter_ = best_val_perfrm['iter_lst'][0]
-                        start_niter_lst = [0] + end_niter_lst[:-1]
-                        last_stage_start_iter = start_niter_lst[-1]
-                        last_stage_niter = end_niter_lst[-1] - start_niter_lst[-1]
+                        last_stage_start_iter = 0 if len(end_niter_lst) == 1 else end_niter_lst[-2]
+                        last_stage_niter = niter_lst[-1]
                         if best_iter_ < last_stage_start_iter:
-                            print('the best iter is not in the last stage, exit.')
+                            logger.info('the best iter is not in the last stage, exit.')
                             if_all_over = True
                             break
                         elif (best_iter_ - last_stage_start_iter) / last_stage_niter <= 0.75:
-                            print('fluctuate enough, exit.')
+                            logger.info('fluctuate enough, exit.')
                             if_all_over = True
                             break
 
