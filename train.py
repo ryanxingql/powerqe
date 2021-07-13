@@ -263,16 +263,30 @@ def main():
                 alg.add_graph(writer=tb_writer, data=train_data['lq'].cuda())
 
             # Determine whether to exit or not
-
+            # # done_niter < niter: keep training.
+            # # done_niter >= niter, if_75 == False: exit.
+            # # done_niter >= niter, if_75 == True, no valid in this step: keep training.
+            # # done_niter >= niter, if_75 == True, valid in this step, best iter not in the last stage: exit.
+            # # done_niter >= niter, if_75 == True, valid in this step, best iter in the last stage, (best_iter - start_iter_of_the_last_stage) / niter_of_the_last_stage <= 0.75: exit.
+            # # else: keep training.
             if done_niter >= niter:
                 if not if_75:  # done_niter == niter
                     if_all_over = True  # no more training after the upper validation
                     break  # leave the training data fetcher, but still in the training-validation loop
                 else:
-                    if _if_val and (best_val_perfrm['iter_lst'][0] / done_niter <= 0.75):
-                        if_all_over = True
-                        print('qualified for exit.')
-                        break
+                    if _if_val:
+                        best_iter_ = best_val_perfrm['iter_lst'][0]
+                        start_niter_lst = [0] + end_niter_lst
+                        last_stage_start_iter = start_niter_lst[-1]
+                        last_stage_niter = end_niter_lst[-1] - start_niter_lst[-1]
+                        if best_iter_ < last_stage_start_iter:
+                            print('the best iter is not in the last stage, exit.')
+                            if_all_over = True
+                            break
+                        elif (best_iter_ - last_stage_start_iter) / last_stage_niter <= 0.75:
+                            print('fluctuate enough, exit.')
+                            if_all_over = True
+                            break
 
             # Figure out the current stage
 
@@ -316,7 +330,7 @@ def main():
                     msg = (f'{stage_now} | iter [{done_niter}]/{end_niter_this_stage}/{niter} | '
                            f'eta/et: [{eta:.1f}]/{et:.1f} h | ' + msg)
                 else:
-                    msg = (f'automatically stop if qualified | iter [{done_niter}]/{niter} | ' + msg)
+                    msg = (f'automatically exit if fluctuate enough | iter [{done_niter}]/{niter} | ' + msg)
                 logger.info(msg)
 
                 if rank == 0:
