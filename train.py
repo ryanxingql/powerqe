@@ -189,10 +189,10 @@ def main():
 
         while train_data is not None:
             # Validate
-            # done_niter == alg.done_niter == 0, if_test_baseline == True: test baseline (to be recorded at tb as step 0)
-            # done_niter == alg.done_niter != 0, if_keep_dir == False: test baseline and val (to be recorded at tb as step alg.done_niter)
-            # done_niter != alg.done_niter, done_niter % inter_val == 0: val
-            # done_niter != alg.done_niter, if_val_end_of_stage == True: val
+            # # done_niter == alg.done_niter == 0, if_test_baseline == True: test baseline (to be recorded at tb as step 0)
+            # # done_niter == alg.done_niter != 0, if_keep_dir == False: test baseline and val (to be recorded at tb as step alg.done_niter)
+            # # done_niter != alg.done_niter, done_niter % inter_val == 0: val
+            # # done_niter != alg.done_niter, if_val_end_of_stage == True: val
             _if_test_baseline = False
             _if_val = False
             if done_niter == alg.done_niter:
