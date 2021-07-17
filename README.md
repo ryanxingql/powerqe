@@ -149,6 +149,7 @@ conda activate pqe && CUDA_VISIBLE_DEVICES=0 python test.py -opt opts/arcnn.yml 
 
 - [[Numeric result]](https://github.com/RyanXingQL/PowerQE/wiki/Result)
 - [[Pre-trained model]](https://github.com/RyanXingQL/PowerQE/releases)
+- [[Validation curve in training]](https://github.com/RyanXingQL/PowerQE/issues/2)
 
 ## 7. License
 
