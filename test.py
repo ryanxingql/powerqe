@@ -37,9 +37,6 @@ def main():
 
     opts_dict, _ = arg2dict()
 
-    num_gpu = torch.cuda.device_count()
-    assert num_gpu == 1, 'ONLY SUPPORT SINGLE-GPU TEST!'
-
     img_save_folder, logger = mkdir_and_create_logger(opts_dict, rank=0)
 
     # record hyper-params
