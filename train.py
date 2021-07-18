@@ -282,7 +282,7 @@ def main():
                             logger.info('the best iter is not in the last stage, exit.')
                             if_all_over = True
                             break
-                        elif (best_iter_ - last_stage_start_iter) / last_stage_niter <= 0.75:
+                        elif (best_iter_ - last_stage_start_iter) / (done_niter - last_stage_start_iter) <= 0.75:
                             logger.info('fluctuate enough, exit.')
                             if_all_over = True
                             break
