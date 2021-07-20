@@ -8,7 +8,7 @@ from utils import BaseAlg, CUDATimer, Recorder, tensor2im
 
 class RBQEAlgorithm(BaseAlg):
     def __init__(self, opts_dict, if_train, if_dist):
-        model_cls = getattr(net, 'RBQEModel')  # !!!
+        model_cls = getattr(net, 'RBQEModel')  # FIXME
         super().__init__(opts_dict=opts_dict, model_cls=model_cls, if_train=if_train, if_dist=if_dist)
 
     def accum_gradient(self, module, stage, group, data, inter_step, additional):
