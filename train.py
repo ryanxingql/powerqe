@@ -1,14 +1,33 @@
+import argparse
 import math
 import shutil
 from pathlib import Path
 
+import yaml
 import torch
 from torch.utils.tensorboard import SummaryWriter
 
 import dataset
 import algorithm
-from utils import mkdir_archived, dict2str, DistSampler, create_dataloader, arg2dict, \
-    CPUPrefetcher, init_dist, set_random_seed, CUDATimer, create_logger
+from utils import mkdir_archived, dict2str, DistSampler, create_dataloader, CPUPrefetcher, init_dist, set_random_seed, \
+    CUDATimer, create_logger
+from utils.individual.plot_curve_from_log import main as plt_curve
+
+
+def arg2dict():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--opt', '-opt', type=str, default='opts/opt.yml', help='path to option YAML file.')
+    parser.add_argument('--case', '-case', type=str, default='v1', help='specified case in YAML.')
+    parser.add_argument('--note', '-note', type=str, default='hello world!', help='useless; just FYI.')
+    parser.add_argument('--delete_archive', '-del', action='store_true', help='delete archived experimental directories.')
+    parser.add_argument('--local_rank', type=int, default=0, help='reserved for DDP.')
+    args = parser.parse_args()
+
+    with open(args.opt, 'r') as fp:
+        opts_dict = yaml.load(fp, Loader=yaml.FullLoader)
+        opts_dict = opts_dict[args.case]
+
+    return opts_dict, args.delete_archive, args.local_rank
 
 
 def mkdir_and_create_logger(opts_dict, if_del_arc=False, rank=0):
@@ -82,7 +101,7 @@ def cal_state(batch_size_per_gpu, num_gpus, num_samples, enlarge_ratio, num_iter
 
 
 def main():
-    opts_dict, opts_aux_dict = arg2dict()
+    opts_dict, if_del_arc, rank = arg2dict()
 
     num_gpu = torch.cuda.device_count()
     log_paras = dict(num_gpu=num_gpu)
@@ -107,8 +126,7 @@ def main():
 
     # Record hyper-params
 
-    msg = opts_aux_dict['note']
-    msg += f'\nhyper parameters\n{dict2str(opts_dict).rstrip()}'  # remove \n from dict2str()
+    msg = f'hyper parameters\n{dict2str(opts_dict).rstrip()}'  # remove \n from dict2str()
     logger.info(msg)
 
     # Enlarge niter

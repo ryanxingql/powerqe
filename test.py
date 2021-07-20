@@ -1,10 +1,25 @@
+import argparse
 from pathlib import Path
 
+import yaml
 import torch
 
 import dataset
 import algorithm
-from utils import create_logger, arg2dict, dict2str, create_dataloader, CPUPrefetcher, CUDATimer
+from utils import create_logger, dict2str, create_dataloader, CPUPrefetcher, CUDATimer
+
+
+def arg2dict():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--opt', '-opt', type=str, default='opts/opt.yml', help='path to option YAML file.')
+    parser.add_argument('--case', '-case', type=str, default='v1', help='specified case in YAML.')
+    args = parser.parse_args()
+
+    with open(args.opt, 'r') as fp:
+        opts_dict = yaml.load(fp, Loader=yaml.FullLoader)
+        opts_dict = opts_dict[args.case]
+
+    return opts_dict
 
 
 def mkdir_and_create_logger(opts_dict, rank):
@@ -35,7 +50,7 @@ def main():
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.deterministic = True
 
-    opts_dict, _ = arg2dict()
+    opts_dict = arg2dict()
 
     img_save_folder, logger = mkdir_and_create_logger(opts_dict, rank=0)
 
