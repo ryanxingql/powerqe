@@ -3,8 +3,5 @@ __pycache__/
 .vscode/
 .idea/
 
-exp/
-data/
-
-*.csv
-*.so
+/exp/
+/data/
