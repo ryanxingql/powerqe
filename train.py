@@ -64,7 +64,7 @@ def mkdir_and_create_logger(opts_dict, if_del_arc=False, rank=0):
     tb_writer = SummaryWriter(log_dir) if rank == 0 else None
 
     ckp_save_path_pre = log_dir / 'ckp_'
-    return logger, tb_writer, ckp_save_path_pre, if_warn_
+    return logger, tb_writer, ckp_save_path_pre, if_warn_, log_path
 
 
 def create_data_fetcher(if_train=False, seed=None, num_gpu=None, rank=None, ds_type=None, ds_opts=None,
@@ -108,7 +108,6 @@ def main():
     opts_dict.update(log_paras)
 
     if_dist = True if num_gpu > 1 else False
-    rank = opts_aux_dict['rank']
     if if_dist:
         init_dist(local_rank=rank, backend='nccl')
 
@@ -117,8 +116,7 @@ def main():
 
     # Create logger
 
-    if_del_arc = opts_aux_dict['if_del_arc']
-    logger, tb_writer, ckp_save_path_pre, if_warn_ = mkdir_and_create_logger(opts_dict, if_del_arc=if_del_arc,
+    logger, tb_writer, ckp_save_path_pre, if_warn_, log_path = mkdir_and_create_logger(opts_dict, if_del_arc=if_del_arc,
                                                                              rank=rank)
 
     if if_warn_:
@@ -139,7 +137,7 @@ def main():
     opts_ = opts_dict['algorithm']['train']['niter']
     niter_lst = list(map(int, opts_['niter']))
     niter_name_lst = opts_['name']
-    if_75 = True if ('if_75' in opts_) and opts_['if_75'] else False
+    if_manually_stop = True if ('if_manually_stop' in opts_) and opts_['if_manually_stop'] else False
     num_stage = len(niter_lst)
     end_niter_lst = [sum(niter_lst[:is_]) for is_ in range(1, num_stage + 1)]
     niter = end_niter_lst[-1]  # all stages
@@ -273,6 +271,9 @@ def main():
                     for tb_write_dict in tb_write_dict_lst:
                         tb_writer.add_scalar(tb_write_dict['tag'], tb_write_dict['scalar'], done_niter)
 
+                    for criteria in opts_dict['algorithm']['val']['criterion']:
+                        plt_curve(log_path, criteria, log_path.parent, if_timestamp=False)
+
             # Show network structure
 
             if (rank == 0) and \
@@ -281,29 +282,9 @@ def main():
                 alg.add_graph(writer=tb_writer, data=train_data['lq'].cuda())
 
             # Determine whether to exit or not
-            # # done_niter < niter: keep training.
-            # # done_niter >= niter, if_75 == False: exit.
-            # # done_niter >= niter, if_75 == True, no valid in this step: keep training.
-            # # done_niter >= niter, if_75 == True, valid in this step, best iter not in the last stage: exit.
-            # # done_niter >= niter, if_75 == True, valid in this step, best iter in the last stage, (best_iter - start_iter_of_the_last_stage) / niter_of_the_last_stage <= 0.75: exit.
-            # # else: keep training.
-            if done_niter >= niter:
-                if not if_75:  # done_niter == niter
-                    if_all_over = True  # no more training after the upper validation
-                    break  # leave the training data fetcher, but still in the training-validation loop
-                else:
-                    if _if_val:
-                        best_iter_ = best_val_perfrm['iter_lst'][0]
-                        last_stage_start_iter = 0 if len(end_niter_lst) == 1 else end_niter_lst[-2]
-                        last_stage_niter = niter_lst[-1]
-                        if best_iter_ < last_stage_start_iter:
-                            logger.info('the best iter is not in the last stage, exit.')
-                            if_all_over = True
-                            break
-                        elif (best_iter_ - last_stage_start_iter) / (done_niter - last_stage_start_iter) <= 0.75:
-                            logger.info('fluctuate enough, exit.')
-                            if_all_over = True
-                            break
+            if done_niter >= niter and (not if_manually_stop):
+                if_all_over = True  # no more training after the upper validation
+                break  # leave the training data fetcher, but still in the training-validation loop
 
             # Figure out the current stage
 
@@ -347,7 +328,7 @@ def main():
                     msg = (f'{stage_now} | iter [{done_niter}]/{end_niter_this_stage}/{niter} | '
                            f'eta/et: [{eta:.1f}]/{et:.1f} h | ' + msg)
                 else:
-                    msg = (f'automatically exit if fluctuate enough | iter [{done_niter}]/{niter} | ' + msg)
+                    msg = (f'never stop | iter [{done_niter}]/{niter} | ' + msg)
                 logger.info(msg)
 
                 if rank == 0:
