@@ -7,7 +7,7 @@ div2k_qf10:
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/jpeg/qf10/
+        lq_path: data/div2k/jpeg/qf10/  # FIXME
         max_num: 700
         start_idx: 0
 
@@ -20,15 +20,15 @@ div2k_qf10:
             if_rot: True
 
       enlarge_ratio: 100
-      bs_pg: 8  # batch size per gpu  # !!!
-      nworker_pg: 8  # !!!
+      bs_pg: 8  # batch size per gpu  # FIXME
+      nworker_pg: 8  # FIXME
 
     val:
       ds_type: ImTestSet
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/jpeg/qf10/
+        lq_path: data/div2k/jpeg/qf10/  # FIXME
         max_num: 100
         start_idx: 700
 
@@ -48,7 +48,7 @@ div2k_qf10:
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/jpeg/qf10/
+        lq_path: data/div2k/jpeg/qf10/  # FIXME
         max_num: 100
         start_idx: 800
 
@@ -65,7 +65,7 @@ div2k_qf10:
 
   algorithm:
     name: ESRGANAlgorithm
-    exp_name: esrgan_div2k_qf10
+    exp_name: esrgan_div2k_qf10  # FIXME
 
     network:
       generator:
@@ -79,14 +79,14 @@ div2k_qf10:
         ninc: 3
         nf: 16  # dis should be simpler than gen
         nhidc: 64
-        gt_w: 128  # !!!
-        gt_h: 128  # !!!
+        gt_w: 128  # FIXME
+        gt_h: 128  # FIXME
       
     train:
       seed: 7
-      if_cudnn: True  # !!!
+      if_cudnn: True  # FIXME
       if_show_graph: True
-      real_bs_pg: 8  # multiple backwards -> step once  # !!!
+      real_bs_pg: 8  # multiple backwards -> step once  # FIXME
 
       load_state:
         if_load: True
@@ -100,8 +100,9 @@ div2k_qf10:
       inter_val: 5000
 
       niter:
+        if_manually_stop: True  # never stop training  # FIXME
         name: [warmup, run]
-        niter: [!!float 4e+5, !!float 4e+5]
+        niter: [!!float 4e+5, !!float 4e+5]  # FIXME
 
       loss:
         warmup:
@@ -205,7 +206,7 @@ div2k_qf10:
             if_cuda: True
             if_spatial: False  # return a score or a map of scores
 
-div2k_qp42:
+div2k_qf20:
   note: 2 cards.
 
   dataset:
@@ -214,7 +215,7 @@ div2k_qp42:
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/bpg/qp42/
+        lq_path: data/div2k/jpeg/qf20/  # FIXME
         max_num: 700
         start_idx: 0
 
@@ -227,15 +228,15 @@ div2k_qp42:
             if_rot: True
 
       enlarge_ratio: 100
-      bs_pg: 8  # batch size per gpu  # !!!
-      nworker_pg: 8  # !!!
+      bs_pg: 8  # batch size per gpu  # FIXME
+      nworker_pg: 8  # FIXME
 
     val:
       ds_type: ImTestSet
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/bpg/qp42/
+        lq_path: data/div2k/jpeg/qf20/  # FIXME
         max_num: 100
         start_idx: 700
 
@@ -255,7 +256,7 @@ div2k_qp42:
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/bpg/qp42/
+        lq_path: data/div2k/jpeg/qf20/  # FIXME
         max_num: 100
         start_idx: 800
 
@@ -272,7 +273,7 @@ div2k_qp42:
 
   algorithm:
     name: ESRGANAlgorithm
-    exp_name: esrgan_div2k_qp42
+    exp_name: esrgan_div2k_qf20  # FIXME
 
     network:
       generator:
@@ -286,14 +287,14 @@ div2k_qp42:
         ninc: 3
         nf: 16  # dis should be simpler than gen
         nhidc: 64
-        gt_w: 128  # !!!
-        gt_h: 128  # !!!
+        gt_w: 128  # FIXME
+        gt_h: 128  # FIXME
 
     train:
       seed: 7
-      if_cudnn: True  # !!!
+      if_cudnn: True  # FIXME
       if_show_graph: True
-      real_bs_pg: 8  # multiple backwards -> step once  # !!!
+      real_bs_pg: 8  # multiple backwards -> step once  # FIXME
 
       load_state:
         if_load: True
@@ -307,8 +308,1673 @@ div2k_qp42:
       inter_val: 5000
 
       niter:
+        if_manually_stop: True  # never stop training  # FIXME
         name: [warmup, run]
-        niter: [!!float 4e+5, !!float 4e+5]
+        niter: [!!float 4e+5, !!float 4e+5]  # FIXME
+
+      loss:
+        warmup:
+          gen:
+            CharbonnierLoss:
+              weight: 1.
+              opts:
+                eps: !!float 1e-6
+
+        run:
+          gen:
+            CharbonnierLoss:
+              weight: !!float 1e-2
+              opts:
+                eps: !!float 1e-6
+
+            VGGLoss:
+              weight: 1.
+              opts:
+                vgg_type: vgg19
+                layer_weights:
+                  conv5_4: 1.
+                use_input_norm: True
+                perceptual_weight: 1.
+                style_weight: 0.
+
+            RelativisticGANLoss:  # for dis and also gen
+              weight: !!float 5e-3
+
+          dis:
+            RelativisticGANLoss:  # for dis and also gen
+              weight: 1.
+
+      optimizer:
+        warmup:
+          gen:
+            name: Adam
+            opts:
+              lr: !!float 2e-4
+              betas: [0.9, 0.999]
+
+        run:
+          gen:
+            name: Adam
+            opts:
+              lr: !!float 1e-4
+              betas: [0.9, 0.999]
+
+          dis:
+            name: Adam
+            opts:
+              lr: !!float 2e-4  # ttur: lr of dis is 2x lr of gen
+              betas: [0.9, 0.999]
+
+      scheduler:
+        if_sched: False
+
+        warmup:
+          gen: ~
+
+        run:
+          gen:
+            name: MultiStepLR
+            opts:
+              milestones: [200000,350000,450000,500000]  # .step() after each iter, not epoch
+              gamma: 0.5
+
+          dis: ~
+
+    val:
+      if_save_im: False
+
+      criterion:
+        PSNR:
+          if_focus: False
+          unit: dB
+          opts: ~
+
+        LPIPS:
+          if_focus: True
+          unit: (lpips)
+          opts:
+            net: alex
+            if_cuda: True
+            if_spatial: False
+
+    test:
+      if_save_im: True
+      if_return_each: False
+      ckp_load_path: ~  # default: exp/<exp_name>/ckp_first_best.pt
+
+      criterion:
+        PSNR:
+          unit: dB
+          opts: ~
+
+        LPIPS:
+          unit: (lpips)
+          opts:
+            net: alex
+            if_cuda: True
+            if_spatial: False  # return a score or a map of scores
+
+div2k_qf30:
+  note: 2 cards.
+
+  dataset:
+    train:
+      ds_type: ImTrainingSet
+
+      ds_opts:
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/jpeg/qf30/  # FIXME
+        max_num: 700
+        start_idx: 0
+
+        aug:
+          if_aug: True
+          opts:
+            gt_h: 128
+            gt_w: 128
+            if_flip: True
+            if_rot: True
+
+      enlarge_ratio: 100
+      bs_pg: 8  # batch size per gpu  # FIXME
+      nworker_pg: 8  # FIXME
+
+    val:
+      ds_type: ImTestSet
+
+      ds_opts:
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/jpeg/qf30/  # FIXME
+        max_num: 100
+        start_idx: 700
+
+        center_crop:
+          if_crop: False
+          opts:
+            h: ~
+            w: ~
+
+        padding:
+          if_pad: False
+          opts:
+            mul: ~
+
+    test:
+      ds_type: ImTestSet
+
+      ds_opts:
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/jpeg/qf30/  # FIXME
+        max_num: 100
+        start_idx: 800
+
+        center_crop:
+          if_crop: False
+          opts:
+            h: ~
+            w: ~
+
+        padding:
+          if_pad: False
+          opts:
+            mul: ~
+
+  algorithm:
+    name: ESRGANAlgorithm
+    exp_name: esrgan_div2k_qf30  # FIXME
+
+    network:
+      generator:
+        num_in_ch: 3
+        num_feat: 32
+        num_block: 8  # 23 originally. 30GB memory for bs=8 per gpu...
+        num_out_ch: 3
+        num_grow_ch: 16
+
+      discriminator:
+        ninc: 3
+        nf: 16  # dis should be simpler than gen
+        nhidc: 64
+        gt_w: 128  # FIXME
+        gt_h: 128  # FIXME
+
+    train:
+      seed: 7
+      if_cudnn: True  # FIXME
+      if_show_graph: True
+      real_bs_pg: 8  # multiple backwards -> step once  # FIXME
+
+      load_state:
+        if_load: True
+        opts:
+          if_load_optim: True
+          if_keep_dir: True
+          ckp_load_path: ~  # default: exp/<exp_name>/ckp_last.pt
+
+      if_test_baseline: True
+      inter_print: 100
+      inter_val: 5000
+
+      niter:
+        if_manually_stop: True  # never stop training  # FIXME
+        name: [warmup, run]
+        niter: [!!float 4e+5, !!float 4e+5]  # FIXME
+
+      loss:
+        warmup:
+          gen:
+            CharbonnierLoss:
+              weight: 1.
+              opts:
+                eps: !!float 1e-6
+
+        run:
+          gen:
+            CharbonnierLoss:
+              weight: !!float 1e-2
+              opts:
+                eps: !!float 1e-6
+
+            VGGLoss:
+              weight: 1.
+              opts:
+                vgg_type: vgg19
+                layer_weights:
+                  conv5_4: 1.
+                use_input_norm: True
+                perceptual_weight: 1.
+                style_weight: 0.
+
+            RelativisticGANLoss:  # for dis and also gen
+              weight: !!float 5e-3
+
+          dis:
+            RelativisticGANLoss:  # for dis and also gen
+              weight: 1.
+
+      optimizer:
+        warmup:
+          gen:
+            name: Adam
+            opts:
+              lr: !!float 2e-4
+              betas: [0.9, 0.999]
+
+        run:
+          gen:
+            name: Adam
+            opts:
+              lr: !!float 1e-4
+              betas: [0.9, 0.999]
+
+          dis:
+            name: Adam
+            opts:
+              lr: !!float 2e-4  # ttur: lr of dis is 2x lr of gen
+              betas: [0.9, 0.999]
+
+      scheduler:
+        if_sched: False
+
+        warmup:
+          gen: ~
+
+        run:
+          gen:
+            name: MultiStepLR
+            opts:
+              milestones: [200000,350000,450000,500000]  # .step() after each iter, not epoch
+              gamma: 0.5
+
+          dis: ~
+
+    val:
+      if_save_im: False
+
+      criterion:
+        PSNR:
+          if_focus: False
+          unit: dB
+          opts: ~
+
+        LPIPS:
+          if_focus: True
+          unit: (lpips)
+          opts:
+            net: alex
+            if_cuda: True
+            if_spatial: False
+
+    test:
+      if_save_im: True
+      if_return_each: False
+      ckp_load_path: ~  # default: exp/<exp_name>/ckp_first_best.pt
+
+      criterion:
+        PSNR:
+          unit: dB
+          opts: ~
+
+        LPIPS:
+          unit: (lpips)
+          opts:
+            net: alex
+            if_cuda: True
+            if_spatial: False  # return a score or a map of scores
+
+div2k_qf40:
+  note: 2 cards.
+
+  dataset:
+    train:
+      ds_type: ImTrainingSet
+
+      ds_opts:
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/jpeg/qf40/  # FIXME
+        max_num: 700
+        start_idx: 0
+
+        aug:
+          if_aug: True
+          opts:
+            gt_h: 128
+            gt_w: 128
+            if_flip: True
+            if_rot: True
+
+      enlarge_ratio: 100
+      bs_pg: 8  # batch size per gpu  # FIXME
+      nworker_pg: 8  # FIXME
+
+    val:
+      ds_type: ImTestSet
+
+      ds_opts:
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/jpeg/qf40/  # FIXME
+        max_num: 100
+        start_idx: 700
+
+        center_crop:
+          if_crop: False
+          opts:
+            h: ~
+            w: ~
+
+        padding:
+          if_pad: False
+          opts:
+            mul: ~
+
+    test:
+      ds_type: ImTestSet
+
+      ds_opts:
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/jpeg/qf40/  # FIXME
+        max_num: 100
+        start_idx: 800
+
+        center_crop:
+          if_crop: False
+          opts:
+            h: ~
+            w: ~
+
+        padding:
+          if_pad: False
+          opts:
+            mul: ~
+
+  algorithm:
+    name: ESRGANAlgorithm
+    exp_name: esrgan_div2k_qf40  # FIXME
+
+    network:
+      generator:
+        num_in_ch: 3
+        num_feat: 32
+        num_block: 8  # 23 originally. 30GB memory for bs=8 per gpu...
+        num_out_ch: 3
+        num_grow_ch: 16
+
+      discriminator:
+        ninc: 3
+        nf: 16  # dis should be simpler than gen
+        nhidc: 64
+        gt_w: 128  # FIXME
+        gt_h: 128  # FIXME
+
+    train:
+      seed: 7
+      if_cudnn: True  # FIXME
+      if_show_graph: True
+      real_bs_pg: 8  # multiple backwards -> step once  # FIXME
+
+      load_state:
+        if_load: True
+        opts:
+          if_load_optim: True
+          if_keep_dir: True
+          ckp_load_path: ~  # default: exp/<exp_name>/ckp_last.pt
+
+      if_test_baseline: True
+      inter_print: 100
+      inter_val: 5000
+
+      niter:
+        if_manually_stop: True  # never stop training  # FIXME
+        name: [warmup, run]
+        niter: [!!float 4e+5, !!float 4e+5]  # FIXME
+
+      loss:
+        warmup:
+          gen:
+            CharbonnierLoss:
+              weight: 1.
+              opts:
+                eps: !!float 1e-6
+
+        run:
+          gen:
+            CharbonnierLoss:
+              weight: !!float 1e-2
+              opts:
+                eps: !!float 1e-6
+
+            VGGLoss:
+              weight: 1.
+              opts:
+                vgg_type: vgg19
+                layer_weights:
+                  conv5_4: 1.
+                use_input_norm: True
+                perceptual_weight: 1.
+                style_weight: 0.
+
+            RelativisticGANLoss:  # for dis and also gen
+              weight: !!float 5e-3
+
+          dis:
+            RelativisticGANLoss:  # for dis and also gen
+              weight: 1.
+
+      optimizer:
+        warmup:
+          gen:
+            name: Adam
+            opts:
+              lr: !!float 2e-4
+              betas: [0.9, 0.999]
+
+        run:
+          gen:
+            name: Adam
+            opts:
+              lr: !!float 1e-4
+              betas: [0.9, 0.999]
+
+          dis:
+            name: Adam
+            opts:
+              lr: !!float 2e-4  # ttur: lr of dis is 2x lr of gen
+              betas: [0.9, 0.999]
+
+      scheduler:
+        if_sched: False
+
+        warmup:
+          gen: ~
+
+        run:
+          gen:
+            name: MultiStepLR
+            opts:
+              milestones: [200000,350000,450000,500000]  # .step() after each iter, not epoch
+              gamma: 0.5
+
+          dis: ~
+
+    val:
+      if_save_im: False
+
+      criterion:
+        PSNR:
+          if_focus: False
+          unit: dB
+          opts: ~
+
+        LPIPS:
+          if_focus: True
+          unit: (lpips)
+          opts:
+            net: alex
+            if_cuda: True
+            if_spatial: False
+
+    test:
+      if_save_im: True
+      if_return_each: False
+      ckp_load_path: ~  # default: exp/<exp_name>/ckp_first_best.pt
+
+      criterion:
+        PSNR:
+          unit: dB
+          opts: ~
+
+        LPIPS:
+          unit: (lpips)
+          opts:
+            net: alex
+            if_cuda: True
+            if_spatial: False  # return a score or a map of scores
+
+div2k_qf50:
+  note: 2 cards.
+
+  dataset:
+    train:
+      ds_type: ImTrainingSet
+
+      ds_opts:
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/jpeg/qf50/  # FIXME
+        max_num: 700
+        start_idx: 0
+
+        aug:
+          if_aug: True
+          opts:
+            gt_h: 128
+            gt_w: 128
+            if_flip: True
+            if_rot: True
+
+      enlarge_ratio: 100
+      bs_pg: 8  # batch size per gpu  # FIXME
+      nworker_pg: 8  # FIXME
+
+    val:
+      ds_type: ImTestSet
+
+      ds_opts:
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/jpeg/qf50/  # FIXME
+        max_num: 100
+        start_idx: 700
+
+        center_crop:
+          if_crop: False
+          opts:
+            h: ~
+            w: ~
+
+        padding:
+          if_pad: False
+          opts:
+            mul: ~
+
+    test:
+      ds_type: ImTestSet
+
+      ds_opts:
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/jpeg/qf50/  # FIXME
+        max_num: 100
+        start_idx: 800
+
+        center_crop:
+          if_crop: False
+          opts:
+            h: ~
+            w: ~
+
+        padding:
+          if_pad: False
+          opts:
+            mul: ~
+
+  algorithm:
+    name: ESRGANAlgorithm
+    exp_name: esrgan_div2k_qf50  # FIXME
+
+    network:
+      generator:
+        num_in_ch: 3
+        num_feat: 32
+        num_block: 8  # 23 originally. 30GB memory for bs=8 per gpu...
+        num_out_ch: 3
+        num_grow_ch: 16
+
+      discriminator:
+        ninc: 3
+        nf: 16  # dis should be simpler than gen
+        nhidc: 64
+        gt_w: 128  # FIXME
+        gt_h: 128  # FIXME
+
+    train:
+      seed: 7
+      if_cudnn: True  # FIXME
+      if_show_graph: True
+      real_bs_pg: 8  # multiple backwards -> step once  # FIXME
+
+      load_state:
+        if_load: True
+        opts:
+          if_load_optim: True
+          if_keep_dir: True
+          ckp_load_path: ~  # default: exp/<exp_name>/ckp_last.pt
+
+      if_test_baseline: True
+      inter_print: 100
+      inter_val: 5000
+
+      niter:
+        if_manually_stop: True  # never stop training  # FIXME
+        name: [warmup, run]
+        niter: [!!float 4e+5, !!float 4e+5]  # FIXME
+
+      loss:
+        warmup:
+          gen:
+            CharbonnierLoss:
+              weight: 1.
+              opts:
+                eps: !!float 1e-6
+
+        run:
+          gen:
+            CharbonnierLoss:
+              weight: !!float 1e-2
+              opts:
+                eps: !!float 1e-6
+
+            VGGLoss:
+              weight: 1.
+              opts:
+                vgg_type: vgg19
+                layer_weights:
+                  conv5_4: 1.
+                use_input_norm: True
+                perceptual_weight: 1.
+                style_weight: 0.
+
+            RelativisticGANLoss:  # for dis and also gen
+              weight: !!float 5e-3
+
+          dis:
+            RelativisticGANLoss:  # for dis and also gen
+              weight: 1.
+
+      optimizer:
+        warmup:
+          gen:
+            name: Adam
+            opts:
+              lr: !!float 2e-4
+              betas: [0.9, 0.999]
+
+        run:
+          gen:
+            name: Adam
+            opts:
+              lr: !!float 1e-4
+              betas: [0.9, 0.999]
+
+          dis:
+            name: Adam
+            opts:
+              lr: !!float 2e-4  # ttur: lr of dis is 2x lr of gen
+              betas: [0.9, 0.999]
+
+      scheduler:
+        if_sched: False
+
+        warmup:
+          gen: ~
+
+        run:
+          gen:
+            name: MultiStepLR
+            opts:
+              milestones: [200000,350000,450000,500000]  # .step() after each iter, not epoch
+              gamma: 0.5
+
+          dis: ~
+
+    val:
+      if_save_im: False
+
+      criterion:
+        PSNR:
+          if_focus: False
+          unit: dB
+          opts: ~
+
+        LPIPS:
+          if_focus: True
+          unit: (lpips)
+          opts:
+            net: alex
+            if_cuda: True
+            if_spatial: False
+
+    test:
+      if_save_im: True
+      if_return_each: False
+      ckp_load_path: ~  # default: exp/<exp_name>/ckp_first_best.pt
+
+      criterion:
+        PSNR:
+          unit: dB
+          opts: ~
+
+        LPIPS:
+          unit: (lpips)
+          opts:
+            net: alex
+            if_cuda: True
+            if_spatial: False  # return a score or a map of scores
+
+div2k_qp42:
+  note: 2 cards.
+
+  dataset:
+    train:
+      ds_type: ImTrainingSet
+
+      ds_opts:
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/bpg/qp42/  # FIXME
+        max_num: 700
+        start_idx: 0
+
+        aug:
+          if_aug: True
+          opts:
+            gt_h: 128
+            gt_w: 128
+            if_flip: True
+            if_rot: True
+
+      enlarge_ratio: 100
+      bs_pg: 8  # batch size per gpu  # FIXME
+      nworker_pg: 8  # FIXME
+
+    val:
+      ds_type: ImTestSet
+
+      ds_opts:
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/bpg/qp42/  # FIXME
+        max_num: 100
+        start_idx: 700
+
+        center_crop:
+          if_crop: False
+          opts:
+            h: ~
+            w: ~
+
+        padding:
+          if_pad: False
+          opts:
+            mul: ~
+
+    test:
+      ds_type: ImTestSet
+
+      ds_opts:
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/bpg/qp42/  # FIXME
+        max_num: 100
+        start_idx: 800
+
+        center_crop:
+          if_crop: False
+          opts:
+            h: ~
+            w: ~
+
+        padding:
+          if_pad: False
+          opts:
+            mul: ~
+
+  algorithm:
+    name: ESRGANAlgorithm
+    exp_name: esrgan_div2k_qp42  # FIXME
+
+    network:
+      generator:
+        num_in_ch: 3
+        num_feat: 32
+        num_block: 8  # 23 originally. 30GB memory for bs=8 per gpu...
+        num_out_ch: 3
+        num_grow_ch: 16
+
+      discriminator:
+        ninc: 3
+        nf: 16  # dis should be simpler than gen
+        nhidc: 64
+        gt_w: 128  # FIXME
+        gt_h: 128  # FIXME
+
+    train:
+      seed: 7
+      if_cudnn: True  # FIXME
+      if_show_graph: True
+      real_bs_pg: 8  # multiple backwards -> step once  # FIXME
+
+      load_state:
+        if_load: True
+        opts:
+          if_load_optim: True
+          if_keep_dir: True
+          ckp_load_path: ~  # default: exp/<exp_name>/ckp_last.pt
+
+      if_test_baseline: True
+      inter_print: 100
+      inter_val: 5000
+
+      niter:
+        if_manually_stop: True  # never stop training  # FIXME
+        name: [warmup, run]
+        niter: [!!float 4e+5, !!float 4e+5]  # FIXME
+
+      loss:
+        warmup:
+          gen:
+            CharbonnierLoss:
+              weight: 1.
+              opts:
+                eps: !!float 1e-6
+
+        run:
+          gen:
+            CharbonnierLoss:
+              weight: !!float 1e-2
+              opts:
+                eps: !!float 1e-6
+
+            VGGLoss:
+              weight: 1.
+              opts:
+                vgg_type: vgg19
+                layer_weights:
+                  conv5_4: 1.
+                use_input_norm: True
+                perceptual_weight: 1.
+                style_weight: 0.
+
+            RelativisticGANLoss:  # for dis and also gen
+              weight: !!float 5e-3
+
+          dis:
+            RelativisticGANLoss:  # for dis and also gen
+              weight: 1.
+
+      optimizer:
+        warmup:
+          gen:
+            name: Adam
+            opts:
+              lr: !!float 2e-4
+              betas: [0.9, 0.999]
+
+        run:
+          gen:
+            name: Adam
+            opts:
+              lr: !!float 1e-4
+              betas: [0.9, 0.999]
+
+          dis:
+            name: Adam
+            opts:
+              lr: !!float 2e-4  # ttur: lr of dis is 2x lr of gen
+              betas: [0.9, 0.999]
+
+      scheduler:
+        if_sched: False
+
+        warmup:
+          gen: ~
+
+        run:
+          gen:
+            name: MultiStepLR
+            opts:
+              milestones: [200000,350000,450000,500000]  # .step() after each iter, not epoch
+              gamma: 0.5
+
+          dis: ~
+
+    val:
+      if_save_im: False
+
+      criterion:
+        PSNR:
+          if_focus: False
+          unit: dB
+          opts: ~
+
+        LPIPS:
+          if_focus: True
+          unit: (lpips)
+          opts:
+            net: alex
+            if_cuda: True
+            if_spatial: False
+
+    test:
+      if_save_im: True
+      if_return_each: False
+      ckp_load_path: ~  # default: exp/<exp_name>/ckp_first_best.pt
+
+      criterion:
+        PSNR:
+          unit: dB
+          opts: ~
+
+        LPIPS:
+          unit: (lpips)
+          opts:
+            net: alex
+            if_cuda: True
+            if_spatial: False  # return a score or a map of scores
+
+div2k_qp37:
+  note: 2 card.
+
+  dataset:
+    train:
+      ds_type: ImTrainingSet
+
+      ds_opts:
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/bpg/qp37/  # FIXME
+        max_num: 700
+        start_idx: 0
+
+        aug:
+          if_aug: True
+          opts:
+            gt_h: 128
+            gt_w: 128
+            if_flip: True
+            if_rot: True
+
+      enlarge_ratio: 100
+      bs_pg: 8  # batch size per gpu  # FIXME
+      nworker_pg: 8  # FIXME
+
+    val:
+      ds_type: ImTestSet
+
+      ds_opts:
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/bpg/qp37/  # FIXME
+        max_num: 100
+        start_idx: 700
+
+        center_crop:
+          if_crop: False
+          opts:
+            h: ~
+            w: ~
+
+        padding:
+          if_pad: False
+          opts:
+            mul: ~
+
+    test:
+      ds_type: ImTestSet
+
+      ds_opts:
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/bpg/qp37/  # FIXME
+        max_num: 100
+        start_idx: 800
+
+        center_crop:
+          if_crop: False
+          opts:
+            h: ~
+            w: ~
+
+        padding:
+          if_pad: False
+          opts:
+            mul: ~
+
+  algorithm:
+    name: ESRGANAlgorithm
+    exp_name: esrgan_div2k_qp37  # FIXME
+
+    network:
+      generator:
+        num_in_ch: 3
+        num_feat: 32
+        num_block: 8  # 23 originally. 30GB memory for bs=8 per gpu...
+        num_out_ch: 3
+        num_grow_ch: 16
+
+      discriminator:
+        ninc: 3
+        nf: 16  # dis should be simpler than gen
+        nhidc: 64
+        gt_w: 128  # FIXME
+        gt_h: 128  # FIXME
+
+    train:
+      seed: 7
+      if_cudnn: True  # FIXME
+      if_show_graph: True
+      real_bs_pg: 8  # multiple backwards -> step once  # FIXME
+
+      load_state:
+        if_load: True
+        opts:
+          if_load_optim: True
+          if_keep_dir: True
+          ckp_load_path: ~  # default: exp/<exp_name>/ckp_last.pt
+
+      if_test_baseline: True
+      inter_print: 100
+      inter_val: 5000
+
+      niter:
+        if_manually_stop: True  # never stop training  # FIXME
+        name: [warmup, run]
+        niter: [!!float 4e+5, !!float 4e+5]  # FIXME
+
+      loss:
+        warmup:
+          gen:
+            CharbonnierLoss:
+              weight: 1.
+              opts:
+                eps: !!float 1e-6
+
+        run:
+          gen:
+            CharbonnierLoss:
+              weight: !!float 1e-2
+              opts:
+                eps: !!float 1e-6
+
+            VGGLoss:
+              weight: 1.
+              opts:
+                vgg_type: vgg19
+                layer_weights:
+                  conv5_4: 1.
+                use_input_norm: True
+                perceptual_weight: 1.
+                style_weight: 0.
+
+            RelativisticGANLoss:  # for dis and also gen
+              weight: !!float 5e-3
+
+          dis:
+            RelativisticGANLoss:  # for dis and also gen
+              weight: 1.
+
+      optimizer:
+        warmup:
+          gen:
+            name: Adam
+            opts:
+              lr: !!float 2e-4
+              betas: [0.9, 0.999]
+
+        run:
+          gen:
+            name: Adam
+            opts:
+              lr: !!float 1e-4
+              betas: [0.9, 0.999]
+
+          dis:
+            name: Adam
+            opts:
+              lr: !!float 2e-4  # ttur: lr of dis is 2x lr of gen
+              betas: [0.9, 0.999]
+
+      scheduler:
+        if_sched: False
+
+        warmup:
+          gen: ~
+
+        run:
+          gen:
+            name: MultiStepLR
+            opts:
+              milestones: [200000,350000,450000,500000]  # .step() after each iter, not epoch
+              gamma: 0.5
+
+          dis: ~
+
+    val:
+      if_save_im: False
+
+      criterion:
+        PSNR:
+          if_focus: False
+          unit: dB
+          opts: ~
+
+        LPIPS:
+          if_focus: True
+          unit: (lpips)
+          opts:
+            net: alex
+            if_cuda: True
+            if_spatial: False
+
+    test:
+      if_save_im: True
+      if_return_each: False
+      ckp_load_path: ~  # default: exp/<exp_name>/ckp_first_best.pt
+
+      criterion:
+        PSNR:
+          unit: dB
+          opts: ~
+
+        LPIPS:
+          unit: (lpips)
+          opts:
+            net: alex
+            if_cuda: True
+            if_spatial: False  # return a score or a map of scores
+
+div2k_qp32:
+  note: 2 cards.
+
+  dataset:
+    train:
+      ds_type: ImTrainingSet
+
+      ds_opts:
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/bpg/qp32/  # FIXME
+        max_num: 700
+        start_idx: 0
+
+        aug:
+          if_aug: True
+          opts:
+            gt_h: 128
+            gt_w: 128
+            if_flip: True
+            if_rot: True
+
+      enlarge_ratio: 100
+      bs_pg: 8  # batch size per gpu  # FIXME
+      nworker_pg: 8  # FIXME
+
+    val:
+      ds_type: ImTestSet
+
+      ds_opts:
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/bpg/qp32/  # FIXME
+        max_num: 100
+        start_idx: 700
+
+        center_crop:
+          if_crop: False
+          opts:
+            h: ~
+            w: ~
+
+        padding:
+          if_pad: False
+          opts:
+            mul: ~
+
+    test:
+      ds_type: ImTestSet
+
+      ds_opts:
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/bpg/qp32/  # FIXME
+        max_num: 100
+        start_idx: 800
+
+        center_crop:
+          if_crop: False
+          opts:
+            h: ~
+            w: ~
+
+        padding:
+          if_pad: False
+          opts:
+            mul: ~
+
+  algorithm:
+    name: ESRGANAlgorithm
+    exp_name: esrgan_div2k_qp32  # FIXME
+
+    network:
+      generator:
+        num_in_ch: 3
+        num_feat: 32
+        num_block: 8  # 23 originally. 30GB memory for bs=8 per gpu...
+        num_out_ch: 3
+        num_grow_ch: 16
+
+      discriminator:
+        ninc: 3
+        nf: 16  # dis should be simpler than gen
+        nhidc: 64
+        gt_w: 128  # FIXME
+        gt_h: 128  # FIXME
+
+    train:
+      seed: 7
+      if_cudnn: True  # FIXME
+      if_show_graph: True
+      real_bs_pg: 8  # multiple backwards -> step once  # FIXME
+
+      load_state:
+        if_load: True
+        opts:
+          if_load_optim: True
+          if_keep_dir: True
+          ckp_load_path: ~  # default: exp/<exp_name>/ckp_last.pt
+
+      if_test_baseline: True
+      inter_print: 100
+      inter_val: 5000
+
+      niter:
+        if_manually_stop: True  # never stop training  # FIXME
+        name: [warmup, run]
+        niter: [!!float 4e+5, !!float 4e+5]  # FIXME
+
+      loss:
+        warmup:
+          gen:
+            CharbonnierLoss:
+              weight: 1.
+              opts:
+                eps: !!float 1e-6
+
+        run:
+          gen:
+            CharbonnierLoss:
+              weight: !!float 1e-2
+              opts:
+                eps: !!float 1e-6
+
+            VGGLoss:
+              weight: 1.
+              opts:
+                vgg_type: vgg19
+                layer_weights:
+                  conv5_4: 1.
+                use_input_norm: True
+                perceptual_weight: 1.
+                style_weight: 0.
+
+            RelativisticGANLoss:  # for dis and also gen
+              weight: !!float 5e-3
+
+          dis:
+            RelativisticGANLoss:  # for dis and also gen
+              weight: 1.
+
+      optimizer:
+        warmup:
+          gen:
+            name: Adam
+            opts:
+              lr: !!float 2e-4
+              betas: [0.9, 0.999]
+
+        run:
+          gen:
+            name: Adam
+            opts:
+              lr: !!float 1e-4
+              betas: [0.9, 0.999]
+
+          dis:
+            name: Adam
+            opts:
+              lr: !!float 2e-4  # ttur: lr of dis is 2x lr of gen
+              betas: [0.9, 0.999]
+
+      scheduler:
+        if_sched: False
+
+        warmup:
+          gen: ~
+
+        run:
+          gen:
+            name: MultiStepLR
+            opts:
+              milestones: [200000,350000,450000,500000]  # .step() after each iter, not epoch
+              gamma: 0.5
+
+          dis: ~
+
+    val:
+      if_save_im: False
+
+      criterion:
+        PSNR:
+          if_focus: False
+          unit: dB
+          opts: ~
+
+        LPIPS:
+          if_focus: True
+          unit: (lpips)
+          opts:
+            net: alex
+            if_cuda: True
+            if_spatial: False
+
+    test:
+      if_save_im: True
+      if_return_each: False
+      ckp_load_path: ~  # default: exp/<exp_name>/ckp_first_best.pt
+
+      criterion:
+        PSNR:
+          unit: dB
+          opts: ~
+
+        LPIPS:
+          unit: (lpips)
+          opts:
+            net: alex
+            if_cuda: True
+            if_spatial: False  # return a score or a map of scores
+
+div2k_qp27:
+  note: 2 cards.
+
+  dataset:
+    train:
+      ds_type: ImTrainingSet
+
+      ds_opts:
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/bpg/qp27/  # FIXME
+        max_num: 700
+        start_idx: 0
+
+        aug:
+          if_aug: True
+          opts:
+            gt_h: 128
+            gt_w: 128
+            if_flip: True
+            if_rot: True
+
+      enlarge_ratio: 100
+      bs_pg: 8  # batch size per gpu  # FIXME
+      nworker_pg: 8  # FIXME
+
+    val:
+      ds_type: ImTestSet
+
+      ds_opts:
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/bpg/qp27/  # FIXME
+        max_num: 100
+        start_idx: 700
+
+        center_crop:
+          if_crop: False
+          opts:
+            h: ~
+            w: ~
+
+        padding:
+          if_pad: False
+          opts:
+            mul: ~
+
+    test:
+      ds_type: ImTestSet
+
+      ds_opts:
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/bpg/qp27/  # FIXME
+        max_num: 100
+        start_idx: 800
+
+        center_crop:
+          if_crop: False
+          opts:
+            h: ~
+            w: ~
+
+        padding:
+          if_pad: False
+          opts:
+            mul: ~
+
+  algorithm:
+    name: ESRGANAlgorithm
+    exp_name: esrgan_div2k_qp27  # FIXME
+
+    network:
+      generator:
+        num_in_ch: 3
+        num_feat: 32
+        num_block: 8  # 23 originally. 30GB memory for bs=8 per gpu...
+        num_out_ch: 3
+        num_grow_ch: 16
+
+      discriminator:
+        ninc: 3
+        nf: 16  # dis should be simpler than gen
+        nhidc: 64
+        gt_w: 128  # FIXME
+        gt_h: 128  # FIXME
+
+    train:
+      seed: 7
+      if_cudnn: True  # FIXME
+      if_show_graph: True
+      real_bs_pg: 8  # multiple backwards -> step once  # FIXME
+
+      load_state:
+        if_load: True
+        opts:
+          if_load_optim: True
+          if_keep_dir: True
+          ckp_load_path: ~  # default: exp/<exp_name>/ckp_last.pt
+
+      if_test_baseline: True
+      inter_print: 100
+      inter_val: 5000
+
+      niter:
+        if_manually_stop: True  # never stop training  # FIXME
+        name: [warmup, run]
+        niter: [!!float 4e+5, !!float 4e+5]  # FIXME
+
+      loss:
+        warmup:
+          gen:
+            CharbonnierLoss:
+              weight: 1.
+              opts:
+                eps: !!float 1e-6
+
+        run:
+          gen:
+            CharbonnierLoss:
+              weight: !!float 1e-2
+              opts:
+                eps: !!float 1e-6
+
+            VGGLoss:
+              weight: 1.
+              opts:
+                vgg_type: vgg19
+                layer_weights:
+                  conv5_4: 1.
+                use_input_norm: True
+                perceptual_weight: 1.
+                style_weight: 0.
+
+            RelativisticGANLoss:  # for dis and also gen
+              weight: !!float 5e-3
+
+          dis:
+            RelativisticGANLoss:  # for dis and also gen
+              weight: 1.
+
+      optimizer:
+        warmup:
+          gen:
+            name: Adam
+            opts:
+              lr: !!float 2e-4
+              betas: [0.9, 0.999]
+
+        run:
+          gen:
+            name: Adam
+            opts:
+              lr: !!float 1e-4
+              betas: [0.9, 0.999]
+
+          dis:
+            name: Adam
+            opts:
+              lr: !!float 2e-4  # ttur: lr of dis is 2x lr of gen
+              betas: [0.9, 0.999]
+
+      scheduler:
+        if_sched: False
+
+        warmup:
+          gen: ~
+
+        run:
+          gen:
+            name: MultiStepLR
+            opts:
+              milestones: [200000,350000,450000,500000]  # .step() after each iter, not epoch
+              gamma: 0.5
+
+          dis: ~
+
+    val:
+      if_save_im: False
+
+      criterion:
+        PSNR:
+          if_focus: False
+          unit: dB
+          opts: ~
+
+        LPIPS:
+          if_focus: True
+          unit: (lpips)
+          opts:
+            net: alex
+            if_cuda: True
+            if_spatial: False
+
+    test:
+      if_save_im: True
+      if_return_each: False
+      ckp_load_path: ~  # default: exp/<exp_name>/ckp_first_best.pt
+
+      criterion:
+        PSNR:
+          unit: dB
+          opts: ~
+
+        LPIPS:
+          unit: (lpips)
+          opts:
+            net: alex
+            if_cuda: True
+            if_spatial: False  # return a score or a map of scores
+
+div2k_qp22:
+  note: 2 cards.
+
+  dataset:
+    train:
+      ds_type: ImTrainingSet
+
+      ds_opts:
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/bpg/qp22/  # FIXME
+        max_num: 700
+        start_idx: 0
+
+        aug:
+          if_aug: True
+          opts:
+            gt_h: 128
+            gt_w: 128
+            if_flip: True
+            if_rot: True
+
+      enlarge_ratio: 100
+      bs_pg: 8  # batch size per gpu  # FIXME
+      nworker_pg: 8  # FIXME
+
+    val:
+      ds_type: ImTestSet
+
+      ds_opts:
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/bpg/qp22/  # FIXME
+        max_num: 100
+        start_idx: 700
+
+        center_crop:
+          if_crop: False
+          opts:
+            h: ~
+            w: ~
+
+        padding:
+          if_pad: False
+          opts:
+            mul: ~
+
+    test:
+      ds_type: ImTestSet
+
+      ds_opts:
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/bpg/qp22/  # FIXME
+        max_num: 100
+        start_idx: 800
+
+        center_crop:
+          if_crop: False
+          opts:
+            h: ~
+            w: ~
+
+        padding:
+          if_pad: False
+          opts:
+            mul: ~
+
+  algorithm:
+    name: ESRGANAlgorithm
+    exp_name: esrgan_div2k_qp22  # FIXME
+
+    network:
+      generator:
+        num_in_ch: 3
+        num_feat: 32
+        num_block: 8  # 23 originally. 30GB memory for bs=8 per gpu...
+        num_out_ch: 3
+        num_grow_ch: 16
+
+      discriminator:
+        ninc: 3
+        nf: 16  # dis should be simpler than gen
+        nhidc: 64
+        gt_w: 128  # FIXME
+        gt_h: 128  # FIXME
+
+    train:
+      seed: 7
+      if_cudnn: True  # FIXME
+      if_show_graph: True
+      real_bs_pg: 8  # multiple backwards -> step once  # FIXME
+
+      load_state:
+        if_load: True
+        opts:
+          if_load_optim: True
+          if_keep_dir: True
+          ckp_load_path: ~  # default: exp/<exp_name>/ckp_last.pt
+
+      if_test_baseline: True
+      inter_print: 100
+      inter_val: 5000
+
+      niter:
+        if_manually_stop: True  # never stop training  # FIXME
+        name: [warmup, run]
+        niter: [!!float 4e+5, !!float 4e+5]  # FIXME
 
       loss:
         warmup:

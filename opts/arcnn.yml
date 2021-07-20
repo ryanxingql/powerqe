@@ -7,7 +7,7 @@ div2k_qf10:
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/jpeg/qf10/
+        lq_path: data/div2k/jpeg/qf10/  # FIXME
         max_num: 700
         start_idx: 0
 
@@ -20,15 +20,15 @@ div2k_qf10:
             if_rot: True
 
       enlarge_ratio: 100
-      bs_pg: 8  # batch size per gpu  # !!!
-      nworker_pg: 8  # !!!
+      bs_pg: 8  # batch size per gpu  # FIXME
+      nworker_pg: 8  # FIXME
 
     val:
       ds_type: ImTestSet
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/jpeg/qf10/
+        lq_path: data/div2k/jpeg/qf10/  # FIXME
         max_num: 100
         start_idx: 700
 
@@ -48,7 +48,7 @@ div2k_qf10:
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/jpeg/qf10/
+        lq_path: data/div2k/jpeg/qf10/  # FIXME
         max_num: 100
         start_idx: 800
 
@@ -65,7 +65,7 @@ div2k_qf10:
 
   algorithm:
     name: ARCNNAlgorithm
-    exp_name: arcnn_div2k_qf10
+    exp_name: arcnn_div2k_qf10  # FIXME
 
     network:
       net:
@@ -79,9 +79,9 @@ div2k_qf10:
       
     train:
       seed: 7
-      if_cudnn: True  # !!!
+      if_cudnn: True  # FIXME
       if_show_graph: True
-      real_bs_pg: 8  # multiple backwards -> step once  # !!!
+      real_bs_pg: 8  # multiple backwards -> step once  # FIXME
 
       load_state:
         if_load: True
@@ -95,9 +95,9 @@ div2k_qf10:
       inter_val: 5000
 
       niter:
-        if_75: True  # keep training when the best_iter/niter ratio > 0.75; only valid when iter >= niter
+        if_manually_stop: True  # never stop training  # FIXME
         name: [run]
-        niter: [!!float 3e+6]
+        niter: [!!float 3e+6]  # FIXME
 
       loss:
         run:
@@ -153,7 +153,7 @@ div2k_qf20:
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/jpeg/qf20/
+        lq_path: data/div2k/jpeg/qf20/  # FIXME
         max_num: 700
         start_idx: 0
 
@@ -166,15 +166,15 @@ div2k_qf20:
             if_rot: True
 
       enlarge_ratio: 100
-      bs_pg: 8  # batch size per gpu  # !!!
-      nworker_pg: 8  # !!!
+      bs_pg: 8  # batch size per gpu  # FIXME
+      nworker_pg: 8  # FIXME
 
     val:
       ds_type: ImTestSet
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/jpeg/qf20/
+        lq_path: data/div2k/jpeg/qf20/  # FIXME
         max_num: 100
         start_idx: 700
 
@@ -194,7 +194,7 @@ div2k_qf20:
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/jpeg/qf20/
+        lq_path: data/div2k/jpeg/qf20/  # FIXME
         max_num: 100
         start_idx: 800
 
@@ -211,7 +211,7 @@ div2k_qf20:
 
   algorithm:
     name: ARCNNAlgorithm
-    exp_name: arcnn_div2k_qf20
+    exp_name: arcnn_div2k_qf20  # FIXME
 
     network:
       net:
@@ -225,9 +225,9 @@ div2k_qf20:
 
     train:
       seed: 7
-      if_cudnn: True  # !!!
+      if_cudnn: True  # FIXME
       if_show_graph: True
-      real_bs_pg: 8  # multiple backwards -> step once  # !!!
+      real_bs_pg: 8  # multiple backwards -> step once  # FIXME
 
       load_state:
         if_load: True
@@ -241,9 +241,9 @@ div2k_qf20:
       inter_val: 5000
 
       niter:
-        if_75: True  # keep training when the best_iter/niter ratio > 0.75; only valid when iter >= niter
+        if_manually_stop: True  # never stop training  # FIXME
         name: [run]
-        niter: [!!float 3e+6]
+        niter: [!!float 3e+6]  # FIXME
 
       loss:
         run:
@@ -299,7 +299,7 @@ div2k_qf30:
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/jpeg/qf30/
+        lq_path: data/div2k/jpeg/qf30/  # FIXME
         max_num: 700
         start_idx: 0
 
@@ -312,15 +312,15 @@ div2k_qf30:
             if_rot: True
 
       enlarge_ratio: 100
-      bs_pg: 8  # batch size per gpu  # !!!
-      nworker_pg: 8  # !!!
+      bs_pg: 8  # batch size per gpu  # FIXME
+      nworker_pg: 8  # FIXME
 
     val:
       ds_type: ImTestSet
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/jpeg/qf30/
+        lq_path: data/div2k/jpeg/qf30/  # FIXME
         max_num: 100
         start_idx: 700
 
@@ -340,7 +340,7 @@ div2k_qf30:
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/jpeg/qf30/
+        lq_path: data/div2k/jpeg/qf30/  # FIXME
         max_num: 100
         start_idx: 800
 
@@ -357,7 +357,7 @@ div2k_qf30:
 
   algorithm:
     name: ARCNNAlgorithm
-    exp_name: arcnn_div2k_qf30
+    exp_name: arcnn_div2k_qf30  # FIXME
 
     network:
       net:
@@ -371,9 +371,9 @@ div2k_qf30:
 
     train:
       seed: 7
-      if_cudnn: True  # !!!
+      if_cudnn: True  # FIXME
       if_show_graph: True
-      real_bs_pg: 8  # multiple backwards -> step once  # !!!
+      real_bs_pg: 8  # multiple backwards -> step once  # FIXME
 
       load_state:
         if_load: True
@@ -387,9 +387,9 @@ div2k_qf30:
       inter_val: 5000
 
       niter:
-        if_75: True  # keep training when the best_iter/niter ratio > 0.75; only valid when iter >= niter
+        if_manually_stop: True  # never stop training  # FIXME
         name: [run]
-        niter: [!!float 3e+6]
+        niter: [!!float 3e+6]  # FIXME
 
       loss:
         run:
@@ -445,7 +445,7 @@ div2k_qf40:
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/jpeg/qf40/
+        lq_path: data/div2k/jpeg/qf40/  # FIXME
         max_num: 700
         start_idx: 0
 
@@ -458,15 +458,15 @@ div2k_qf40:
             if_rot: True
 
       enlarge_ratio: 100
-      bs_pg: 8  # batch size per gpu  # !!!
-      nworker_pg: 8  # !!!
+      bs_pg: 8  # batch size per gpu  # FIXME
+      nworker_pg: 8  # FIXME
 
     val:
       ds_type: ImTestSet
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/jpeg/qf40/
+        lq_path: data/div2k/jpeg/qf40/  # FIXME
         max_num: 100
         start_idx: 700
 
@@ -486,7 +486,7 @@ div2k_qf40:
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/jpeg/qf40/
+        lq_path: data/div2k/jpeg/qf40/  # FIXME
         max_num: 100
         start_idx: 800
 
@@ -503,7 +503,7 @@ div2k_qf40:
 
   algorithm:
     name: ARCNNAlgorithm
-    exp_name: arcnn_div2k_qf40
+    exp_name: arcnn_div2k_qf40  # FIXME
 
     network:
       net:
@@ -517,9 +517,9 @@ div2k_qf40:
 
     train:
       seed: 7
-      if_cudnn: True  # !!!
+      if_cudnn: True  # FIXME
       if_show_graph: True
-      real_bs_pg: 8  # multiple backwards -> step once  # !!!
+      real_bs_pg: 8  # multiple backwards -> step once  # FIXME
 
       load_state:
         if_load: True
@@ -533,9 +533,9 @@ div2k_qf40:
       inter_val: 5000
 
       niter:
-        if_75: True  # keep training when the best_iter/niter ratio > 0.75; only valid when iter >= niter
+        if_manually_stop: True  # never stop training  # FIXME
         name: [run]
-        niter: [!!float 3e+6]
+        niter: [!!float 3e+6]  # FIXME
 
       loss:
         run:
@@ -591,7 +591,7 @@ div2k_qf50:
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/jpeg/qf50/
+        lq_path: data/div2k/jpeg/qf50/  # FIXME
         max_num: 700
         start_idx: 0
 
@@ -604,15 +604,15 @@ div2k_qf50:
             if_rot: True
 
       enlarge_ratio: 100
-      bs_pg: 8  # batch size per gpu  # !!!
-      nworker_pg: 8  # !!!
+      bs_pg: 8  # batch size per gpu  # FIXME
+      nworker_pg: 8  # FIXME
 
     val:
       ds_type: ImTestSet
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/jpeg/qf50/
+        lq_path: data/div2k/jpeg/qf50/  # FIXME
         max_num: 100
         start_idx: 700
 
@@ -632,7 +632,7 @@ div2k_qf50:
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/jpeg/qf50/
+        lq_path: data/div2k/jpeg/qf50/  # FIXME
         max_num: 100
         start_idx: 800
 
@@ -649,7 +649,7 @@ div2k_qf50:
 
   algorithm:
     name: ARCNNAlgorithm
-    exp_name: arcnn_div2k_qf50
+    exp_name: arcnn_div2k_qf50  # FIXME
 
     network:
       net:
@@ -663,9 +663,9 @@ div2k_qf50:
 
     train:
       seed: 7
-      if_cudnn: True  # !!!
+      if_cudnn: True  # FIXME
       if_show_graph: True
-      real_bs_pg: 8  # multiple backwards -> step once  # !!!
+      real_bs_pg: 8  # multiple backwards -> step once  # FIXME
 
       load_state:
         if_load: True
@@ -679,9 +679,9 @@ div2k_qf50:
       inter_val: 5000
 
       niter:
-        if_75: True  # keep training when the best_iter/niter ratio > 0.75; only valid when iter >= niter
+        if_manually_stop: True  # never stop training  # FIXME
         name: [run]
-        niter: [!!float 3e+6]
+        niter: [!!float 3e+6]  # FIXME
 
       loss:
         run:
@@ -737,7 +737,7 @@ div2k_qp42:
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/bpg/qp42/
+        lq_path: data/div2k/bpg/qp42/  # FIXME
         max_num: 700
         start_idx: 0
 
@@ -750,15 +750,15 @@ div2k_qp42:
             if_rot: True
 
       enlarge_ratio: 100
-      bs_pg: 8  # batch size per gpu  # !!!
-      nworker_pg: 8  # !!!
+      bs_pg: 8  # batch size per gpu  # FIXME
+      nworker_pg: 8  # FIXME
 
     val:
       ds_type: ImTestSet
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/bpg/qp42/
+        lq_path: data/div2k/bpg/qp42/  # FIXME
         max_num: 100
         start_idx: 700
 
@@ -778,7 +778,7 @@ div2k_qp42:
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/bpg/qp42/
+        lq_path: data/div2k/bpg/qp42/  # FIXME
         max_num: 100
         start_idx: 800
 
@@ -795,7 +795,7 @@ div2k_qp42:
 
   algorithm:
     name: ARCNNAlgorithm
-    exp_name: arcnn_div2k_qp42
+    exp_name: arcnn_div2k_qp42  # FIXME
 
     network:
       net:
@@ -809,9 +809,9 @@ div2k_qp42:
 
     train:
       seed: 7
-      if_cudnn: True  # !!!
+      if_cudnn: True  # FIXME
       if_show_graph: True
-      real_bs_pg: 8  # multiple backwards -> step once  # !!!
+      real_bs_pg: 8  # multiple backwards -> step once  # FIXME
 
       load_state:
         if_load: True
@@ -825,9 +825,9 @@ div2k_qp42:
       inter_val: 5000
 
       niter:
-        if_75: True  # keep training when the best_iter/niter ratio > 0.75; only valid when iter >= niter
+        if_manually_stop: True  # never stop training  # FIXME
         name: [run]
-        niter: [!!float 3e+6]
+        niter: [!!float 3e+6]  # FIXME
 
       loss:
         run:
@@ -883,7 +883,7 @@ div2k_qp37:
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/bpg/qp37/
+        lq_path: data/div2k/bpg/qp37/  # FIXME
         max_num: 700
         start_idx: 0
 
@@ -896,15 +896,15 @@ div2k_qp37:
             if_rot: True
 
       enlarge_ratio: 100
-      bs_pg: 8  # batch size per gpu  # !!!
-      nworker_pg: 8  # !!!
+      bs_pg: 8  # batch size per gpu  # FIXME
+      nworker_pg: 8  # FIXME
 
     val:
       ds_type: ImTestSet
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/bpg/qp37/
+        lq_path: data/div2k/bpg/qp37/  # FIXME
         max_num: 100
         start_idx: 700
 
@@ -924,7 +924,7 @@ div2k_qp37:
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/bpg/qp37/
+        lq_path: data/div2k/bpg/qp37/  # FIXME
         max_num: 100
         start_idx: 800
 
@@ -941,7 +941,7 @@ div2k_qp37:
 
   algorithm:
     name: ARCNNAlgorithm
-    exp_name: arcnn_div2k_qp37
+    exp_name: arcnn_div2k_qp37  # FIXME
 
     network:
       net:
@@ -955,9 +955,9 @@ div2k_qp37:
 
     train:
       seed: 7
-      if_cudnn: True  # !!!
+      if_cudnn: True  # FIXME
       if_show_graph: True
-      real_bs_pg: 8  # multiple backwards -> step once  # !!!
+      real_bs_pg: 8  # multiple backwards -> step once  # FIXME
 
       load_state:
         if_load: True
@@ -971,9 +971,9 @@ div2k_qp37:
       inter_val: 5000
 
       niter:
-        if_75: True  # keep training when the best_iter/niter ratio > 0.75; only valid when iter >= niter
+        if_manually_stop: True  # never stop training  # FIXME
         name: [run]
-        niter: [!!float 3e+6]
+        niter: [!!float 3e+6]  # FIXME
 
       loss:
         run:
@@ -1029,7 +1029,7 @@ div2k_qp32:
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/bpg/qp32/
+        lq_path: data/div2k/bpg/qp32/  # FIXME
         max_num: 700
         start_idx: 0
 
@@ -1042,15 +1042,15 @@ div2k_qp32:
             if_rot: True
 
       enlarge_ratio: 100
-      bs_pg: 8  # batch size per gpu  # !!!
-      nworker_pg: 8  # !!!
+      bs_pg: 8  # batch size per gpu  # FIXME
+      nworker_pg: 8  # FIXME
 
     val:
       ds_type: ImTestSet
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/bpg/qp32/
+        lq_path: data/div2k/bpg/qp32/  # FIXME
         max_num: 100
         start_idx: 700
 
@@ -1070,7 +1070,7 @@ div2k_qp32:
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/bpg/qp32/
+        lq_path: data/div2k/bpg/qp32/  # FIXME
         max_num: 100
         start_idx: 800
 
@@ -1087,7 +1087,7 @@ div2k_qp32:
 
   algorithm:
     name: ARCNNAlgorithm
-    exp_name: arcnn_div2k_qp32
+    exp_name: arcnn_div2k_qp32  # FIXME
 
     network:
       net:
@@ -1101,9 +1101,9 @@ div2k_qp32:
 
     train:
       seed: 7
-      if_cudnn: True  # !!!
+      if_cudnn: True  # FIXME
       if_show_graph: True
-      real_bs_pg: 8  # multiple backwards -> step once  # !!!
+      real_bs_pg: 8  # multiple backwards -> step once  # FIXME
 
       load_state:
         if_load: True
@@ -1117,9 +1117,9 @@ div2k_qp32:
       inter_val: 5000
 
       niter:
-        if_75: True  # keep training when the best_iter/niter ratio > 0.75; only valid when iter >= niter
+        if_manually_stop: True  # never stop training  # FIXME
         name: [run]
-        niter: [!!float 3e+6]
+        niter: [!!float 3e+6]  # FIXME
 
       loss:
         run:
@@ -1175,7 +1175,7 @@ div2k_qp27:
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/bpg/qp27/
+        lq_path: data/div2k/bpg/qp27/  # FIXME
         max_num: 700
         start_idx: 0
 
@@ -1188,15 +1188,15 @@ div2k_qp27:
             if_rot: True
 
       enlarge_ratio: 100
-      bs_pg: 8  # batch size per gpu  # !!!
-      nworker_pg: 8  # !!!
+      bs_pg: 8  # batch size per gpu  # FIXME
+      nworker_pg: 8  # FIXME
 
     val:
       ds_type: ImTestSet
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/bpg/qp27/
+        lq_path: data/div2k/bpg/qp27/  # FIXME
         max_num: 100
         start_idx: 700
 
@@ -1216,7 +1216,7 @@ div2k_qp27:
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/bpg/qp27/
+        lq_path: data/div2k/bpg/qp27/  # FIXME
         max_num: 100
         start_idx: 800
 
@@ -1233,7 +1233,7 @@ div2k_qp27:
 
   algorithm:
     name: ARCNNAlgorithm
-    exp_name: arcnn_div2k_qp27
+    exp_name: arcnn_div2k_qp27  # FIXME
 
     network:
       net:
@@ -1247,9 +1247,9 @@ div2k_qp27:
 
     train:
       seed: 7
-      if_cudnn: True  # !!!
+      if_cudnn: True  # FIXME
       if_show_graph: True
-      real_bs_pg: 8  # multiple backwards -> step once  # !!!
+      real_bs_pg: 8  # multiple backwards -> step once  # FIXME
 
       load_state:
         if_load: True
@@ -1263,9 +1263,9 @@ div2k_qp27:
       inter_val: 5000
 
       niter:
-        if_75: True  # keep training when the best_iter/niter ratio > 0.75; only valid when iter >= niter
+        if_manually_stop: True  # never stop training  # FIXME
         name: [run]
-        niter: [!!float 3e+6]
+        niter: [!!float 3e+6]  # FIXME
 
       loss:
         run:
@@ -1321,7 +1321,7 @@ div2k_qp22:
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/bpg/qp22/
+        lq_path: data/div2k/bpg/qp22/  # FIXME
         max_num: 700
         start_idx: 0
 
@@ -1334,15 +1334,15 @@ div2k_qp22:
             if_rot: True
 
       enlarge_ratio: 100
-      bs_pg: 8  # batch size per gpu  # !!!
-      nworker_pg: 8  # !!!
+      bs_pg: 8  # batch size per gpu  # FIXME
+      nworker_pg: 8  # FIXME
 
     val:
       ds_type: ImTestSet
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/bpg/qp22/
+        lq_path: data/div2k/bpg/qp22/  # FIXME
         max_num: 100
         start_idx: 700
 
@@ -1362,7 +1362,7 @@ div2k_qp22:
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/bpg/qp22/
+        lq_path: data/div2k/bpg/qp22/  # FIXME
         max_num: 100
         start_idx: 800
 
@@ -1379,7 +1379,7 @@ div2k_qp22:
 
   algorithm:
     name: ARCNNAlgorithm
-    exp_name: arcnn_div2k_qp22
+    exp_name: arcnn_div2k_qp22  # FIXME
 
     network:
       net:
@@ -1393,9 +1393,9 @@ div2k_qp22:
 
     train:
       seed: 7
-      if_cudnn: True  # !!!
+      if_cudnn: True  # FIXME
       if_show_graph: True
-      real_bs_pg: 8  # multiple backwards -> step once  # !!!
+      real_bs_pg: 8  # multiple backwards -> step once  # FIXME
 
       load_state:
         if_load: True
@@ -1409,9 +1409,9 @@ div2k_qp22:
       inter_val: 5000
 
       niter:
-        if_75: True  # keep training when the best_iter/niter ratio > 0.75; only valid when iter >= niter
+        if_manually_stop: True  # never stop training  # FIXME
         name: [run]
-        niter: [!!float 3e+6]
+        niter: [!!float 3e+6]  # FIXME
 
       loss:
         run:

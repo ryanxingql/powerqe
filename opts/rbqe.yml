@@ -7,7 +7,7 @@ div2k_jpeg:
 
       ds_opts:
         gt_path: data/div2k/raw_combined/
-        lq_path: data/div2k/jpeg_combined/
+        lq_path: data/div2k/jpeg_combined/  # FIXME
         max_num: 3500  # 700*5
         start_idx: 0
 
@@ -20,15 +20,15 @@ div2k_jpeg:
             if_rot: True
       
       enlarge_ratio: 100
-      bs_pg: 8  # batch size per gpu  # !!!
-      nworker_pg: 8  # !!!
+      bs_pg: 8  # batch size per gpu  # FIXME
+      nworker_pg: 8  # FIXME
 
     val:
       ds_type: ImTestSet
 
       ds_opts:
         gt_path: data/div2k/raw_combined/
-        lq_path: data/div2k/jpeg_combined/
+        lq_path: data/div2k/jpeg_combined/  # FIXME
         max_num: 500  # 100*5
         start_idx: 3500  # 700*5
 
@@ -48,7 +48,7 @@ div2k_jpeg:
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/jpeg/qf10/  # you should run 5 times for 5 qfs
+        lq_path: data/div2k/jpeg/qf10/  # you should run 5 times for 5 qfs  # FIXME
         max_num: 100
         start_idx: 800
 
@@ -65,7 +65,7 @@ div2k_jpeg:
 
   algorithm:
     name: RBQEAlgorithm
-    exp_name: rbqe_div2k_jpeg
+    exp_name: rbqe_div2k_jpeg  # FIXME
 
     network:
       net:
@@ -82,9 +82,9 @@ div2k_jpeg:
 
     train:
       seed: 7
-      if_cudnn: True  # !!!
+      if_cudnn: True  # FIXME
       if_show_graph: True
-      real_bs_pg: 8  # multiple backwards -> step once  # !!!
+      real_bs_pg: 8  # multiple backwards -> step once  # FIXME
 
       load_state:
         if_load: True
@@ -98,8 +98,9 @@ div2k_jpeg:
       inter_val: 5000
 
       niter:
+        if_manually_stop: True  # never stop training  # FIXME
         name: [run]
-        niter: [!!float 15e+5]
+        niter: [!!float 15e+5]  # FIXME
 
       loss:
         run:
@@ -163,7 +164,7 @@ div2k_bpg:
 
       ds_opts:
         gt_path: data/div2k/raw_combined/
-        lq_path: data/div2k/bpg_combined/
+        lq_path: data/div2k/bpg_combined/  # FIXME
         max_num: 3500  # 700*5
         start_idx: 0
 
@@ -176,15 +177,15 @@ div2k_bpg:
             if_rot: True
 
       enlarge_ratio: 100
-      bs_pg: 8  # batch size per gpu  # !!!
-      nworker_pg: 8  # !!!
+      bs_pg: 8  # batch size per gpu  # FIXME
+      nworker_pg: 8  # FIXME
 
     val:
       ds_type: ImTestSet
 
       ds_opts:
         gt_path: data/div2k/raw_combined/
-        lq_path: data/div2k/bpg_combined/
+        lq_path: data/div2k/bpg_combined/  # FIXME
         max_num: 500  # 100*5
         start_idx: 3500  # 700*5
 
@@ -204,7 +205,7 @@ div2k_bpg:
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/bpg/qp42/  # you should run 5 times for 5 qfs
+        lq_path: data/div2k/bpg/qp42/  # you should run 5 times for 5 qfs  # FIXME
         max_num: 100
         start_idx: 800
 
@@ -221,7 +222,7 @@ div2k_bpg:
 
   algorithm:
     name: RBQEAlgorithm
-    exp_name: rbqe_div2k_bpg
+    exp_name: rbqe_div2k_bpg  # FIXME
 
     network:
       net:
@@ -238,9 +239,9 @@ div2k_bpg:
 
     train:
       seed: 7
-      if_cudnn: True  # !!!
+      if_cudnn: True  # FIXME
       if_show_graph: True
-      real_bs_pg: 8  # multiple backwards -> step once  # !!!
+      real_bs_pg: 8  # multiple backwards -> step once  # FIXME
 
       load_state:
         if_load: True
@@ -254,8 +255,9 @@ div2k_bpg:
       inter_val: 5000
 
       niter:
+        if_manually_stop: True  # never stop training  # FIXME
         name: [run]
-        niter: [!!float 15e+5]
+        niter: [!!float 15e+5]  # FIXME
 
       loss:
         run:
