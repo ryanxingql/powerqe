@@ -198,8 +198,8 @@ def main():
         if done_niter == alg.done_niter:
             if done_iter_this_epoch > 0:
                 logger.info(f'skip {done_iter_this_epoch} iteration(s) to meet the pre-trained status...')
-            [train_fetcher.next() for _ in range(done_iter_this_epoch)]  # skip done training data
-            if done_iter_this_epoch > 0:
+                if_verbose = True if rank == 0 else False
+                train_fetcher.skip_front(done_iter_this_epoch, verbose=if_verbose)
                 logger.info(f'done.')
         train_data = train_fetcher.next()  # fetch the first batch
 
