@@ -48,7 +48,7 @@ div2k_jpeg:
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/jpeg/qf10/  # you should run 5 times for 5 qfs  # FIXME
+        lq_path: data/div2k/jpeg/qf10/  # FIXME
         max_num: 100
         start_idx: 800
 
@@ -148,6 +148,206 @@ div2k_jpeg:
           unit: dB
           opts: ~
 
+div2k_jpeg_test_qf20:
+  dataset:
+    test:
+      ds_type: ImTestSet
+
+      ds_opts:
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/jpeg/qf20/  # FIXME
+        max_num: 100
+        start_idx: 800
+
+        center_crop:
+          if_crop: False
+          opts:
+            h: ~
+            w: ~
+
+        padding:
+          if_pad: False
+          opts:
+            mul: ~
+
+  algorithm:
+    name: CBDNetAlgorithm
+    exp_name: cbdnet_div2k_jpeg_test_qf20  # FIXME
+
+    network:
+      net:
+        nf_in: 3
+        nf_estimate: 32
+        nf_out: 3
+        nlevel_denoise: 3
+        nf_base_denoise: 64
+        nf_gr_denoise: 2
+        nl_base_denoise: 1
+        nl_gr_denoise: 2
+        down_denoise: avepool2d
+        up_denoise: transpose2d
+        reduce_denoise: add
+
+    test:
+      if_save_im: True
+      if_return_each: False
+      ckp_load_path: exp/cbdnet_div2k_jpeg/ckp_first_best.pt
+
+      criterion:
+        PSNR:
+          unit: dB
+          opts: ~
+
+div2k_jpeg_test_qf30:
+  dataset:
+    test:
+      ds_type: ImTestSet
+
+      ds_opts:
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/jpeg/qf30/  # FIXME
+        max_num: 100
+        start_idx: 800
+
+        center_crop:
+          if_crop: False
+          opts:
+            h: ~
+            w: ~
+
+        padding:
+          if_pad: False
+          opts:
+            mul: ~
+
+  algorithm:
+    name: CBDNetAlgorithm
+    exp_name: cbdnet_div2k_jpeg_test_qf30  # FIXME
+
+    network:
+      net:
+        nf_in: 3
+        nf_estimate: 32
+        nf_out: 3
+        nlevel_denoise: 3
+        nf_base_denoise: 64
+        nf_gr_denoise: 2
+        nl_base_denoise: 1
+        nl_gr_denoise: 2
+        down_denoise: avepool2d
+        up_denoise: transpose2d
+        reduce_denoise: add
+
+    test:
+      if_save_im: True
+      if_return_each: False
+      ckp_load_path: exp/cbdnet_div2k_jpeg/ckp_first_best.pt
+
+      criterion:
+        PSNR:
+          unit: dB
+          opts: ~
+
+div2k_jpeg_test_qf40:
+  dataset:
+    test:
+      ds_type: ImTestSet
+
+      ds_opts:
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/jpeg/qf40/  # FIXME
+        max_num: 100
+        start_idx: 800
+
+        center_crop:
+          if_crop: False
+          opts:
+            h: ~
+            w: ~
+
+        padding:
+          if_pad: False
+          opts:
+            mul: ~
+
+  algorithm:
+    name: CBDNetAlgorithm
+    exp_name: cbdnet_div2k_jpeg_test_qf40  # FIXME
+
+    network:
+      net:
+        nf_in: 3
+        nf_estimate: 32
+        nf_out: 3
+        nlevel_denoise: 3
+        nf_base_denoise: 64
+        nf_gr_denoise: 2
+        nl_base_denoise: 1
+        nl_gr_denoise: 2
+        down_denoise: avepool2d
+        up_denoise: transpose2d
+        reduce_denoise: add
+
+    test:
+      if_save_im: True
+      if_return_each: False
+      ckp_load_path: exp/cbdnet_div2k_jpeg/ckp_first_best.pt
+
+      criterion:
+        PSNR:
+          unit: dB
+          opts: ~
+
+div2k_jpeg_test_qf50:
+  dataset:
+    test:
+      ds_type: ImTestSet
+
+      ds_opts:
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/jpeg/qf50/  # FIXME
+        max_num: 100
+        start_idx: 800
+
+        center_crop:
+          if_crop: False
+          opts:
+            h: ~
+            w: ~
+
+        padding:
+          if_pad: False
+          opts:
+            mul: ~
+
+  algorithm:
+    name: CBDNetAlgorithm
+    exp_name: cbdnet_div2k_jpeg_test_qf50  # FIXME
+
+    network:
+      net:
+        nf_in: 3
+        nf_estimate: 32
+        nf_out: 3
+        nlevel_denoise: 3
+        nf_base_denoise: 64
+        nf_gr_denoise: 2
+        nl_base_denoise: 1
+        nl_gr_denoise: 2
+        down_denoise: avepool2d
+        up_denoise: transpose2d
+        reduce_denoise: add
+
+    test:
+      if_save_im: True
+      if_return_each: False
+      ckp_load_path: exp/cbdnet_div2k_jpeg/ckp_first_best.pt
+
+      criterion:
+        PSNR:
+          unit: dB
+          opts: ~
+
 div2k_bpg:
   note: 2 cards.
 
@@ -198,7 +398,7 @@ div2k_bpg:
 
       ds_opts:
         gt_path: data/div2k/raw/
-        lq_path: data/div2k/bpg/qp42/  # you should run 5 times for 5 qfs  # FIXME
+        lq_path: data/div2k/bpg/qp42/  # FIXME
         max_num: 100
         start_idx: 800
 
@@ -297,3 +497,204 @@ div2k_bpg:
         PSNR:
           unit: dB
           opts: ~
+
+div2k_bpg_test_qp22:
+  dataset:
+    test:
+      ds_type: ImTestSet
+
+      ds_opts:
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/bpg/qp22/  # FIXME
+        max_num: 100
+        start_idx: 800
+
+        center_crop:
+          if_crop: False
+          opts:
+            h: ~
+            w: ~
+
+        padding:
+          if_pad: False
+          opts:
+            mul: ~
+
+  algorithm:
+    name: CBDNetAlgorithm
+    exp_name: cbdnet_div2k_bpg_test_qp22  # FIXME
+
+    network:
+      net:
+        nf_in: 3
+        nf_estimate: 32
+        nf_out: 3
+        nlevel_denoise: 3
+        nf_base_denoise: 64
+        nf_gr_denoise: 2
+        nl_base_denoise: 1
+        nl_gr_denoise: 2
+        down_denoise: avepool2d
+        up_denoise: transpose2d
+        reduce_denoise: add
+
+    test:
+      if_save_im: True
+      if_return_each: False
+      ckp_load_path: exp/cbdnet_div2k_bpg/ckp_first_best.pt
+
+      criterion:
+        PSNR:
+          unit: dB
+          opts: ~
+
+div2k_bpg_test_qp27:
+  dataset:
+    test:
+      ds_type: ImTestSet
+
+      ds_opts:
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/bpg/qp27/  # FIXME
+        max_num: 100
+        start_idx: 800
+
+        center_crop:
+          if_crop: False
+          opts:
+            h: ~
+            w: ~
+
+        padding:
+          if_pad: False
+          opts:
+            mul: ~
+
+  algorithm:
+    name: CBDNetAlgorithm
+    exp_name: cbdnet_div2k_bpg_test_qp27  # FIXME
+
+    network:
+      net:
+        nf_in: 3
+        nf_estimate: 32
+        nf_out: 3
+        nlevel_denoise: 3
+        nf_base_denoise: 64
+        nf_gr_denoise: 2
+        nl_base_denoise: 1
+        nl_gr_denoise: 2
+        down_denoise: avepool2d
+        up_denoise: transpose2d
+        reduce_denoise: add
+
+    test:
+      if_save_im: True
+      if_return_each: False
+      ckp_load_path: exp/cbdnet_div2k_bpg/ckp_first_best.pt
+
+      criterion:
+        PSNR:
+          unit: dB
+          opts: ~
+
+div2k_bpg_test_qp32:
+  dataset:
+    test:
+      ds_type: ImTestSet
+
+      ds_opts:
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/bpg/qp32/  # FIXME
+        max_num: 100
+        start_idx: 800
+
+        center_crop:
+          if_crop: False
+          opts:
+            h: ~
+            w: ~
+
+        padding:
+          if_pad: False
+          opts:
+            mul: ~
+
+  algorithm:
+    name: CBDNetAlgorithm
+    exp_name: cbdnet_div2k_bpg_test_qp32  # FIXME
+
+    network:
+      net:
+        nf_in: 3
+        nf_estimate: 32
+        nf_out: 3
+        nlevel_denoise: 3
+        nf_base_denoise: 64
+        nf_gr_denoise: 2
+        nl_base_denoise: 1
+        nl_gr_denoise: 2
+        down_denoise: avepool2d
+        up_denoise: transpose2d
+        reduce_denoise: add
+
+    test:
+      if_save_im: True
+      if_return_each: False
+      ckp_load_path: exp/cbdnet_div2k_bpg/ckp_first_best.pt
+
+      criterion:
+        PSNR:
+          unit: dB
+          opts: ~
+
+div2k_bpg_test_qp37:
+  dataset:
+    test:
+      ds_type: ImTestSet
+
+      ds_opts:
+        gt_path: data/div2k/raw/
+        lq_path: data/div2k/bpg/qp37/  # FIXME
+        max_num: 100
+        start_idx: 800
+
+        center_crop:
+          if_crop: False
+          opts:
+            h: ~
+            w: ~
+
+        padding:
+          if_pad: False
+          opts:
+            mul: ~
+
+  algorithm:
+    name: CBDNetAlgorithm
+    exp_name: cbdnet_div2k_bpg_test_qp37  # FIXME
+
+    network:
+      net:
+        nf_in: 3
+        nf_estimate: 32
+        nf_out: 3
+        nlevel_denoise: 3
+        nf_base_denoise: 64
+        nf_gr_denoise: 2
+        nl_base_denoise: 1
+        nl_gr_denoise: 2
+        down_denoise: avepool2d
+        up_denoise: transpose2d
+        reduce_denoise: add
+
+    test:
+      if_save_im: True
+      if_return_each: False
+      ckp_load_path: exp/cbdnet_div2k_bpg/ckp_first_best.pt
+
+      criterion:
+        PSNR:
+          unit: dB
+          opts: ~
+
