@@ -158,7 +158,7 @@ We adopt Apache License v2.0.
 If you find this repository helpful, you may cite:
 
 ```tex
-@misc{PowerQE_xing_2021,
+@misc{2021xing2,
   author = {Qunliang Xing},
   title = {PowerQE: An Open Framework for Quality Enhancement of Compressed Visual Data},
   howpublished = "\url{https://github.com/RyanXingQL/PowerQE}",
