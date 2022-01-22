@@ -1,5 +1,7 @@
 # PowerQE: An Open Framework for Quality Enhancement of Compressed Visual Data
 
+:airplane: **Update** (22/1/22): We will embrace [mmediting](https://github.com/open-mmlab/mmediting) for future works, since it is open-sourced and is maintained by global users.
+
 :muscle: An **unified** framework for training/testing blind/non-blind fidelity/perception-oriented **quality enhancement** approaches for compressed images/videos based on PyTorch.
 
 :hammer_and_wrench: Support now:
@@ -8,25 +10,23 @@
 - [x] [DCAD](https://ieeexplore.ieee.org/abstract/document/7923714/)
 - [x] [DnCNN](https://arxiv.org/abs/1608.03981)
 - [x] [CBDNet](https://arxiv.org/abs/1807.04686)
-- [x] [RBQE](https://github.com/RyanXingQL/RBQE)
-- [x] [ESRGAN](https://github.com/RyanXingQL/SubjectiveQE-ESRGAN)
-- [ ] [MFQE](https://github.com/RyanXingQL/MFQEv2.0)
-- [ ] [STDF](https://github.com/RyanXingQL/STDF-PyTorch)
+- [x] [RBQE](https://github.com/ryanxingql/rbqe)
+- [x] [ESRGAN](https://github.com/ryanxingql/subjectiveqe-esrgan)
 
-:rocket: Clone: this repository adopts [PythonUtils](https://github.com/RyanXingQL/PythonUtils) as a sub-module. You may clone PowerQE by:
+:rocket: Clone: this repository adopts [PythonUtils](https://github.com/ryanxingql/pythonutils) as a sub-module. You may clone PowerQE by:
 
 ```bash
-git clone git@github.com:RyanXingQL/PowerQE.git --depth=1 --recursive
+git clone git@github.com:ryanxingql/powerqe.git --depth=1 --recursive
 ```
 
-:notebook: [[Wiki]](https://github.com/RyanXingQL/PowerQE/wiki)
+:notebook: [[Wiki]](https://github.com/ryanxingql/powerqe/wiki)
 
 :e-mail: Feel free to contact: `ryanxingql@gmail.com`.
 
 ## 0. Archive
 
 - v2: support full-resolution DIV2K data-set.
-- [v1](https://github.com/RyanXingQL/PowerQE/tree/ea903fd0d04154c95b321b5100540249856bd44b): support down-sampled DIV2K data-set.
+- [v1](https://github.com/ryanxingql/powerqe/tree/ea903fd0d04154c95b321b5100540249856bd44b): support down-sampled DIV2K data-set.
 
 ## 1. Dependency
 
@@ -74,7 +74,7 @@ mkdir raw/
 unzip -j DIV2K_train_HR.zip -d raw/
 unzip -j DIV2K_valid_HR.zip -d raw/
 
-cd <path-to-PowerQE>
+cd <path-to-powerqe>
 mkdir data && ln -s <path-to-div2k> data/
 ```
 
@@ -84,7 +84,7 @@ We take `{0001-0700}.png` for training, `{0701-0800}.png` for validation, and `{
 
 We take JPEG (QF=10) and BPG (HEVC-MSP, QP=42) as examples.
 
-[[How to install BPG]](https://github.com/RyanXingQL/PowerQE/wiki/How-to-install-BPG%3F)
+[[How to install BPG]](https://github.com/ryanxingql/powerqe/wiki/How-to-install-BPG%3F)
 
 ```bash
 cd ./data_pre_process/ && conda activate pqe
@@ -112,7 +112,7 @@ python main_combine_im.py div2k raw bpg
 
 ## 3. Video Data
 
-To obtain uncompressed raw videos, we adopt the [MFQEv2 dataset](https://github.com/RyanXingQL/MFQEv2.0/wiki/MFQEv2-Dataset).
+To obtain uncompressed raw videos, we adopt the [MFQEv2 dataset](https://github.com/ryanxingql/mfqev2.0/wiki/MFQEv2-Dataset).
 
 It may take days to compress videos due to the low speed of the HM codec.
 
@@ -147,9 +147,9 @@ conda activate pqe && CUDA_VISIBLE_DEVICES=0 python test.py -opt opts/arcnn.yml 
 
 ## 6. Result
 
-- [[Numeric result]](https://github.com/RyanXingQL/PowerQE/wiki/Result)
-- [[Pre-trained model]](https://github.com/RyanXingQL/PowerQE/releases)
-- [[Validation curve in training]](https://github.com/RyanXingQL/PowerQE/issues/2)
+- [[Numeric result]](https://github.com/ryanxingql/powerqe/wiki/Result)
+- [[Pre-trained model]](https://github.com/ryanxingql/powerqe/releases)
+- [[Validation curve in training]](https://github.com/ryanxingql/powerqe/issues/2)
 
 ## 7. License
 
@@ -161,7 +161,7 @@ If you find this repository helpful, you may cite:
 @misc{2021xing2,
   author = {Qunliang Xing},
   title = {PowerQE: An Open Framework for Quality Enhancement of Compressed Visual Data},
-  howpublished = "\url{https://github.com/RyanXingQL/PowerQE}",
+  howpublished = "\url{https://github.com/ryanxingql/powerqe}",
   year = {2021},
   note = "[Online; accessed 11-April-2021]"
 }
