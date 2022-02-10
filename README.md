@@ -158,11 +158,12 @@ We adopt Apache License v2.0.
 If you find this repository helpful, you may cite:
 
 ```tex
-@misc{2021xing2,
-  author = {Qunliang Xing},
-  title = {PowerQE: An Open Framework for Quality Enhancement of Compressed Visual Data},
-  howpublished = "\url{https://github.com/ryanxingql/powerqe}",
-  year = {2021},
-  note = "[Online; accessed 11-April-2021]"
+@software{2021xing,
+  author = {Xing, Qunliang},
+  month = {4},
+  title = {{An unified framework of quality enhancement approaches for compressed images/videos based on PyTorch}},
+  url = {https://github.com/ryanxingql/powerqe},
+  version = {1.0.0},
+  year = {2021}
 }
 ```
