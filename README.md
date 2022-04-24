@@ -1,6 +1,7 @@
 # PowerQE: An Open Framework for Quality Enhancement of Compressed Visual Data
 
-:airplane: **Update** (22/1/22): We will embrace [mmediting](https://github.com/open-mmlab/mmediting) for future works, since it is open-sourced and is maintained by global users.
+
+:rocket: **Update** (22/4/24): We implement video approaches including MFQEv2 and STDF based on MMEditing at [basicvqe-mmediting](https://github.com/ryanxingql/basicvqe-mmediting).
 
 :muscle: An **unified** framework for training/testing blind/non-blind fidelity/perception-oriented **quality enhancement** approaches for compressed images/videos based on PyTorch.
 
@@ -30,8 +31,6 @@ git clone git@github.com:ryanxingql/powerqe.git --depth=1 --recursive
 
 ## 1. Dependency
 
-### Basis
-
 ```bash
 conda create -n pqe python=3.7 -y && conda activate pqe
 
@@ -42,16 +41,6 @@ python -m pip install tqdm lmdb pyyaml opencv-python scikit-image tensorboard lp
 # case 2: given CUDA 11.x
 python -m pip install torch==1.9.0+cu111 torchvision==0.10.0+cu111 torchaudio==0.9.0 -f https://download.pytorch.org/whl/torch_stable.html
 python -m pip install tqdm lmdb pyyaml opencv-python scikit-image tensorboard lpips
-```
-
-### Deformable Convolutions V2 (required only for STDF)
-
-```bash
-cd ./net/ops/dcn
-conda activate pqe && sh build.sh
-
-# check (optional)
-python simple_check.py
 ```
 
 ## 2. Image Data
@@ -110,13 +99,7 @@ python main_compress_bpg_blind.py div2k raw bpg <dir-to-libbpg>  # compress imag
 python main_combine_im.py div2k raw bpg
 ```
 
-## 3. Video Data
-
-To obtain uncompressed raw videos, we adopt the [MFQEv2 dataset](https://github.com/ryanxingql/mfqev2.0/wiki/MFQEv2-Dataset).
-
-It may take days to compress videos due to the low speed of the HM codec.
-
-## 4. Train
+## 3. Train
 
 Edit YML in `opts/`, then run:
 
@@ -137,7 +120,7 @@ cd ./exp/arcnn_div2k_qf10
 conda activate pqe && tensorboard --logdir=./ --port=10001 --bind_all
 ```
 
-## 5. Test
+## 4. Test
 
 Edit YML in `opts/`, then run:
 
@@ -145,13 +128,13 @@ Edit YML in `opts/`, then run:
 conda activate pqe && CUDA_VISIBLE_DEVICES=0 python test.py -opt opts/arcnn.yml -case div2k_qf10
 ```
 
-## 6. Result
+## 5. Result
 
 - [[Numeric result]](https://github.com/ryanxingql/powerqe/wiki/Result)
 - [[Pre-trained model]](https://github.com/ryanxingql/powerqe/releases)
 - [[Validation curve in training]](https://github.com/ryanxingql/powerqe/issues/2)
 
-## 7. License
+## 6. License
 
 We adopt Apache License v2.0.
 
