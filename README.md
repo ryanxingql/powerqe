@@ -1,9 +1,9 @@
-# PowerQE: An Open Framework for Quality Enhancement of Compressed Visual Data
+# PowerQE: An Open Framework for Quality Enhancement of Compressed Images
 
 
-:rocket: **Update** (22/4/24): We implement video approaches including MFQEv2 and STDF based on MMEditing at [basicvqe-mmediting](https://github.com/ryanxingql/basicvqe-mmediting).
+:rocket: **Update** (22/4/24): We implement video approaches including MFQEv2 and STDF based on MMEditing at [PowerVQE](https://github.com/ryanxingql/powervqe).
 
-:muscle: An **unified** framework for training/testing blind/non-blind fidelity/perception-oriented **quality enhancement** approaches for compressed images/videos based on PyTorch.
+:muscle: **PowerQE** is an **unified** framework for training/testing blind/non-blind fidelity/perception-oriented **quality enhancement** approaches for compressed images based on PyTorch.
 
 :hammer_and_wrench: Support now:
 
