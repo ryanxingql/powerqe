@@ -1,0 +1,3 @@
+[submodule "mmediting"]
+	path = mmediting
+	url = git@github.com:open-mmlab/mmediting.git
