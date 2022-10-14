@@ -24,3 +24,11 @@ pip3 install -e .  # everytime you update the submodule mmediting, you have to d
 cd ~
 python -c "import mmedit; print(mmedit.__version__)"
 ```
+
+## Training
+
+```bash
+conda activate powerqe
+#chmod +x ./tools/dist_train.sh
+CUDA_VISIBLE_DEVICES=0 PORT=29600 ./tools/dist_train.sh ./configs/rdn/rdn_qe_r4c64b8_g1_1000k_div2k.py 1
+```
