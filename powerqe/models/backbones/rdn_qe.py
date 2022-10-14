@@ -1,3 +1,5 @@
+# Copyright (c) OpenMMLab. All rights reserved.
+# Modified by RyanXingQL, 2022
 import math
 
 import torch
