@@ -29,16 +29,28 @@ python -c "import mmedit; print(mmedit.__version__)"
 
 ```bash
 conda activate powerqe
+
 #chmod +x ./tools/dist_train.sh
-CUDA_VISIBLE_DEVICES=0 PORT=29500 ./tools/dist_train.sh ./configs/rdn/rdn_qe_r4c64b8_g1_1000k_div2k.py 1
+
+CUDA_VISIBLE_DEVICES=0 PORT=29500 \
+./tools/dist_train.sh \
+./configs/rdn/rdn_qe_r4c64b8_g1_1000k_div2k.py \
+1
 ```
 
 ## Testing
 
 ```bash
 conda activate powerqe
+
 #chmod +x ./tools/dist_test.sh
-CUDA_VISIBLE_DEVICES=0 PORT=29510 ./tools/dist_test.sh ./configs/rdn/rdn_qe_r4c64b8_g1_1000k_div2k.py ./work_dirs/rdn_qe_r4c64b8_g1_1000k_div2k/latest.pth 1 --save-path ./work_dirs/rdn_qe_r4c64b8_g1_1000k_div2k/results/
+
+CUDA_VISIBLE_DEVICES=0 PORT=29510 \
+./tools/dist_test.sh \
+./configs/rdn/rdn_qe_r4c64b8_g1_1000k_div2k.py \
+./work_dirs/rdn_qe_r4c64b8_g1_1000k_div2k/latest.pth \
+1 \
+--save-path ./work_dirs/rdn_qe_r4c64b8_g1_1000k_div2k/results/
 ```
 
 ## Q&A
