@@ -77,8 +77,6 @@ class RDNQE(nn.Module):
     """RDN model for image quality enhancement.
 
     Adapted from the RDN in MMEditing.
-    1. Rescale factor.
-    2. Default 8 blocks.
 
     Args:
         rescale (int): Rescaling factor.
@@ -93,15 +91,16 @@ class RDNQE(nn.Module):
             Default: 64.
     """
 
-    def __init__(self,
-                 rescale,
-                 in_channels,
-                 out_channels,
-                 mid_channels=64,
-                 num_blocks=8,
-                #  upscale_factor=4,
-                 num_layers=8,
-                 channel_growth=64):
+    def __init__(
+            self,
+            rescale,
+            in_channels,
+            out_channels,
+            mid_channels=64,
+            num_blocks=8,
+            #  upscale_factor=4,
+            num_layers=8,
+            channel_growth=64):
 
         super().__init__()
         self.rescale = rescale
@@ -183,7 +182,7 @@ class RDNQE(nn.Module):
         """
 
         # downsample
-        x = F.interpolate(x, scale_factor=1/self.rescale, mode='bicubic')
+        x = F.interpolate(x, scale_factor=1 / self.rescale, mode='bicubic')
 
         sfe1 = self.sfe1(x)
         sfe2 = self.sfe2(sfe1)

@@ -4,7 +4,7 @@ exp_name = 'rdn_qe_r4c64b8_g1_1000k_div2k'
 rescale = 4  # must be 2^n
 # model settings
 model = dict(
-    type='BasicRestorer',
+    type='BasicRestorerQE',
     generator=dict(
         type='RDNQE',
         rescale=rescale,
@@ -13,7 +13,7 @@ model = dict(
         mid_channels=64,
         # num_blocks=16,
         num_blocks=8),
-        # upscale_factor=scale),
+    # upscale_factor=scale),
     pixel_loss=dict(type='L1Loss', loss_weight=1.0, reduction='mean'))
 # model training and testing settings
 train_cfg = None
@@ -112,7 +112,11 @@ checkpoint_config = dict(interval=5000, save_optimizer=True, by_epoch=False)
 # evaluation = dict(interval=5000, save_image=True, gpu_collect=True)
 evaluation = dict(interval=5000, save_image=False, gpu_collect=True)
 log_config = dict(
-    interval=100, hooks=[dict(type='TextLoggerHook', by_epoch=False),dict(type='TensorboardLoggerHook'),])
+    interval=100,
+    hooks=[
+        dict(type='TextLoggerHook', by_epoch=False),
+        dict(type='TensorboardLoggerHook'),
+    ])
 visual_config = None
 
 # runtime settings

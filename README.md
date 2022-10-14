@@ -30,5 +30,25 @@ python -c "import mmedit; print(mmedit.__version__)"
 ```bash
 conda activate powerqe
 #chmod +x ./tools/dist_train.sh
-CUDA_VISIBLE_DEVICES=0 PORT=29600 ./tools/dist_train.sh ./configs/rdn/rdn_qe_r4c64b8_g1_1000k_div2k.py 1
+CUDA_VISIBLE_DEVICES=0 PORT=29500 ./tools/dist_train.sh ./configs/rdn/rdn_qe_r4c64b8_g1_1000k_div2k.py 1
 ```
+
+## Testing
+
+```bash
+conda activate powerqe
+#chmod +x ./tools/dist_test.sh
+CUDA_VISIBLE_DEVICES=0 PORT=29510 ./tools/dist_test.sh ./configs/rdn/rdn_qe_r4c64b8_g1_1000k_div2k.py ./work_dirs/rdn_qe_r4c64b8_g1_1000k_div2k/latest.pth 1 --save-path ./work_dirs/rdn_qe_r4c64b8_g1_1000k_div2k/results/
+```
+
+## Q&A
+
+### Main difference between PowerQE and MMEditing
+
+- Support downsampling before enhancement and upsampling after enhancement to save memory.
+- Save LQ, GT and output when testing.
+- Evaluate "LQ vs. GT" and "output vs. GT" when testing.
+
+### Crop image border before evaluation
+
+Due to the padding of upsampling, the error at border is significant. We follow the common practice in SR to crop image border before evaluation.
