@@ -38,6 +38,10 @@ CUDA_VISIBLE_DEVICES=0 PORT=29500 \
 1
 ```
 
+Other options:
+
+- `--resume-from <ckp-path>`: Resume training status (model weights, number of iterations, optimizer status, etc.) from a checkpoint file.
+
 ## Testing
 
 ```bash
