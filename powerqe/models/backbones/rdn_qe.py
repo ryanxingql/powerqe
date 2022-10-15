@@ -72,6 +72,26 @@ class RDB(nn.Module):
         return x + self.lff(self.layers(x))  # local residual learning
 
 
+class Interpolate(nn.Module):
+    """
+    https://discuss.pytorch.org/t/using-nn-function-interpolate-inside-nn-sequential/23588/2
+    """
+
+    def __init__(self, scale_factor, mode):
+        super(Interpolate, self).__init__()
+        self.interp = nn.functional.interpolate
+        self.scale_factor = scale_factor
+        self.mode = mode
+
+    def forward(self, x):
+        x = self.interp(
+            x,
+            scale_factor=self.scale_factor,
+            mode=self.mode,
+            align_corners=False)
+        return x
+
+
 @BACKBONES.register_module()
 class RDNQE(nn.Module):
     """RDN model for image quality enhancement.
@@ -108,6 +128,12 @@ class RDNQE(nn.Module):
         self.channel_growth = channel_growth
         self.num_blocks = num_blocks
         self.num_layers = num_layers
+
+        if rescale == 1:
+            self.downscale = nn.Identity()
+        else:
+            self.downscale = Interpolate(
+                scale_factor=1. / rescale, mode='bicubic')
 
         # shallow feature extraction
         self.sfe1 = nn.Conv2d(
@@ -156,17 +182,20 @@ class RDNQE(nn.Module):
         #             kernel_size=3,
         #             padding=3 // 2), nn.PixelShuffle(upscale_factor))
         assert math.log2(rescale).is_integer()
-        self.upscale = []
-        for _ in range(rescale // 2):
-            self.upscale.extend([
-                nn.Conv2d(
-                    self.mid_channels,
-                    self.mid_channels * (2**2),
-                    kernel_size=3,
-                    padding=3 // 2),
-                nn.PixelShuffle(2)
-            ])
-        self.upscale = nn.Sequential(*self.upscale)
+        if rescale == 1:
+            self.upscale = nn.Identity()
+        else:
+            self.upscale = []
+            for _ in range(rescale // 2):
+                self.upscale.extend([
+                    nn.Conv2d(
+                        self.mid_channels,
+                        self.mid_channels * (2**2),
+                        kernel_size=3,
+                        padding=3 // 2),
+                    nn.PixelShuffle(2)
+                ])
+            self.upscale = nn.Sequential(*self.upscale)
 
         self.output = nn.Conv2d(
             self.mid_channels, out_channels, kernel_size=3, padding=3 // 2)
@@ -181,8 +210,7 @@ class RDNQE(nn.Module):
             Tensor: Forward results.
         """
 
-        # downsample
-        x = F.interpolate(x, scale_factor=1 / self.rescale, mode='bicubic')
+        x = self.downscale(x)
 
         sfe1 = self.sfe1(x)
         sfe2 = self.sfe2(sfe1)
@@ -193,8 +221,9 @@ class RDNQE(nn.Module):
             x = self.rdbs[i](x)
             local_features.append(x)
 
-        x = self.gff(torch.cat(local_features, 1)) + sfe1
-        # global residual learning
+        x = self.gff(torch.cat(local_features,
+                               1)) + sfe1  # global residual learning
+
         x = self.upscale(x)
         x = self.output(x)
         return x
