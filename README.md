@@ -69,7 +69,7 @@ CUDA_VISIBLE_DEVICES=0 PORT=29510 \
 
 Due to the padding of upsampling, the error at border is significant. We follow the common practice in SR to crop image border before evaluation.
 
-### Pre-commit Hook
+### Pre-commit hook
 
 We follow [MMCV](https://github.com/open-mmlab/mmcv/blob/master/CONTRIBUTING.md) to support pre-commit hook. The config file is inherited from [MMEditing](https://github.com/ryanxingql/mmediting/blob/master/.pre-commit-config.yaml). Installation:
 
