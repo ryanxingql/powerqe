@@ -8,7 +8,6 @@ import torch
 from mmcv import Config, DictAction
 from mmcv.parallel import MMDataParallel
 from mmcv.runner import get_dist_info, init_dist, load_checkpoint
-
 from mmedit.apis import multi_gpu_test, set_random_seed, single_gpu_test
 from mmedit.core.distributed_wrapper import DistributedDataParallelWrapper
 from mmedit.datasets import build_dataloader, build_dataset
@@ -28,10 +27,9 @@ def parse_args():
         action='store_true',
         help='whether to set deterministic options for CUDNN backend.')
     parser.add_argument('--out', help='output result pickle file')
-    parser.add_argument(
-        '--gpu-collect',
-        action='store_true',
-        help='whether to use gpu to collect results')
+    parser.add_argument('--gpu-collect',
+                        action='store_true',
+                        help='whether to use gpu to collect results')
     parser.add_argument(
         '--save-path',
         default=None,
@@ -48,11 +46,10 @@ def parse_args():
         'It also allows nested list/tuple values, e.g. key="[(a,b),(c,d)]" '
         'Note that the quotation marks are necessary and that no white space '
         'is allowed.')
-    parser.add_argument(
-        '--launcher',
-        choices=['none', 'pytorch', 'slurm', 'mpi'],
-        default='none',
-        help='job launcher')
+    parser.add_argument('--launcher',
+                        choices=['none', 'pytorch', 'slurm', 'mpi'],
+                        default='none',
+                        help='job launcher')
     parser.add_argument('--local_rank', type=int, default=0)
     args = parser.parse_args()
     if 'LOCAL_RANK' not in os.environ:
@@ -97,11 +94,10 @@ def main():
 
     loader_cfg = {
         **dict((k, cfg.data[k]) for k in ['workers_per_gpu'] if k in cfg.data),
-        **dict(
-            samples_per_gpu=1,
-            drop_last=False,
-            shuffle=False,
-            dist=distributed),
+        **dict(samples_per_gpu=1,
+               drop_last=False,
+               shuffle=False,
+               dist=distributed),
         **cfg.data.get('test_dataloader', {})
     }
 
@@ -115,11 +111,10 @@ def main():
     if not distributed:
         _ = load_checkpoint(model, args.checkpoint, map_location='cpu')
         model = MMDataParallel(model, device_ids=[0])
-        outputs = single_gpu_test(
-            model,
-            data_loader,
-            save_path=args.save_path,
-            save_image=args.save_image)
+        outputs = single_gpu_test(model,
+                                  data_loader,
+                                  save_path=args.save_path,
+                                  save_image=args.save_image)
     else:
         find_unused_parameters = cfg.get('find_unused_parameters', False)
         model = DistributedDataParallelWrapper(
@@ -133,14 +128,13 @@ def main():
             model,
             args.checkpoint,
             map_location=lambda storage, loc: storage.cuda(device_id))
-        outputs = multi_gpu_test(
-            model,
-            data_loader,
-            args.tmpdir,
-            args.gpu_collect,
-            save_path=args.save_path,
-            save_image=args.save_image,
-            empty_cache=empty_cache)
+        outputs = multi_gpu_test(model,
+                                 data_loader,
+                                 args.tmpdir,
+                                 args.gpu_collect,
+                                 save_path=args.save_path,
+                                 save_image=args.save_image,
+                                 empty_cache=empty_cache)
 
     if rank == 0 and 'eval_result' in outputs[0]:
         print('')

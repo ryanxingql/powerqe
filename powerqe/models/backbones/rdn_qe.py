@@ -4,10 +4,8 @@ import math
 
 import torch
 from mmcv.runner import load_checkpoint
-from torch import nn
-import torch.nn.functional as F
-
 from mmedit.utils import get_root_logger
+from torch import nn
 
 from ..registry import BACKBONES
 
@@ -19,11 +17,12 @@ class DenseLayer(nn.Module):
         in_channels (int): Channel number of inputs.
         out_channels (int): Channel number of outputs.
     """
-
     def __init__(self, in_channels, out_channels):
         super().__init__()
-        self.conv = nn.Conv2d(
-            in_channels, out_channels, kernel_size=3, padding=3 // 2)
+        self.conv = nn.Conv2d(in_channels,
+                              out_channels,
+                              kernel_size=3,
+                              padding=3 // 2)
         self.relu = nn.ReLU(inplace=True)
 
     def forward(self, x):
@@ -46,7 +45,6 @@ class RDB(nn.Module):
         channel_growth (int): Channels growth in each layer.
         num_layers (int): Layer number in the Residual Dense Block.
     """
-
     def __init__(self, in_channels, channel_growth, num_layers):
         super().__init__()
         self.layers = nn.Sequential(*[
@@ -55,10 +53,9 @@ class RDB(nn.Module):
         ])
 
         # local feature fusion
-        self.lff = nn.Conv2d(
-            in_channels + channel_growth * num_layers,
-            in_channels,
-            kernel_size=1)
+        self.lff = nn.Conv2d(in_channels + channel_growth * num_layers,
+                             in_channels,
+                             kernel_size=1)
 
     def forward(self, x):
         """Forward function.
@@ -76,7 +73,6 @@ class Interpolate(nn.Module):
     """
     https://discuss.pytorch.org/t/using-nn-function-interpolate-inside-nn-sequential/23588/2
     """
-
     def __init__(self, scale_factor, mode):
         super(Interpolate, self).__init__()
         self.interp = nn.functional.interpolate
@@ -84,11 +80,10 @@ class Interpolate(nn.Module):
         self.mode = mode
 
     def forward(self, x):
-        x = self.interp(
-            x,
-            scale_factor=self.scale_factor,
-            mode=self.mode,
-            align_corners=False)
+        x = self.interp(x,
+                        scale_factor=self.scale_factor,
+                        mode=self.mode,
+                        align_corners=False)
         return x
 
 
@@ -110,7 +105,6 @@ class RDNQE(nn.Module):
         channel_growth(int): Channels growth in each layer of RDB.
             Default: 64.
     """
-
     def __init__(
             self,
             rescale,
@@ -132,21 +126,27 @@ class RDNQE(nn.Module):
         if rescale == 1:
             self.downscale = nn.Identity()
         else:
-            self.downscale = Interpolate(
-                scale_factor=1. / rescale, mode='bicubic')
+            self.downscale = Interpolate(scale_factor=1. / rescale,
+                                         mode='bicubic')
 
         # shallow feature extraction
-        self.sfe1 = nn.Conv2d(
-            in_channels, mid_channels, kernel_size=3, padding=3 // 2)
-        self.sfe2 = nn.Conv2d(
-            mid_channels, mid_channels, kernel_size=3, padding=3 // 2)
+        self.sfe1 = nn.Conv2d(in_channels,
+                              mid_channels,
+                              kernel_size=3,
+                              padding=3 // 2)
+        self.sfe2 = nn.Conv2d(mid_channels,
+                              mid_channels,
+                              kernel_size=3,
+                              padding=3 // 2)
 
         # residual dense blocks
-        # self.rdbs = nn.ModuleList(
-        #     [RDB(self.mid_channels, self.channel_growth, self.num_layers)])
-        # for _ in range(self.num_blocks - 1):
-        #     self.rdbs.append(
-        #         RDB(self.channel_growth, self.channel_growth, self.num_layers))
+        """
+        self.rdbs = nn.ModuleList(
+            [RDB(self.mid_channels, self.channel_growth, self.num_layers)])
+        for _ in range(self.num_blocks - 1):
+            self.rdbs.append(
+                RDB(self.channel_growth, self.channel_growth, self.num_layers))
+        """
         self.rdbs = nn.ModuleList()
         for _ in range(self.num_blocks):
             self.rdbs.append(
@@ -154,15 +154,13 @@ class RDNQE(nn.Module):
 
         # global feature fusion
         self.gff = nn.Sequential(
-            nn.Conv2d(
-                self.mid_channels * self.num_blocks,
-                self.mid_channels,
-                kernel_size=1),
-            nn.Conv2d(
-                self.mid_channels,
-                self.mid_channels,
-                kernel_size=3,
-                padding=3 // 2))
+            nn.Conv2d(self.mid_channels * self.num_blocks,
+                      self.mid_channels,
+                      kernel_size=1),
+            nn.Conv2d(self.mid_channels,
+                      self.mid_channels,
+                      kernel_size=3,
+                      padding=3 // 2))
 
         # up-sampling
         # assert 2 <= upscale_factor <= 4
@@ -192,17 +190,18 @@ class RDNQE(nn.Module):
             self.upscale = []
             for _ in range(rescale // 2):
                 self.upscale.extend([
-                    nn.Conv2d(
-                        self.mid_channels,
-                        self.mid_channels * (2**2),
-                        kernel_size=3,
-                        padding=3 // 2),
+                    nn.Conv2d(self.mid_channels,
+                              self.mid_channels * (2**2),
+                              kernel_size=3,
+                              padding=3 // 2),
                     nn.PixelShuffle(2)
                 ])
             self.upscale = nn.Sequential(*self.upscale)
 
-        self.output = nn.Conv2d(
-            self.mid_channels, out_channels, kernel_size=3, padding=3 // 2)
+        self.output = nn.Conv2d(self.mid_channels,
+                                out_channels,
+                                kernel_size=3,
+                                padding=3 // 2)
 
     def forward(self, x):
         """Forward function.

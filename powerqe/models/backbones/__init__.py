@@ -1,3 +1,3 @@
 from .rdn_qe import RDNQE
 
-__all__ = ["RDNQE"]
+__all__ = ['RDNQE']

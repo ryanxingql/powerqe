@@ -4,11 +4,9 @@ import numbers
 import os.path as osp
 
 import mmcv
-
-from mmedit.core import psnr, ssim, tensor2img
+from mmedit.core import tensor2img
 from mmedit.models import BasicRestorer
 
-from ..builder import build_backbone, build_loss
 from ..registry import MODELS
 
 
@@ -29,19 +27,17 @@ class BasicRestorerQE(BasicRestorer):
         test_cfg (dict): Config for testing. Default: None.
         pretrained (str): Path for pretrained model. Default: None.
     """
-
     def __init__(self,
                  generator,
                  pixel_loss,
                  train_cfg=None,
                  test_cfg=None,
                  pretrained=None):
-        super().__init__(
-            generator=generator,
-            pixel_loss=pixel_loss,
-            train_cfg=train_cfg,
-            test_cfg=test_cfg,
-            pretrained=pretrained)
+        super().__init__(generator=generator,
+                         pixel_loss=pixel_loss,
+                         train_cfg=train_cfg,
+                         test_cfg=test_cfg,
+                         pretrained=pretrained)
 
     # def evaluate(self, output, gt):
     def evaluate(self, output, gt, lq):
@@ -96,12 +92,11 @@ class BasicRestorerQE(BasicRestorer):
             assert gt is not None, (
                 'evaluation with metrics must have gt images.')
             # results = dict(eval_result=self.evaluate(output, gt))
-            results = dict(
-                eval_result=self.evaluate(
-                    output=output,
-                    gt=gt,
-                    lq=lq,
-                ))
+            results = dict(eval_result=self.evaluate(
+                output=output,
+                gt=gt,
+                lq=lq,
+            ))
         else:
             results = dict(lq=lq.cpu(), output=output.cpu())
             if gt is not None:
@@ -112,8 +107,10 @@ class BasicRestorerQE(BasicRestorer):
             lq_path = meta[0]['lq_path']
             folder_name = osp.splitext(osp.basename(lq_path))[0]
             if isinstance(iteration, numbers.Number):
-                # save_path = osp.join(save_path, folder_name,
-                #                      f'{folder_name}-{iteration + 1:06d}.png')
+                """
+                save_path = osp.join(save_path, folder_name,
+                                     f'{folder_name}-{iteration + 1:06d}.png')
+                """
                 save_path_output = osp.join(
                     save_path, folder_name, 'output',
                     f'{folder_name}-{iteration + 1:06d}.png')

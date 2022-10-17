@@ -1,9 +1,9 @@
-from .backbones import *
-from .restorers import *
+from .backbones import RDNQE
 from .builder import build_backbone, build_component, build_loss, build_model
 from .registry import BACKBONES, COMPONENTS, LOSSES, MODELS
+from .restorers import BasicRestorerQE
 
 __all__ = [
-    "build_backbone", "build_component", "build_loss", "build_model",
-    "BACKBONES", "COMPONENTS", "LOSSES", "MODELS"
+    'RDNQE', 'build_backbone', 'build_component', 'build_loss', 'build_model',
+    'BACKBONES', 'COMPONENTS', 'LOSSES', 'MODELS', 'BasicRestorerQE'
 ]

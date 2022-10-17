@@ -11,7 +11,6 @@ import torch
 import torch.distributed as dist
 from mmcv import Config, DictAction
 from mmcv.runner import init_dist
-
 from mmedit import __version__
 from mmedit.apis import init_random_seed, set_random_seed, train_model
 from mmedit.datasets import build_dataset
@@ -25,18 +24,17 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Train an editor')
     parser.add_argument('config', help='train config file path')
     parser.add_argument('--work-dir', help='the dir to save logs and models')
-    parser.add_argument(
-        '--resume-from', help='the checkpoint file to resume from')
+    parser.add_argument('--resume-from',
+                        help='the checkpoint file to resume from')
     parser.add_argument(
         '--no-validate',
         action='store_true',
         help='whether not to evaluate the checkpoint during training')
-    parser.add_argument(
-        '--gpus',
-        type=int,
-        default=1,
-        help='number of gpus to use '
-        '(only applicable to non-distributed training)')
+    parser.add_argument('--gpus',
+                        type=int,
+                        default=1,
+                        help='number of gpus to use '
+                        '(only applicable to non-distributed training)')
     parser.add_argument('--seed', type=int, default=None, help='random seed')
     parser.add_argument(
         '--diff_seed',
@@ -56,16 +54,14 @@ def parse_args():
         'It also allows nested list/tuple values, e.g. key="[(a,b),(c,d)]" '
         'Note that the quotation marks are necessary and that no white space '
         'is allowed.')
-    parser.add_argument(
-        '--launcher',
-        choices=['none', 'pytorch', 'slurm', 'mpi'],
-        default='none',
-        help='job launcher')
+    parser.add_argument('--launcher',
+                        choices=['none', 'pytorch', 'slurm', 'mpi'],
+                        default='none',
+                        help='job launcher')
     parser.add_argument('--local_rank', type=int, default=0)
-    parser.add_argument(
-        '--autoscale-lr',
-        action='store_true',
-        help='automatically scale lr with the number of gpus')
+    parser.add_argument('--autoscale-lr',
+                        action='store_true',
+                        help='automatically scale lr with the number of gpus')
     args = parser.parse_args()
     if 'LOCAL_RANK' not in os.environ:
         os.environ['LOCAL_RANK'] = str(args.local_rank)
@@ -132,8 +128,9 @@ def main():
     set_random_seed(seed, deterministic=args.deterministic)
     cfg.seed = seed
 
-    model = build_model(
-        cfg.model, train_cfg=cfg.train_cfg, test_cfg=cfg.test_cfg)
+    model = build_model(cfg.model,
+                        train_cfg=cfg.train_cfg,
+                        test_cfg=cfg.test_cfg)
 
     datasets = [build_dataset(cfg.data.train)]
     if len(cfg.workflow) == 2:
@@ -158,14 +155,13 @@ def main():
     meta['env_info'] = env_info
 
     # add an attribute for visualization convenience
-    train_model(
-        model,
-        datasets,
-        cfg,
-        distributed=distributed,
-        validate=(not args.no_validate),
-        timestamp=timestamp,
-        meta=meta)
+    train_model(model,
+                datasets,
+                cfg,
+                distributed=distributed,
+                validate=(not args.no_validate),
+                timestamp=timestamp,
+                meta=meta)
 
 
 if __name__ == '__main__':
