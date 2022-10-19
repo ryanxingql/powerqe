@@ -65,34 +65,23 @@ data = dict(
     train_dataloader=dict(samples_per_gpu=16, drop_last=True),
     val_dataloader=dict(samples_per_gpu=1),
     test_dataloader=dict(samples_per_gpu=1),
-    train=dict(
-        type='RepeatDataset',
-        times=1000,
-        dataset=dict(
-            # type='SRAnnotationDataset',
-            type='SRFolderDataset',
-            lq_folder='./data/div2k/train/lq',
-            gt_folder='./data/div2k/train/gt',
-            # ann_file='data/DIV2K/meta_info_DIV2K800sub_GT.txt',
-            pipeline=train_pipeline,
-            # scale=scale)),
-            scale=1)),
-    val=dict(
-        type='SRFolderDataset',
-        lq_folder='./data/div2k/valid/lq',
-        gt_folder='./data/div2k/valid/gt',
-        pipeline=test_pipeline,
-        # scale=scale,
-        scale=1,
-        filename_tmpl='{}'),
-    test=dict(
-        type='SRFolderDataset',
-        lq_folder='./data/kodak/lq',
-        gt_folder='./data/kodak/gt',
-        pipeline=test_pipeline,
-        # scale=scale,
-        scale=1,
-        filename_tmpl='{}'))
+    train=dict(type='RepeatDataset',
+               times=1000,
+               dataset=dict(type='QEFolderDataset',
+                            lq_folder='./data/div2k/train/lq',
+                            gt_folder='./data/div2k/train/gt',
+                            pipeline=train_pipeline,
+                            filename_tmpl='{}.png')),
+    val=dict(type='QEFolderDataset',
+             lq_folder='./data/div2k/valid/lq',
+             gt_folder='./data/div2k/valid/gt',
+             pipeline=test_pipeline,
+             filename_tmpl='{}.png'),
+    test=dict(type='QEFolderDataset',
+              lq_folder='./data/div2k/valid/lq',
+              gt_folder='./data/div2k/valid/gt',
+              pipeline=test_pipeline,
+              filename_tmpl='{}.png'))
 
 # optimizer
 optimizers = dict(generator=dict(type='Adam', lr=1e-4, betas=(0.9, 0.999)))

@@ -91,7 +91,7 @@ class Interpolate(nn.Module):
 class RDNQE(nn.Module):
     """RDN model for image quality enhancement.
 
-    Adapted from the RDN in MMEditing.
+    Adapted from the RDN in MMEditing 0.15.
 
     Args:
         rescale (int): Rescaling factor.
