@@ -1,5 +1,8 @@
 # PowerQE
 
+- [x] RDN
+- [x] UNet
+
 ## Environment
 
 - MMEditing (PyTorch + MMCV + MMEditing)
@@ -28,13 +31,12 @@ python -c "import mmedit; print(mmedit.__version__)"
 ## Training
 
 ```bash
-conda activate powerqe
-
 #chmod +x ./tools/dist_train.sh
 
+conda activate powerqe && \
 CUDA_VISIBLE_DEVICES=0 PORT=29500 \
 ./tools/dist_train.sh \
-./configs/rdn/rdn_qe_r4c64b8_g1_1000k_div2k.py \
+./configs/rdn/rdn_qe_c64b8_div2k_ps128_bs32_1000k_g1.py \
 1
 ```
 
@@ -45,16 +47,15 @@ Other options:
 ## Testing
 
 ```bash
-conda activate powerqe
-
 #chmod +x ./tools/dist_test.sh
 
+conda activate powerqe && \
 CUDA_VISIBLE_DEVICES=0 PORT=29510 \
 ./tools/dist_test.sh \
-./configs/rdn/rdn_qe_r4c64b8_g1_1000k_div2k.py \
-./work_dirs/rdn_qe_r4c64b8_g1_1000k_div2k/latest.pth \
+./configs/rdn/rdn_qe_c64b8_div2k_ps128_bs32_1000k_g1.py \
+./work_dirs/rdn_qe_c64b8_div2k_ps128_bs32_1000k_g1/latest.pth \
 1 \
---save-path ./work_dirs/rdn_qe_r4c64b8_g1_1000k_div2k/results/
+--save-path ./work_dirs/rdn_qe_c64b8_div2k_ps128_bs32_1000k_g1/results/
 ```
 
 ## Q&A

@@ -1,7 +1,7 @@
-exp_name = 'rdn_qe_r4c64b8_g1_1000k_div2k'
+exp_name = 'rdn_qe_r1c64b8_div2k_ps128_bs32_1000k_g1'
 
 # scale = 1
-rescale = 4  # must be 2^n
+rescale = 1  # must be 2^n
 # model settings
 model = dict(
     type='BasicRestorerQE',
@@ -15,6 +15,7 @@ model = dict(
         num_blocks=8),
     # upscale_factor=scale),
     pixel_loss=dict(type='L1Loss', loss_weight=1.0, reduction='mean'))
+
 # model training and testing settings
 train_cfg = None
 # test_cfg = dict(metrics=['PSNR', 'SSIM'], crop_border=scale)
@@ -33,7 +34,7 @@ train_pipeline = [
          flag='color',
          channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
-    dict(type='PairedRandomCrop', gt_patch_size=64),
+    dict(type='PairedRandomCrop', gt_patch_size=128),
     dict(type='Flip',
          keys=['lq', 'gt'],
          flip_ratio=0.5,
@@ -61,8 +62,8 @@ test_pipeline = [
 
 data = dict(
     # workers_per_gpu=1,
-    workers_per_gpu=16,  # really helpful
-    train_dataloader=dict(samples_per_gpu=16, drop_last=True),
+    workers_per_gpu=32,  # really helpful
+    train_dataloader=dict(samples_per_gpu=32, drop_last=True),
     val_dataloader=dict(samples_per_gpu=1),
     test_dataloader=dict(samples_per_gpu=1),
     train=dict(type='RepeatDataset',
