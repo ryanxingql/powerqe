@@ -10,18 +10,23 @@
 My example:
 
 ```bash
-conda create --name powerqe python=3.8 -y && conda activate powerqe
+# add conda mirror
+# https://mirrors.tuna.tsinghua.edu.cn/help/anaconda/
+
+conda create -n powerqe python=3.8 -y && conda activate powerqe
 
 # install MMEditing following mmediting/docs/en/install.md
 
-conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch -y
+conda install pytorch=1.10 torchvision torchaudio cudatoolkit=11.3 -c pytorch -y
 
-#pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+# add pip mirror
+# https://mirrors.tuna.tsinghua.edu.cn/help/pypi/
+#which pip
 pip3 install openmim
 mim install mmcv-full==1.5.0
 
 cd mmediting
-pip3 install -e .  # every time you update the submodule mmediting, you have to do this again
+pip3 install -e .
 
 # verify
 cd ~
