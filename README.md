@@ -6,6 +6,7 @@
 ## Environment
 
 - MMEditing (PyTorch + MMCV + MMEditing)
+- `torch-dct==0.1.6`
 
 My example:
 
@@ -31,6 +32,9 @@ pip3 install -e .
 # verify
 cd ~
 python -c "import mmedit; print(mmedit.__version__)"
+
+# other pkgs
+pip install torch-dct==0.1.6
 ```
 
 ## Training

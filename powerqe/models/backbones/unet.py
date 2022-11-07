@@ -1,4 +1,4 @@
-# Copyright (c) ryanxingql. All rights reserved.
+# RyanXingQL, 2022
 import torch
 import torch.nn as nn
 import torch.nn.functional as nnf
@@ -63,6 +63,7 @@ class Up(nn.Module):
 
 @BACKBONES.register_module()
 class UNet(nn.Module):
+    """U-Net for enhancement."""
     def __init__(
         self,
         nf_in,

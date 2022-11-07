@@ -12,13 +12,7 @@ from ..registry import MODELS
 
 @MODELS.register_module()
 class BasicRestorerQE(BasicRestorer):
-    """Basic model for image restoration.
-
-    It must contain a generator that takes an image as inputs and outputs a
-    restored image. It also has a pixel-wise loss for training.
-
-    The subclasses should overwrite the function `forward_train`,
-    `forward_test` and `train_step`.
+    """Support LQ vs. GT testing.
 
     Args:
         generator (dict): Config for the generator structure.

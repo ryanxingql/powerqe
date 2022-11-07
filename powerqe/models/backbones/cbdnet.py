@@ -1,4 +1,4 @@
-# Copyright (c) ryanxingql. All rights reserved.
+# RyanXingQL, 2022
 import torch
 import torch.nn as nn
 from mmcv.runner import load_checkpoint
