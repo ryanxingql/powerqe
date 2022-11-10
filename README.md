@@ -18,20 +18,19 @@ conda create -n powerqe python=3.8 -y && conda activate powerqe
 
 # install MMEditing following mmediting/docs/en/install.md
 
-conda install pytorch=1.10 torchvision torchaudio cudatoolkit=11.3 -c pytorch -y
+conda install pytorch=1.10 torchvision cudatoolkit=11.3 -c pytorch -y
 
 # add pip mirror
 # https://mirrors.tuna.tsinghua.edu.cn/help/pypi/
 #which pip
+#pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.10/index.html
 pip3 install openmim
 mim install mmcv-full==1.5.0
 
-cd mmediting
-pip3 install -e .
+cd mmediting && pip3 install -e .
 
 # verify
-cd ~
-python -c "import mmedit; print(mmedit.__version__)"
+cd ~ && python -c "import mmedit; print(mmedit.__version__)"
 
 # other pkgs
 pip install torch-dct==0.1.6
