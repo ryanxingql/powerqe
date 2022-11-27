@@ -1,5 +1,6 @@
 # PowerQE
 
+- [x] ESRGAN
 - [x] RDN
 - [x] UNet
 
