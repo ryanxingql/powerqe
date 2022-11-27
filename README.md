@@ -1,8 +1,32 @@
 # PowerQE
 
-- [x] ESRGAN
-- [x] RDN
-- [x] UNet
+This repository supports some quality enhancement approaches for compressed images/videos based on PyTorch and MMEditing (v1.x).
+
+- [ ] [BasicVSR++ (CVPR 2022)](https://arxiv.org/abs/2104.13371)
+- [ ] [STDF (AAAI 2020)](https://github.com/ryanxingql/stdf-pytorch)
+- [ ] [RBQE (ECCV 2020)](https://arxiv.org/abs/2006.16581)
+- [ ] [MFQEv2 (TPAMI 2019)](https://github.com/ryanxingql/mfqev2.0)
+- [ ] [CBDNet (CVPR 2019)](https://arxiv.org/abs/1807.04686)
+- [ ] [EDVR (CVPRW 2019)](https://arxiv.org/abs/1905.02716)
+- [x] [ESRGAN (ECCVW 2018)](https://arxiv.org/abs/1809.00219)
+- [x] [RDN (CVPR 2018)](https://arxiv.org/abs/1802.08797)
+- [ ] [DnCNN (TIP 2017)](https://arxiv.org/abs/1608.03981)
+- [ ] [DCAD (DCC 2017)](https://ieeexplore.ieee.org/abstract/document/7923714)
+- [x] [UNet (MICCAI 2015)](https://arxiv.org/abs/1505.04597)
+- [ ] [AR-CNN (ICCV 2015)](https://arxiv.org/abs/1504.06993)
+
+Main difference to MMEditing:
+
+- Support downsampling before enhancement and upsampling after enhancement to save memory.
+- Save LQ, GT and output when testing.
+- Evaluate "LQ vs. GT" and "output vs. GT" when testing.
+- Bug fixed.
+
+MMEditing is a submodule of PowerQE. Users can easily upgrade the MMEditing, and add their own models to PowerQE without modifying the MMEdit package. One should clone PowerQE along with MMEditing like this:
+
+```bash
+git clone -b v3-dev --recurse-submodules --depth 1 https://github.com/ryanxingql/powerqe.git
+```
 
 ## Environment
 
@@ -68,12 +92,6 @@ CUDA_VISIBLE_DEVICES=0 PORT=29510 \
 ```
 
 ## Q&A
-
-### Main difference between PowerQE and MMEditing
-
-- Support downsampling before enhancement and upsampling after enhancement to save memory.
-- Save LQ, GT and output when testing.
-- Evaluate "LQ vs. GT" and "output vs. GT" when testing.
 
 ### Crop image border before evaluation
 
