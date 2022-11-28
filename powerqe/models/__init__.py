@@ -2,10 +2,10 @@
 from .backbones import RDNQE, RRDBNetQE, UNet
 from .builder import build_backbone, build_component, build_loss, build_model
 from .registry import BACKBONES, COMPONENTS, LOSSES, MODELS
-from .restorers import ESRGANQE, BasicRestorerQE
+from .restorers import BasicRestorerQE, ESRGANQE
 
 __all__ = [
-    'RDNQE', 'build_backbone', 'build_component', 'build_loss', 'build_model',
-    'BACKBONES', 'COMPONENTS', 'LOSSES', 'MODELS', 'BasicRestorerQE',
-    'ESRGANQE', 'RRDBNetQE', 'UNet'
+    'build_backbone', 'build_component', 'build_loss', 'build_model',
+    'BACKBONES', 'COMPONENTS', 'LOSSES', 'MODELS', 'RDNQE', 'RRDBNetQE',
+    'UNet', 'BasicRestorerQE', 'ESRGANQE'
 ]
