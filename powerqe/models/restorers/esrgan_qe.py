@@ -34,7 +34,6 @@ class ESRGANQE(BasicRestorer):
         test_cfg (dict): Config for testing. Default: None.
         pretrained (str): Path for pretrained model. Default: None.
     """
-
     def __init__(self,
                  generator,
                  discriminator=None,
@@ -80,9 +79,9 @@ class ESRGANQE(BasicRestorer):
             pretrained (str, optional): Path for pretrained weights. If given
                 None, pretrained weights will not be loaded. Defaults to None.
         """
-        self.generator.init_weights(
-            pretrained=pretrained,
-            revise_keys=[(r'^generator\.', ''), (r'^module\.', '')])
+        self.generator.init_weights(pretrained=pretrained,
+                                    revise_keys=[(r'^generator\.', ''),
+                                                 (r'^module\.', '')])
         # if self.discriminator:
         #     self.discriminator.init_weights(pretrained=pretrained)
 
@@ -124,14 +123,14 @@ class ESRGANQE(BasicRestorer):
             # gan loss for generator
             real_d_pred = self.discriminator(gt).detach()
             fake_g_pred = self.discriminator(fake_g_output)
-            loss_gan_fake = self.gan_loss(
-                fake_g_pred - torch.mean(real_d_pred),
-                target_is_real=True,
-                is_disc=False)
-            loss_gan_real = self.gan_loss(
-                real_d_pred - torch.mean(fake_g_pred),
-                target_is_real=False,
-                is_disc=False)
+            loss_gan_fake = self.gan_loss(fake_g_pred -
+                                          torch.mean(real_d_pred),
+                                          target_is_real=True,
+                                          is_disc=False)
+            loss_gan_real = self.gan_loss(real_d_pred -
+                                          torch.mean(fake_g_pred),
+                                          target_is_real=False,
+                                          is_disc=False)
             losses['loss_gan'] = (loss_gan_fake + loss_gan_real) / 2
 
             # parse loss
@@ -173,9 +172,10 @@ class ESRGANQE(BasicRestorer):
         self.step_counter += 1
 
         log_vars.pop('loss')  # remove the unnecessary 'loss'
-        outputs = dict(
-            log_vars=log_vars,
-            num_samples=len(gt.data),
-            results=dict(lq=lq.cpu(), gt=gt.cpu(), output=fake_g_output.cpu()))
+        outputs = dict(log_vars=log_vars,
+                       num_samples=len(gt.data),
+                       results=dict(lq=lq.cpu(),
+                                    gt=gt.cpu(),
+                                    output=fake_g_output.cpu()))
 
         return outputs
