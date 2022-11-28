@@ -1,4 +1,4 @@
-# RyanXingQL, 2022
+# RyanXingQL @2022
 import torch
 import torch.nn as nn
 from mmcv.runner import load_checkpoint

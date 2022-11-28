@@ -1,8 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-# Modified by ryanxingql @2022
-import torch.nn as nn
+# Modified by RyanXingQL @2022
 from mmcv.runner import load_checkpoint
-
 from mmedit.models import RRDBNet
 from mmedit.models.common import default_init_weights
 from mmedit.models.registry import BACKBONES
@@ -28,7 +26,6 @@ class RRDBNetQE(RRDBNet):
         upscale_factor (int): Upsampling factor. Support x1, x2 and x4.
             Default: 4.
     """
-
     def init_weights(self,
                      pretrained=None,
                      strict=True,
@@ -43,12 +40,11 @@ class RRDBNetQE(RRDBNet):
         """
         if isinstance(pretrained, str):
             logger = get_root_logger()
-            load_checkpoint(
-                self,
-                pretrained,
-                strict=strict,
-                logger=logger,
-                revise_keys=revise_keys)
+            load_checkpoint(self,
+                            pretrained,
+                            strict=strict,
+                            logger=logger,
+                            revise_keys=revise_keys)
         elif pretrained is None:
             # Use smaller std for better stability and performance. We
             # use 0.1. See more details in "ESRGAN: Enhanced Super-Resolution

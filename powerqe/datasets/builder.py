@@ -1,5 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-# Modified by RyanXingQL, 2022
+# Modified by RyanXingQL @2022
 import copy
 import platform
 import random

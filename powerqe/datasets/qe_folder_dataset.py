@@ -1,4 +1,4 @@
-# RyanXingQL, 2022
+# RyanXingQL @2022
 import os
 import os.path as osp
 from pathlib import Path

@@ -1,4 +1,4 @@
-# RyanXingQL, 2022
+# RyanXingQL @2022
 import torch
 import torch.nn as nn
 import torch.nn.functional as nnf

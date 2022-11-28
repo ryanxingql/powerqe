@@ -1,4 +1,4 @@
-# RyanXingQL, 2022
+# RyanXingQL @2022
 from .rdn_qe import RDNQE
 from .rrdb_net_qe import RRDBNetQE
 from .unet import UNet
