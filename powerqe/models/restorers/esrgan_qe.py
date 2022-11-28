@@ -1,15 +1,15 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 # Modified by RyanXingQL @2022
 import torch
-from mmedit.models import BasicRestorer
 from mmedit.models.common import set_requires_grad
 
 from ..builder import build_backbone, build_component, build_loss
 from ..registry import MODELS
+from .basic_restorer_qe import BasicRestorerQE
 
 
 @MODELS.register_module()
-class ESRGANQE(BasicRestorer):
+class ESRGANQE(BasicRestorerQE):
     """Enhanced SRGAN model for single image quality enhancement.
 
     Ref:
@@ -43,8 +43,12 @@ class ESRGANQE(BasicRestorer):
                  train_cfg=None,
                  test_cfg=None,
                  pretrained=None):
-        # search for the __init__ above BasicRestorer
-        super(BasicRestorer, self).__init__()
+        # search for the __init__ above BasicRestorerQE
+        super().__init__(generator=generator,
+                         pixel_loss=pixel_loss,
+                         train_cfg=train_cfg,
+                         test_cfg=test_cfg,
+                         pretrained=pretrained)
 
         self.train_cfg = train_cfg
         self.test_cfg = test_cfg

@@ -2,7 +2,7 @@ exp_name = 'esrgan_stage1'
 
 scale = 1
 # model settings
-model = dict(type='BasicRestorer',
+model = dict(type='BasicRestorerQE',
              generator=dict(type='RRDBNetQE',
                             in_channels=3,
                             out_channels=3,
