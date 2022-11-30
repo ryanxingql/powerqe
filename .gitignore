@@ -1,2 +1,6 @@
 .vscode/
 .DS_Store
+
+/data/
+/tmp/
+/work_dirs/
