@@ -95,11 +95,11 @@ CUDA_VISIBLE_DEVICES=0 PORT=29510 \
 
 ### Crop image border before evaluation
 
-Due to the padding of upsampling, the error at border is significant. We follow the common practice in SR to crop image border before evaluation.
+Due to the padding of upsampling, the error at border is significant. PowerQE follows the common practice in SR to crop image border before evaluation.
 
 ### Pre-commit hook
 
-We follow [MMCV](https://github.com/open-mmlab/mmcv/blob/master/CONTRIBUTING.md) to support pre-commit hook. The config file is inherited from [MMEditing](https://github.com/ryanxingql/mmediting/blob/master/.pre-commit-config.yaml). Installation:
+PowerQE follows [MMCV](https://github.com/open-mmlab/mmcv/blob/master/CONTRIBUTING.md) to support pre-commit hook. The config file is inherited from [MMEditing](https://github.com/ryanxingql/mmediting/blob/master/.pre-commit-config.yaml). Installation:
 
 ```bash
 conda activate powerqe
@@ -112,3 +112,11 @@ On every commit, linters and formatter will be enforced. You can also run hooks 
 ```bash
 pre-commit run --all-files
 ```
+
+### Same items between PowerQE and MMEditing such as `Compose`
+
+When constructing the pipelines for a dataset, the dataset (`BaseDataset` in fact) will refer to `Compose`. Then, `Compose` refers to `..registry` for `PIPELINES`.
+
+PowerQE has its own pipelines such as `PairedCenterCrop`. As a result, PowerQE has to define a new `Compose`, which refers to its own `..registry`.
+
+Note that `Compose` in PowerQE will not be registered into `PIPELINES`.

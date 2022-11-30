@@ -3,9 +3,8 @@ import os
 import os.path as osp
 from pathlib import Path
 
-from mmedit.datasets import SRFolderDataset
-
 from .registry import DATASETS
+from .sr_folder_dataset import SRFolderDataset
 
 IMG_EXTENSIONS = ('.jpg', '.JPG', '.jpeg', '.JPEG', '.png', '.PNG', '.ppm',
                   '.PPM', '.bmp', '.BMP', '.tif', '.TIF', '.tiff', '.TIFF')

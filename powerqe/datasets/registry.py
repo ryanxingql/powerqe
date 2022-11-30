@@ -1,4 +1,6 @@
 # RyanXingQL @2022
 from mmedit.datasets import DATASETS as MMEDIT_DATASETS
+from mmedit.datasets import PIPELINES as MMEDIT_PIPELINES
 
 DATASETS = MMEDIT_DATASETS
+PIPELINES = MMEDIT_PIPELINES
