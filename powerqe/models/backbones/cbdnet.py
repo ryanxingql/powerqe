@@ -42,6 +42,7 @@ class CBDNet(nn.Module):
             in the denoising module.
             Default: add.
     """
+
     def __init__(
         self,
         in_channels=3,

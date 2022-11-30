@@ -74,6 +74,7 @@ class QEFolderDataset(SRFolderDataset):
         filename_tmpl (str): Template for each filename. Note that the
             template excludes the file extension. Default: '{}.png'.
     """
+
     def __init__(self,
                  lq_folder,
                  gt_folder,

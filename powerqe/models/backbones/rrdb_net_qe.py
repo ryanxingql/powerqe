@@ -26,6 +26,7 @@ class RRDBNetQE(RRDBNet):
         upscale_factor (int): Upsampling factor. Support x1, x2 and x4.
             Default: 4.
     """
+
     def init_weights(self,
                      pretrained=None,
                      strict=True,

@@ -34,6 +34,7 @@ class ESRGANQE(BasicRestorerQE):
         test_cfg (dict): Config for testing. Default: None.
         pretrained (str): Path for pretrained model. Default: None.
     """
+
     def __init__(self,
                  generator,
                  discriminator=None,

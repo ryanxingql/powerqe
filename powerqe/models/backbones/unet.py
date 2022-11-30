@@ -13,6 +13,7 @@ reduce_method_lst = ['add', 'concat']
 
 
 class Up(nn.Module):
+
     def __init__(self, method, nf_in=None):
         assert method in up_method_lst, 'NOT SUPPORTED YET!'
 
@@ -64,6 +65,7 @@ class Up(nn.Module):
 @BACKBONES.register_module()
 class UNet(nn.Module):
     """U-Net for enhancement."""
+
     def __init__(
         self,
         nf_in,

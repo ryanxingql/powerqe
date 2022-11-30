@@ -17,6 +17,7 @@ class DenseLayer(nn.Module):
         in_channels (int): Channel number of inputs.
         out_channels (int): Channel number of outputs.
     """
+
     def __init__(self, in_channels, out_channels):
         super().__init__()
         self.conv = nn.Conv2d(in_channels,
@@ -45,6 +46,7 @@ class RDB(nn.Module):
         channel_growth (int): Channels growth in each layer.
         num_layers (int): Layer number in the Residual Dense Block.
     """
+
     def __init__(self, in_channels, channel_growth, num_layers):
         super().__init__()
         self.layers = nn.Sequential(*[
@@ -73,6 +75,7 @@ class Interpolate(nn.Module):
     """
     https://discuss.pytorch.org/t/using-nn-function-interpolate-inside-nn-sequential/23588/2
     """
+
     def __init__(self, scale_factor, mode):
         super(Interpolate, self).__init__()
         self.interp = nn.functional.interpolate
@@ -105,6 +108,7 @@ class RDNQE(nn.Module):
         channel_growth(int): Channels growth in each layer of RDB.
             Default: 64.
     """
+
     def __init__(
             self,
             rescale,
