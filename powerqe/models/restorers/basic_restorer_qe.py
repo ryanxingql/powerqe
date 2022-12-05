@@ -22,18 +22,6 @@ class BasicRestorerQE(BasicRestorer):
         pretrained (str): Path for pretrained model. Default: None.
     """
 
-    def __init__(self,
-                 generator,
-                 pixel_loss,
-                 train_cfg=None,
-                 test_cfg=None,
-                 pretrained=None):
-        super().__init__(generator=generator,
-                         pixel_loss=pixel_loss,
-                         train_cfg=train_cfg,
-                         test_cfg=test_cfg,
-                         pretrained=pretrained)
-
     # def evaluate(self, output, gt):
     def evaluate(self, output, gt, lq):
         """Evaluation function.
