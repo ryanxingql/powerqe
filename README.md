@@ -15,6 +15,11 @@ This repository supports some quality enhancement approaches for compressed imag
 - [x] [UNet (MICCAI 2015)](https://arxiv.org/abs/1505.04597)
 - [x] [AR-CNN (ICCV 2015)](https://arxiv.org/abs/1504.06993)
 
+TODO:
+
+- [ ] Support blind RBQE training and testing.
+- [ ] Support RBQE with multiprocessing IQA.
+
 Main difference to MMEditing:
 
 - Support downsampling before enhancement and upsampling after enhancement to save memory.
