@@ -1,18 +1,20 @@
-exp_name = 'rdn_qe_c64b8_div2k_ps128_bs32_1000k_g1'
+exp_name = 'arcnn_c64c32c16k9k7k1k5_div2k_ps128_bs32_1000k_g1'
 
 # scale = 1
 rescale = 1  # must be 2^n
 # model settings
 model = dict(
     type='BasicRestorerQE',
-    generator=dict(
-        type='RDNQE',
-        rescale=rescale,
-        in_channels=3,
-        out_channels=3,
-        mid_channels=64,
-        # num_blocks=16,
-        num_blocks=8),
+    generator=dict(type='ARCNN',
+                   in_channels=3,
+                   mid_channels_1=64,
+                   mid_channels_2=32,
+                   mid_channels_3=16,
+                   out_channels=3,
+                   in_kernel_size=9,
+                   mid_kernel_size_1=7,
+                   mid_kernel_size_2=1,
+                   out_kernel_size=5),
     # upscale_factor=scale),
     pixel_loss=dict(type='L1Loss', loss_weight=1.0, reduction='mean'))
 

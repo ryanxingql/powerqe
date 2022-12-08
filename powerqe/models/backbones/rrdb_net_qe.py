@@ -9,23 +9,7 @@ from mmedit.utils import get_root_logger
 
 @BACKBONES.register_module()
 class RRDBNetQE(RRDBNet):
-    """Networks consisting of Residual in Residual Dense Block, which is used
-    in ESRGAN and Real-ESRGAN.
-
-    ESRGAN: Enhanced Super-Resolution Generative Adversarial Networks.
-    Real-ESRGAN: Training Real-World Blind Super-Resolution with Pure Synthetic Data. # noqa: E501
-    Currently, it supports [x1/x2/x4] upsampling scale factor.
-
-    Args:
-        in_channels (int): Channel number of inputs.
-        out_channels (int): Channel number of outputs.
-        mid_channels (int): Channel number of intermediate features.
-            Default: 64
-        num_blocks (int): Block number in the trunk network. Defaults: 23
-        growth_channels (int): Channels for each growth. Default: 32.
-        upscale_factor (int): Upsampling factor. Support x1, x2 and x4.
-            Default: 4.
-    """
+    """See RRDBNet."""
 
     def init_weights(self,
                      pretrained=None,

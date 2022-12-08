@@ -6,14 +6,14 @@ This repository supports some quality enhancement approaches for compressed imag
 - [ ] [STDF (AAAI 2020)](https://github.com/ryanxingql/stdf-pytorch)
 - [ ] [RBQE (ECCV 2020)](https://arxiv.org/abs/2006.16581)
 - [ ] [MFQEv2 (TPAMI 2019)](https://github.com/ryanxingql/mfqev2.0)
-- [ ] [CBDNet (CVPR 2019)](https://arxiv.org/abs/1807.04686)
+- [x] [CBDNet (CVPR 2019)](https://arxiv.org/abs/1807.04686)
 - [ ] [EDVR (CVPRW 2019)](https://arxiv.org/abs/1905.02716)
 - [x] [ESRGAN (ECCVW 2018)](https://arxiv.org/abs/1809.00219)
 - [x] [RDN (CVPR 2018)](https://arxiv.org/abs/1802.08797)
 - [ ] [DnCNN (TIP 2017)](https://arxiv.org/abs/1608.03981)
 - [ ] [DCAD (DCC 2017)](https://ieeexplore.ieee.org/abstract/document/7923714)
 - [x] [UNet (MICCAI 2015)](https://arxiv.org/abs/1505.04597)
-- [ ] [AR-CNN (ICCV 2015)](https://arxiv.org/abs/1504.06993)
+- [x] [AR-CNN (ICCV 2015)](https://arxiv.org/abs/1504.06993)
 
 Main difference to MMEditing:
 

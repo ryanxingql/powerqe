@@ -10,30 +10,7 @@ from .basic_restorer_qe import BasicRestorerQE
 
 @MODELS.register_module()
 class ESRGANQE(BasicRestorerQE):
-    """Enhanced SRGAN model for single image quality enhancement.
-
-    Ref:
-    ESRGAN: Enhanced Super-Resolution Generative Adversarial Networks.
-    It uses RaGAN for GAN updates:
-    The relativistic discriminator: a key element missing from standard GAN.
-
-    Args:
-        generator (dict): Config for the generator.
-        discriminator (dict): Config for the discriminator. Default: None.
-        gan_loss (dict): Config for the gan loss.
-            Note that the loss weight in gan loss is only for the generator.
-        pixel_loss (dict): Config for the pixel loss. Default: None.
-        perceptual_loss (dict): Config for the perceptual loss. Default: None.
-        train_cfg (dict): Config for training. Default: None.
-            You may change the training of gan by setting:
-            `disc_steps`: how many discriminator updates after one generate
-            update;
-            `disc_init_steps`: how many discriminator updates at the start of
-            the training.
-            These two keys are useful when training with WGAN.
-        test_cfg (dict): Config for testing. Default: None.
-        pretrained (str): Path for pretrained model. Default: None.
-    """
+    """Support LQ vs. GT testing for BasicRestorerQE."""
 
     def __init__(self,
                  generator,

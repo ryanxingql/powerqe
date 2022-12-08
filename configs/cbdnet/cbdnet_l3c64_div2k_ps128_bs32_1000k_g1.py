@@ -1,18 +1,15 @@
-exp_name = 'rdn_qe_c64b8_div2k_ps128_bs32_1000k_g1'
+exp_name = 'cbdnet_l3c64_div2k_ps128_bs32_1000k_g1'
 
 # scale = 1
 rescale = 1  # must be 2^n
 # model settings
 model = dict(
     type='BasicRestorerQE',
-    generator=dict(
-        type='RDNQE',
-        rescale=rescale,
-        in_channels=3,
-        out_channels=3,
-        mid_channels=64,
-        # num_blocks=16,
-        num_blocks=8),
+    generator=dict(type='CBDNet',
+                   in_channels=3,
+                   estimate_channels=32,
+                   nlevel_denoise=3,
+                   nf_base_denoise=64),
     # upscale_factor=scale),
     pixel_loss=dict(type='L1Loss', loss_weight=1.0, reduction='mean'))
 

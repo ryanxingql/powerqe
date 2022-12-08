@@ -12,15 +12,7 @@ from ..registry import MODELS
 
 @MODELS.register_module()
 class BasicRestorerQE(BasicRestorer):
-    """Support LQ vs. GT testing.
-
-    Args:
-        generator (dict): Config for the generator structure.
-        pixel_loss (dict): Config for pixel-wise loss.
-        train_cfg (dict): Config for training. Default: None.
-        test_cfg (dict): Config for testing. Default: None.
-        pretrained (str): Path for pretrained model. Default: None.
-    """
+    """Support LQ vs. GT testing for BasicRestorer."""
 
     # def evaluate(self, output, gt):
     def evaluate(self, output, gt, lq):
