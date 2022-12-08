@@ -11,7 +11,7 @@ This repository supports some quality enhancement approaches for compressed imag
 - [x] [ESRGAN (ECCVW 2018)](https://arxiv.org/abs/1809.00219)
 - [x] [RDN (CVPR 2018)](https://arxiv.org/abs/1802.08797)
 - [ ] [DnCNN (TIP 2017)](https://arxiv.org/abs/1608.03981)
-- [ ] [DCAD (DCC 2017)](https://ieeexplore.ieee.org/abstract/document/7923714)
+- [x] [DCAD (DCC 2017)](https://ieeexplore.ieee.org/abstract/document/7923714)
 - [x] [UNet (MICCAI 2015)](https://arxiv.org/abs/1505.04597)
 - [x] [AR-CNN (ICCV 2015)](https://arxiv.org/abs/1504.06993)
 

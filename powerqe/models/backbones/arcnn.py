@@ -51,7 +51,7 @@ class ARCNN(nn.Module):
 
         super().__init__()
 
-        self.net = nn.Sequential(
+        self.layers = nn.Sequential(
             nn.Conv2d(in_channels,
                       mid_channels_1,
                       in_kernel_size,
@@ -82,7 +82,7 @@ class ARCNN(nn.Module):
         Returns:
             Tensor: Forward results.
         """
-        return self.net(x) + x
+        return self.layers(x) + x
 
     def init_weights(self, pretrained=None, strict=True):
         """Init weights for models.
