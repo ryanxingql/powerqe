@@ -35,35 +35,39 @@ git clone -b v3-dev --recurse-submodules --depth 1 https://github.com/ryanxingql
 
 ## Environment
 
-- MMEditing (PyTorch + MMCV + MMEditing)
-- `torch-dct==0.1.6`
+- `environment.yml`
+- `requirements.txt`
+- MMEditing (PyTorch + MMCV + MMEdit)
 
-My example:
+First update your mirror (optional):
+
+- Conda: https://mirrors.tuna.tsinghua.edu.cn/help/anaconda
+- pip: https://mirrors.tuna.tsinghua.edu.cn/help/pypi
+
+Then install PowerQE:
 
 ```bash
-# add conda mirror
-# https://mirrors.tuna.tsinghua.edu.cn/help/anaconda/
+conda env create -f environment.yml  # create the powerqe env
+conda activate powerqe
+pip install -r requirements.txt
+```
 
-conda create -n powerqe python=3.8 -y && conda activate powerqe
+Finally install MMEdit following `mmediting/docs/en/install.md`
 
-# install MMEditing following mmediting/docs/en/install.md
-
+```bash
 conda install pytorch=1.10 torchvision cudatoolkit=11.3 -c pytorch -y
 
-# add pip mirror
-# https://mirrors.tuna.tsinghua.edu.cn/help/pypi/
-#which pip
 #pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.10/index.html
+# or
 pip3 install openmim
 mim install mmcv-full==1.5.0
 
-cd mmediting && pip3 install -e .
+cd mmediting
+pip3 install -e .
 
 # verify
-cd ~ && python -c "import mmedit; print(mmedit.__version__)"
-
-# other pkgs
-pip install torch-dct==0.1.6
+cd ~
+python -c "import mmedit; print(mmedit.__version__)"
 ```
 
 ## Training
