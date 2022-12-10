@@ -1,6 +1,6 @@
 exp_name = 'esrgan_stage2'
-
 scale = 1
+
 # model settings
 model = dict(
     type='ESRGANQE',
@@ -112,7 +112,6 @@ lr_config = dict(policy='Step',
                  gamma=0.5)
 
 checkpoint_config = dict(interval=5000, save_optimizer=True, by_epoch=False)
-# evaluation = dict(interval=5000, save_image=True, gpu_collect=True)
 evaluation = dict(interval=5000, save_image=False, gpu_collect=True)
 log_config = dict(
     interval=100,

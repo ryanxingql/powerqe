@@ -22,12 +22,12 @@ TODO:
 
 Main difference to MMEditing:
 
-- Support downsampling before enhancement and upsampling after enhancement to save memory.
+- Support down-sampling before enhancement and up-sampling after enhancement to save memory.
 - Save LQ, GT and output when testing.
 - Evaluate "LQ vs. GT" and "output vs. GT" when testing.
 - Bug fixed.
 
-MMEditing is a submodule of PowerQE. Users can easily upgrade the MMEditing, and add their own models to PowerQE without modifying the MMEdit package. One should clone PowerQE along with MMEditing like this:
+MMEditing is a submodule of PowerQE. One can easily upgrade the MMEditing, and add their own models to PowerQE without modifying the MMEditing repository. One should clone PowerQE along with MMEditing like this:
 
 ```bash
 git clone -b v3-dev --recurse-submodules --depth 1 https://github.com/ryanxingql/powerqe.git
@@ -52,7 +52,7 @@ conda activate powerqe
 pip install -r requirements.txt
 ```
 
-Finally install MMEdit following `mmediting/docs/en/install.md`
+Finally install MMEditing following `mmediting/docs/en/install.md`
 
 ```bash
 conda install pytorch=1.10 torchvision cudatoolkit=11.3 -c pytorch
@@ -102,11 +102,47 @@ CUDA_VISIBLE_DEVICES=0 PORT=29510 \
 
 ## Q&A
 
-### Crop image border before evaluation
+### Use LMDB for faster IO
 
-Due to the padding of upsampling, the error at border is significant. PowerQE follows the common practice in SR to crop image border before evaluation.
+One can use LMDB to accelerate the IO. Specifically, one can store training patches/images into LMDB files.
 
-### Pre-commit hook
+Pros:
+
+- Much faster training due to the loading and processing of small patches instead of big images and faster IO of LMDB.
+- Lower CPU utility and GPU memory due to the loading and processing of small patches.
+- All images (PNG, JPG, etc.) can be stored as PNG.
+
+Cons:
+
+- Higher memory.
+- Extra time, computation and storage for LMDB files.
+- Once the LMDB file is generated, the cropping manner is also fixed.
+
+Take the DIV2K dataset as an example.
+
+```bash
+conda activate powerqe && \
+python ./tools/data/prepare_dataset.py \
+-src data/div2k/train/gt \
+-tmp tmp/div2k/train/gt_patches \
+-save data/div2k/train/gt_patches.lmdb \
+-n 16 -ps 128 -step 64
+
+conda activate powerqe && \
+python ./tools/data/prepare_dataset.py \
+-src data/div2k/train/lq \
+-tmp tmp/div2k/train/lq_patches \
+-save data/div2k/train/lq_patches.lmdb \
+-n 16 -ps 128 -step 64
+```
+
+For the config file with LMDB loading, see `./configs/arcnn/arcnn_c64c32c16k9k7k1k5_div2k_lmdb_ps128_bs32_1000k_g1.py`.
+
+### Why crop image border before evaluation
+
+Due to the padding of up-sampling, the error at border is significant. PowerQE follows the common practice in SR to crop image border before evaluation.
+
+### Use pre-commit hook before code submission
 
 PowerQE follows [MMCV](https://github.com/open-mmlab/mmcv/blob/master/CONTRIBUTING.md) to support pre-commit hook. The config file is inherited from [MMEditing](https://github.com/ryanxingql/mmediting/blob/master/.pre-commit-config.yaml). Installation:
 
@@ -122,7 +158,9 @@ On every commit, linters and formatter will be enforced. You can also run hooks 
 pre-commit run --all-files
 ```
 
-### Same items between PowerQE and MMEditing such as `Compose`
+### Why there are some same items between PowerQE and MMEditing
+
+I take `Compose` as an example.
 
 When constructing the pipelines for a dataset, the dataset (`BaseDataset` in fact) will refer to `Compose`. Then, `Compose` refers to `..registry` for `PIPELINES`.
 

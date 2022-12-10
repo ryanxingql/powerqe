@@ -1,6 +1,6 @@
 exp_name = 'esrgan_stage1'
-
 scale = 1
+
 # model settings
 model = dict(type='BasicRestorerQE',
              generator=dict(type='RRDBNetQE',
@@ -11,6 +11,7 @@ model = dict(type='BasicRestorerQE',
                             growth_channels=32,
                             upscale_factor=scale),
              pixel_loss=dict(type='L1Loss', loss_weight=1.0, reduction='mean'))
+
 # model training and testing settings
 train_cfg = None
 test_cfg = dict(metrics=['PSNR', 'SSIM'], crop_border=scale)
@@ -93,7 +94,6 @@ lr_config = dict(policy='CosineRestart',
                  min_lr=1e-7)
 
 checkpoint_config = dict(interval=5000, save_optimizer=True, by_epoch=False)
-# evaluation = dict(interval=5000, save_image=True, gpu_collect=True)
 evaluation = dict(interval=5000, save_image=False, gpu_collect=True)
 log_config = dict(
     interval=100,

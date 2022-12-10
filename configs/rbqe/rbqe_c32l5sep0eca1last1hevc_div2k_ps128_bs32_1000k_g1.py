@@ -1,28 +1,23 @@
 exp_name = 'rbqe_c32l5sep0eca1last1hevc_div2k_ps128_bs32_1000k_g1'
 
-# scale = 1
-rescale = 1  # must be 2^n
 # model settings
-model = dict(
-    type='BasicRestorerQE',
-    generator=dict(type='RBQE',
-                   nf_in=3,
-                   nf_base=32,
-                   nlevel=5,
-                   down_method='strideconv',
-                   up_method='transpose2d',
-                   if_separable=False,
-                   if_eca=True,
-                   nf_out=3,
-                   if_only_last_output=True,
-                   comp_type='hevc'),
-    # upscale_factor=scale),
-    pixel_loss=dict(type='L1Loss', loss_weight=1.0, reduction='mean'))
+model = dict(type='BasicRestorerQE',
+             generator=dict(type='RBQE',
+                            nf_in=3,
+                            nf_base=32,
+                            nlevel=5,
+                            down_method='strideconv',
+                            up_method='transpose2d',
+                            if_separable=False,
+                            if_eca=True,
+                            nf_out=3,
+                            if_only_last_output=True,
+                            comp_type='hevc'),
+             pixel_loss=dict(type='L1Loss', loss_weight=1.0, reduction='mean'))
 
 # model training and testing settings
 train_cfg = None
-# test_cfg = dict(metrics=['PSNR', 'SSIM'], crop_border=scale)
-test_cfg = dict(metrics=['PSNR', 'SSIM'], crop_border=rescale)
+test_cfg = dict(metrics=['PSNR', 'SSIM'], crop_border=1)
 
 # dataset settings
 train_pipeline = [
@@ -63,29 +58,27 @@ test_pipeline = [
     dict(type='ImageToTensor', keys=['lq', 'gt'])
 ]
 
-data = dict(
-    # workers_per_gpu=1,
-    workers_per_gpu=32,  # really helpful
-    train_dataloader=dict(samples_per_gpu=32, drop_last=True),
-    val_dataloader=dict(samples_per_gpu=1),
-    test_dataloader=dict(samples_per_gpu=1),
-    train=dict(type='RepeatDataset',
-               times=1000,
-               dataset=dict(type='QEFolderDataset',
-                            lq_folder='./data/div2k/train/lq',
-                            gt_folder='./data/div2k/train/gt',
-                            pipeline=train_pipeline,
-                            filename_tmpl='{}.png')),
-    val=dict(type='QEFolderDataset',
-             lq_folder='./data/div2k/valid/lq',
-             gt_folder='./data/div2k/valid/gt',
-             pipeline=test_pipeline,
-             filename_tmpl='{}.png'),
-    test=dict(type='QEFolderDataset',
-              lq_folder='./data/div2k/valid/lq',
-              gt_folder='./data/div2k/valid/gt',
-              pipeline=test_pipeline,
-              filename_tmpl='{}.png'))
+data = dict(workers_per_gpu=32,
+            train_dataloader=dict(samples_per_gpu=32, drop_last=True),
+            val_dataloader=dict(samples_per_gpu=1),
+            test_dataloader=dict(samples_per_gpu=1),
+            train=dict(type='RepeatDataset',
+                       times=1000,
+                       dataset=dict(type='QEFolderDataset',
+                                    lq_folder='./data/div2k/train/lq',
+                                    gt_folder='./data/div2k/train/gt',
+                                    pipeline=train_pipeline,
+                                    filename_tmpl='{}.png')),
+            val=dict(type='QEFolderDataset',
+                     lq_folder='./data/div2k/valid/lq',
+                     gt_folder='./data/div2k/valid/gt',
+                     pipeline=test_pipeline,
+                     filename_tmpl='{}.png'),
+            test=dict(type='QEFolderDataset',
+                      lq_folder='./data/div2k/valid/lq',
+                      gt_folder='./data/div2k/valid/gt',
+                      pipeline=test_pipeline,
+                      filename_tmpl='{}.png'))
 
 # optimizer
 optimizers = dict(generator=dict(type='Adam', lr=1e-4, betas=(0.9, 0.999)))
@@ -98,7 +91,6 @@ lr_config = dict(policy='CosineRestart',
                  min_lr=1e-7)
 
 checkpoint_config = dict(interval=5000, save_optimizer=True, by_epoch=False)
-# evaluation = dict(interval=5000, save_image=True, gpu_collect=True)
 evaluation = dict(interval=5000, save_image=False, gpu_collect=True)
 log_config = dict(interval=100,
                   hooks=[

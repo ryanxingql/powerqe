@@ -20,7 +20,6 @@ model = dict(type='BasicRestorerQE',
 
 # model training and testing settings
 train_cfg = None
-# test_cfg = dict(metrics=['PSNR', 'SSIM'], crop_border=scale)
 test_cfg = dict(metrics=['PSNR', 'SSIM'], crop_border=1)
 
 # dataset settings
@@ -62,29 +61,27 @@ test_pipeline = [
     dict(type='ImageToTensor', keys=['lq', 'gt'])
 ]
 
-data = dict(
-    # workers_per_gpu=1,
-    workers_per_gpu=32,  # really helpful
-    train_dataloader=dict(samples_per_gpu=32, drop_last=True),
-    val_dataloader=dict(samples_per_gpu=1),
-    test_dataloader=dict(samples_per_gpu=1),
-    train=dict(type='RepeatDataset',
-               times=1000,
-               dataset=dict(type='QEFolderDataset',
-                            lq_folder='./data/div2k/train/lq',
-                            gt_folder='./data/div2k/train/gt',
-                            pipeline=train_pipeline,
-                            filename_tmpl='{}.png')),
-    val=dict(type='QEFolderDataset',
-             lq_folder='./data/div2k/valid/lq',
-             gt_folder='./data/div2k/valid/gt',
-             pipeline=test_pipeline,
-             filename_tmpl='{}.png'),
-    test=dict(type='QEFolderDataset',
-              lq_folder='./data/div2k/valid/lq',
-              gt_folder='./data/div2k/valid/gt',
-              pipeline=test_pipeline,
-              filename_tmpl='{}.png'))
+data = dict(workers_per_gpu=32,
+            train_dataloader=dict(samples_per_gpu=32, drop_last=True),
+            val_dataloader=dict(samples_per_gpu=1),
+            test_dataloader=dict(samples_per_gpu=1),
+            train=dict(type='RepeatDataset',
+                       times=1000,
+                       dataset=dict(type='QEFolderDataset',
+                                    lq_folder='./data/div2k/train/lq',
+                                    gt_folder='./data/div2k/train/gt',
+                                    pipeline=train_pipeline,
+                                    filename_tmpl='{}.png')),
+            val=dict(type='QEFolderDataset',
+                     lq_folder='./data/div2k/valid/lq',
+                     gt_folder='./data/div2k/valid/gt',
+                     pipeline=test_pipeline,
+                     filename_tmpl='{}.png'),
+            test=dict(type='QEFolderDataset',
+                      lq_folder='./data/div2k/valid/lq',
+                      gt_folder='./data/div2k/valid/gt',
+                      pipeline=test_pipeline,
+                      filename_tmpl='{}.png'))
 
 # optimizer
 optimizers = dict(generator=dict(type='Adam', lr=1e-4, betas=(0.9, 0.999)))
