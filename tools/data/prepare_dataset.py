@@ -3,7 +3,6 @@
 import argparse
 import os
 import os.path as osp
-import sys
 from multiprocessing import Pool
 
 import cv2
@@ -71,18 +70,10 @@ def crop_patches(opt):
             n_thread (int): Thread number.
     """
     input_folder = opt['input_folder']
-    save_folder = opt['save_folder']
-    if not osp.exists(save_folder):
-        os.makedirs(save_folder)
-        print(f'mkdir {save_folder} ...')
-    else:
-        print(f'Folder {save_folder} already exists. Exit.')
-        sys.exit(1)
-
     img_list = list(mmcv.scandir(input_folder))
     img_list = [osp.join(input_folder, v) for v in img_list]
 
-    prog_bar = tqdm(total=len(img_list))
+    prog_bar = tqdm(total=len(img_list), ncols=80)
     pool = Pool(opt['n_thread'])
     for path in img_list:
         pool.apply_async(crop_one_image,
@@ -224,9 +215,6 @@ def make_lmdb(data_path,
     print(f'Total images: {len(img_path_list)}')
     if not lmdb_path.endswith('.lmdb'):
         raise ValueError("lmdb_path must end with '.lmdb'.")
-    if osp.exists(lmdb_path):
-        print(f'Folder {lmdb_path} already exists. Exit.')
-        sys.exit(1)
 
     if multiprocessing_read:
         # read all the images to memory (multiprocessing)
@@ -261,7 +249,7 @@ def make_lmdb(data_path,
     env = lmdb.open(lmdb_path, map_size=data_size * 10)
 
     # write data to lmdb
-    prog_bar = tqdm(total=len(img_path_list))
+    prog_bar = tqdm(total=len(img_path_list), ncols=80)
     txn = env.begin(write=True)
     txt_file = open(osp.join(lmdb_path, 'meta_info.txt'), 'w')
     for idx, (path, key) in enumerate(zip(img_path_list, keys)):
@@ -369,6 +357,8 @@ def parse_args():
 if __name__ == '__main__':
     args = parse_args()
     assert not (args.no_patch and args.no_lmdb)
+    assert not osp.exists(args.save)
+    os.makedirs(args.save)
 
     if args.no_patch:
         main_make_lmdb(args.src, args.save)
@@ -376,5 +366,7 @@ if __name__ == '__main__':
         if args.no_lmdb:
             main_crop_patches(args, args.src, args.save)
         else:
+            assert not osp.exists(args.tmp)
+            os.makedirs(args.tmp)
             main_crop_patches(args, args.src, args.tmp)
             main_make_lmdb(args.tmp, args.save)
