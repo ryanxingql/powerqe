@@ -48,16 +48,22 @@ train_pipeline = [
     dict(type='ImageToTensor', keys=['lq', 'gt'])
 ]
 test_pipeline = [
-    dict(type='LoadImageFromFile',
-         io_backend='disk',
-         key='lq',
-         flag='color',
-         channel_order='rgb'),
-    dict(type='LoadImageFromFile',
-         io_backend='disk',
-         key='gt',
-         flag='color',
-         channel_order='rgb'),
+    dict(
+        type='LoadImageFromFile',
+        #  io_backend='disk',
+        io_backend='lmdb',
+        db_path='./data/div2k/train/lq.lmdb',
+        key='lq',
+        flag='color',
+        channel_order='rgb'),
+    dict(
+        type='LoadImageFromFile',
+        #  io_backend='disk',
+        io_backend='lmdb',
+        db_path='./data/div2k/train/gt.lmdb',
+        key='gt',
+        flag='color',
+        channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
     dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path']),
     dict(type='ImageToTensor', keys=['lq', 'gt'])
@@ -81,16 +87,26 @@ data = dict(
             pipeline=train_pipeline,
             #   filename_tmpl='{}.png')),
             scale=1)),
-    val=dict(type='QEFolderDataset',
-             lq_folder='./data/div2k/valid/lq',
-             gt_folder='./data/div2k/valid/gt',
-             pipeline=test_pipeline,
-             filename_tmpl='{}.png'),
-    test=dict(type='QEFolderDataset',
-              lq_folder='./data/div2k/valid/lq',
-              gt_folder='./data/div2k/valid/gt',
-              pipeline=test_pipeline,
-              filename_tmpl='{}.png'))
+    val=dict(
+        # type='QEFolderDataset',
+        # lq_folder='./data/div2k/valid/lq',
+        # gt_folder='./data/div2k/valid/gt',
+        type='SRLmdbDataset',
+        lq_folder='./data/div2k/valid/lq.lmdb',
+        gt_folder='./data/div2k/valid/gt.lmdb',
+        pipeline=test_pipeline,
+        # filename_tmpl='{}.png'),
+        scale=1),
+    test=dict(
+        # type='QEFolderDataset',
+        # lq_folder='./data/div2k/valid/lq',
+        # gt_folder='./data/div2k/valid/gt',
+        type='SRLmdbDataset',
+        lq_folder='./data/div2k/valid/lq.lmdb',
+        gt_folder='./data/div2k/valid/gt.lmdb',
+        pipeline=test_pipeline,
+        # filename_tmpl='{}.png'))
+        scale=1))
 
 # optimizer
 optimizers = dict(generator=dict(type='Adam', lr=1e-4, betas=(0.9, 0.999)))

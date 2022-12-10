@@ -121,6 +121,8 @@ Cons:
 Take the DIV2K dataset as an example.
 
 ```bash
+# cropping and making lmdb for training set
+
 conda activate powerqe && \
 python ./tools/data/prepare_dataset.py \
 -src data/div2k/train/gt \
@@ -134,6 +136,22 @@ python ./tools/data/prepare_dataset.py \
 -tmp tmp/div2k/train/lq_patches \
 -save data/div2k/train/lq_patches.lmdb \
 -n 16 -ps 128 -step 64
+
+# no cropping for test set
+
+conda activate powerqe && \
+python ./tools/data/prepare_dataset.py \
+-no-patch \
+-src data/div2k/valid/gt \
+-save data/div2k/valid/gt.lmdb \
+-n 16
+
+conda activate powerqe && \
+python ./tools/data/prepare_dataset.py \
+-no-patch \
+-src data/div2k/valid/lq \
+-save data/div2k/valid/lq.lmdb \
+-n 16
 ```
 
 For the config file with LMDB loading, see `./configs/arcnn/arcnn_c64c32c16k9k7k1k5_div2k_lmdb_ps128_bs32_1000k_g1.py`.

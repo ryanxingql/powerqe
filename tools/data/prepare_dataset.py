@@ -299,15 +299,15 @@ def parse_args():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
-        '-no_patch',
-        '--no_patch',
-        action='store_false',
+        '-no-patch',
+        '--no-patch',
+        action='store_true',
         help='whether to crop image patches',
     )
     parser.add_argument(
-        '-no_lmdb',
-        '--no_lmdb',
-        action='store_false',
+        '-no-lmdb',
+        '--no-lmdb',
+        action='store_true',
         help='whether to generate lmdb',
     )
     parser.add_argument(
