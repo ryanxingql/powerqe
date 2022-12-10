@@ -55,7 +55,7 @@ pip install -r requirements.txt
 Finally install MMEdit following `mmediting/docs/en/install.md`
 
 ```bash
-conda install pytorch=1.10 torchvision cudatoolkit=11.3 -c pytorch -y
+conda install pytorch=1.10 torchvision cudatoolkit=11.3 -c pytorch
 
 #pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.10/index.html
 # or
