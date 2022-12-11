@@ -173,7 +173,7 @@ pre-commit install
 On every commit, linters and formatter will be enforced. You can also run hooks manually:
 
 ```bash
-pre-commit run --all-files
+pre-commit run --all
 ```
 
 ### Why there are some same items between PowerQE and MMEditing
