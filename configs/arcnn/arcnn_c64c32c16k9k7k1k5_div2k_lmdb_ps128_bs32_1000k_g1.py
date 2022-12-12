@@ -1,4 +1,4 @@
-_base_ = ['./arcnn_c64c32c16k9k7k1k5_div2k_ps128_bs32_1000k_g1.py']
+_base_ = './arcnn_c64c32c16k9k7k1k5_div2k_ps128_bs32_1000k_g1.py'
 
 exp_name = 'arcnn_c64c32c16k9k7k1k5_div2k_lmdb_ps128_bs32_1000k_g1'
 
