@@ -1,7 +1,7 @@
 # RyanXingQL @2022
 import torch
 import torch.nn as nn
-import torch.nn.functional as nnf
+import torch.nn.functional as F
 from mmcv.runner import load_checkpoint
 from mmedit.utils import get_root_logger
 
@@ -45,7 +45,7 @@ class Up(nn.Module):
             feat = feat[:, :, :, :ref_big.size()[3]]
             diff_w = 0
 
-        out_t = nnf.pad(
+        out_t = F.pad(
             input=feat,
             pad=[
                 diff_w // 2,

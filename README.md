@@ -3,6 +3,7 @@
 This repository supports some quality enhancement approaches for compressed images/videos based on PyTorch and MMEditing (v1.x).
 
 - [ ] [BasicVSR++ (CVPR 2022)](https://arxiv.org/abs/2104.13371)
+- [x] [MPRNet (CVPR 2021)](https://github.com/swz30/MPRNet)
 - [ ] [STDF (AAAI 2020)](https://github.com/ryanxingql/stdf-pytorch)
 - [ ] [RBQE (ECCV 2020)](https://arxiv.org/abs/2006.16581)
 - [ ] [MFQEv2 (TPAMI 2019)](https://github.com/ryanxingql/mfqev2.0)
