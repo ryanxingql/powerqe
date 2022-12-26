@@ -3,8 +3,10 @@ import os
 import os.path as osp
 from pathlib import Path
 
+from mmedit.datasets import SRFolderDataset
+
+from .pipelines.compose import Compose
 from .registry import DATASETS
-from .sr_folder_dataset import SRFolderDataset
 
 IMG_EXTENSIONS = ('.jpg', '.JPG', '.jpeg', '.JPEG', '.png', '.PNG', '.ppm',
                   '.PPM', '.bmp', '.BMP', '.tif', '.TIF', '.tiff', '.TIFF')
@@ -80,16 +82,22 @@ class QEFolderDataset(SRFolderDataset):
                  pipeline,
                  test_mode=False,
                  filename_tmpl='{}.png'):
+        # BaseDataset cannot accept the new pipeline outside MMEdit
         super().__init__(lq_folder=lq_folder,
                          gt_folder=gt_folder,
-                         pipeline=pipeline,
+                         pipeline=[],
                          scale=1,
                          test_mode=test_mode,
                          filename_tmpl=filename_tmpl)
+
         self.lq_folder = str(lq_folder)
         self.gt_folder = str(gt_folder)
         self.filename_tmpl = filename_tmpl
         self.data_infos = self.load_annotations()
+
+        # BaseDataset cannot accept the new pipeline outside MMEdit
+        # we have to create pipeline manually
+        self.pipeline = Compose(pipeline)
 
     def scan_folder(self, path):
         """Obtain image path list (including sub-folders) from a given folder.

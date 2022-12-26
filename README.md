@@ -20,14 +20,14 @@ TODO:
 - [ ] Support blind RBQE training and testing.
 - [ ] Support RBQE with multiprocessing IQA.
 
-Main difference to MMEditing:
+The main difference to MMEditing:
 
 - Support down-sampling before enhancement and up-sampling after enhancement to save memory.
 - Save LQ, GT and output when testing.
 - Evaluate "LQ vs. GT" and "output vs. GT" when testing.
 - Bug fixed.
 
-MMEditing is a submodule of PowerQE. One can easily upgrade the MMEditing, and add their own models to PowerQE without modifying the MMEditing repository. One should clone PowerQE along with MMEditing like this:
+MMEditing is a submodule of PowerQE. One can easily upgrade the MMEditing, and add their models to PowerQE without modifying the MMEditing repository. One should clone PowerQE along with MMEditing like this:
 
 ```bash
 git clone -b v3-dev --recurse-submodules --depth 1 https://github.com/ryanxingql/powerqe.git
@@ -39,12 +39,12 @@ git clone -b v3-dev --recurse-submodules --depth 1 https://github.com/ryanxingql
 - `requirements.txt`
 - MMEditing (PyTorch + MMCV + MMEdit)
 
-First update your mirror (optional):
+First, update your mirror (optional):
 
 - Conda: https://mirrors.tuna.tsinghua.edu.cn/help/anaconda
 - pip: https://mirrors.tuna.tsinghua.edu.cn/help/pypi
 
-Then install PowerQE:
+Then, install PowerQE:
 
 ```bash
 conda env create -f environment.yml  # create the powerqe env
@@ -52,7 +52,7 @@ conda activate powerqe
 pip install -r requirements.txt
 ```
 
-Finally install MMEditing following `mmediting/docs/en/install.md`
+Finally, install MMEditing following `mmediting/docs/en/install.md`
 
 ```bash
 conda install pytorch=1.10 torchvision cudatoolkit=11.3 -c pytorch
@@ -104,7 +104,7 @@ CUDA_VISIBLE_DEVICES=0 PORT=29510 \
 
 ### Use LMDB for faster IO
 
-One can use LMDB to accelerate the IO. Specifically, one can store training patches/images into LMDB files.
+One can use LMDB to accelerate the IO. Specifically, one can store training patches/images in LMDB files.
 
 Pros:
 
@@ -158,7 +158,7 @@ For the config file with LMDB loading, see `./configs/arcnn/arcnn_c64c32c16k9k7k
 
 ### Why crop image border before evaluation
 
-Due to the padding of up-sampling, the error at border is significant. PowerQE follows the common practice in SR to crop image border before evaluation.
+Due to the padding of up-sampling, the error at borders is significant. PowerQE follows the common practice in SR to crop image borders before evaluation.
 
 ### Use pre-commit hook before code submission
 
@@ -182,6 +182,6 @@ I take `Compose` as an example.
 
 When constructing the pipelines for a dataset, the dataset (`BaseDataset` in fact) will refer to `Compose`. Then, `Compose` refers to `..registry` for `PIPELINES`.
 
-PowerQE has its own pipelines such as `PairedCenterCrop`. As a result, PowerQE has to define a new `Compose`, which refers to its own `..registry`.
+PowerQE has its pipelines such as `PairedCenterCrop`. As a result, PowerQE has to define a new `Compose`, which refers to its own `..registry`.
 
 Note that `Compose` in PowerQE will not be registered into `PIPELINES`.
