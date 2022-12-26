@@ -1,4 +1,4 @@
-# Copyright (c) ryanxingql. All rights reserved.
+# RyanXingQL @2022
 import math
 import numbers
 
