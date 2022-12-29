@@ -40,35 +40,41 @@ git clone -b v3-dev --recurse-submodules --depth 1 https://github.com/ryanxingql
 - `requirements.txt`
 - MMEditing (PyTorch + MMCV + MMEdit)
 
-First, update your mirror (optional):
+First, update mirrors (optional):
 
 - Conda: https://mirrors.tuna.tsinghua.edu.cn/help/anaconda
 - pip: https://mirrors.tuna.tsinghua.edu.cn/help/pypi
 
-Then, install PowerQE:
+Then, create PowerQE environment:
 
 ```bash
 conda env create -f environment.yml  # create the powerqe env
 conda activate powerqe
-pip install -r requirements.txt
 ```
 
-Finally, install MMEditing following `mmediting/docs/en/install.md`
+Next, install MMEditing following `mmediting/docs/en/install.md`
 
 ```bash
-conda install pytorch=1.10 torchvision cudatoolkit=11.3 -c pytorch
+conda install pytorch==1.12.1 torchvision==0.13.1 torchaudio==0.12.1 cudatoolkit=11.3 -c pytorch
 
-#pip install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.10/index.html
+pip3 install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.12/index.html
 # or
-pip3 install openmim
-mim install mmcv-full==1.5.0
+#pip3 install openmim
+#mim install mmcv-full==1.7.0
 
-cd mmediting
+cd mmediting/
 pip3 install -e .
 
 # verify
 cd ~
 python -c "import mmedit; print(mmedit.__version__)"
+```
+
+Finally,
+
+```
+cd powerqe/
+pip3 install -r requirements.txt
 ```
 
 ## Training
