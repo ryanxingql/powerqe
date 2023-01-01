@@ -45,7 +45,7 @@ First, update mirrors (optional):
 - Conda: https://mirrors.tuna.tsinghua.edu.cn/help/anaconda
 - pip: https://mirrors.tuna.tsinghua.edu.cn/help/pypi
 
-Then, create PowerQE environment:
+Then, create a PowerQE environment:
 
 ```bash
 conda env create -f environment.yml  # create the powerqe env
@@ -169,7 +169,7 @@ Due to the padding of up-sampling, the error at borders is significant. PowerQE 
 
 ### Use pre-commit hook before code submission
 
-PowerQE follows [MMCV](https://github.com/open-mmlab/mmcv/blob/master/CONTRIBUTING.md) to support pre-commit hook. The config file is inherited from [MMEditing](https://github.com/ryanxingql/mmediting/blob/master/.pre-commit-config.yaml). Installation:
+PowerQE follows [MMCV](https://github.com/open-mmlab/mmcv/blob/master/CONTRIBUTING.md) to support the pre-commit hook. The config file is inherited from [MMEditing](https://github.com/ryanxingql/mmediting/blob/master/.pre-commit-config.yaml). Installation:
 
 ```bash
 conda activate powerqe
