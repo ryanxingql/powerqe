@@ -1,4 +1,4 @@
-exp_name = 'mprnet_c96_div2k_ps128_bs16_1000k_g1'
+exp_name = 'mprnet_c96_div2k_ps128_bs16_100k_g1'
 
 # model settings
 model = dict(type='BasicRestorerQE',
@@ -19,10 +19,10 @@ train_cfg = None
 test_cfg = dict(
     metrics=['PSNR', 'SSIM'],
     crop_border=1,
-    # unfolding=dict(
-    #     patch_sz=128,
-    #     splits=4,
-    # )  # to save memory for testing
+    unfolding=dict(
+        patch_sz=128,
+        splits=4,
+    )  # to save memory for testing
 )
 
 # dataset settings
@@ -60,7 +60,7 @@ valid_pipeline = [
          flag='color',
          channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
-    dict(type='PairedCenterCrop', gt_patch_size=128),
+    # dict(type='PairedCenterCrop', gt_patch_size=128),
     dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path']),
     dict(type='ImageToTensor', keys=['lq', 'gt'])
 ]
@@ -106,7 +106,7 @@ data = dict(workers_per_gpu=16,
 optimizers = dict(generator=dict(type='Adam', lr=2e-4, betas=(0.9, 0.999)))
 
 # learning policy
-total_iters = 1000000
+total_iters = 100000
 lr_config = dict(policy='CosineRestart',
                  by_epoch=False,
                  periods=[total_iters],
