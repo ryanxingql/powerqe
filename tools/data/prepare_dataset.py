@@ -73,9 +73,12 @@ def crop_patches(opt):
     img_list = list(mmcv.scandir(input_folder))
     img_list = [osp.join(input_folder, v) for v in img_list]
 
-    prog_bar = tqdm(total=len(img_list), ncols=80)
+    prog_bar = tqdm(total=len(img_list), ncols=0)
     pool = Pool(opt['n_thread'])
     for path in img_list:
+        # for debugging
+        # process_info = crop_one_image(path, opt)
+        # prog_bar.update()
         pool.apply_async(crop_one_image,
                          args=(path, opt),
                          callback=lambda _: prog_bar.update())
@@ -249,7 +252,7 @@ def make_lmdb(data_path,
     env = lmdb.open(lmdb_path, map_size=data_size * 10)
 
     # write data to lmdb
-    prog_bar = tqdm(total=len(img_path_list), ncols=80)
+    prog_bar = tqdm(total=len(img_path_list), ncols=0)
     txn = env.begin(write=True)
     txt_file = open(osp.join(lmdb_path, 'meta_info.txt'), 'w')
     for idx, (path, key) in enumerate(zip(img_path_list, keys)):
@@ -356,8 +359,9 @@ def parse_args():
 
 if __name__ == '__main__':
     args = parse_args()
-    assert not (args.no_patch and args.no_lmdb)
-    assert not osp.exists(args.save)
+    assert not (args.no_patch
+                and args.no_lmdb), 'No work: No patching and no LMDB'
+    assert not osp.exists(args.save), f'Exist: [{args.save}]'
     os.makedirs(args.save)
 
     if args.no_patch:
@@ -366,7 +370,7 @@ if __name__ == '__main__':
         if args.no_lmdb:
             main_crop_patches(args, args.src, args.save)
         else:
-            assert not osp.exists(args.tmp)
+            assert not osp.exists(args.tmp), f'Exist: [{args.tmp}]'
             os.makedirs(args.tmp)
             main_crop_patches(args, args.src, args.tmp)
             main_make_lmdb(args.tmp, args.save)
