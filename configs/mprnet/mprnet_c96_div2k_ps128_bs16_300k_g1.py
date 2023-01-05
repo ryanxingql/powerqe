@@ -1,4 +1,4 @@
-exp_name = 'mprnet_c96_div2k_ps128_bs16_100k_g1'
+exp_name = 'mprnet_c96_div2k_ps128_bs16_300k_g1'
 
 # model settings
 model = dict(type='BasicRestorerQE',
@@ -106,7 +106,7 @@ data = dict(workers_per_gpu=16,
 optimizers = dict(generator=dict(type='Adam', lr=2e-4, betas=(0.9, 0.999)))
 
 # learning policy
-total_iters = 100000
+total_iters = 300000
 lr_config = dict(policy='CosineRestart',
                  by_epoch=False,
                  periods=[total_iters],
