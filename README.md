@@ -1,6 +1,6 @@
 # PowerQE
 
-This repository supports some quality enhancement approaches for compressed images/videos based on PyTorch and MMEditing (v1.x).
+This repository supports some quality enhancement approaches for compressed images/videos based on PyTorch and MMEditing (v0.x).
 
 - [ ] [BasicVSR++ (CVPR 2022)](https://arxiv.org/abs/2104.13371)
 - [x] [MPRNet (CVPR 2021)](https://github.com/swz30/MPRNet)
@@ -15,11 +15,6 @@ This repository supports some quality enhancement approaches for compressed imag
 - [x] [DCAD (DCC 2017)](https://ieeexplore.ieee.org/abstract/document/7923714)
 - [x] [UNet (MICCAI 2015)](https://arxiv.org/abs/1505.04597)
 - [x] [AR-CNN (ICCV 2015)](https://arxiv.org/abs/1504.06993)
-
-TODO:
-
-- [ ] Support blind RBQE training and testing.
-- [ ] Support RBQE with multiprocessing IQA.
 
 The main difference to MMEditing:
 
