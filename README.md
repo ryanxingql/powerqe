@@ -26,7 +26,7 @@ The main difference to MMEditing:
 MMEditing is a submodule of PowerQE. One can easily upgrade the MMEditing, and add their models to PowerQE without modifying the MMEditing repository. One should clone PowerQE along with MMEditing like this:
 
 ```bash
-git clone -b v3-dev --recurse-submodules --depth 1 https://github.com/ryanxingql/powerqe.git
+git clone -b v3 --recurse-submodules --depth 1 https://github.com/ryanxingql/powerqe.git
 ```
 
 ## Environment
