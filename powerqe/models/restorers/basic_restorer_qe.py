@@ -140,14 +140,18 @@ class BasicRestorerQE(BasicRestorer):
             unfold_patch_sz = self.test_cfg.unfolding.patch_sz
             lq_pad, pad_info = pad_img(lq, unfold_patch_sz)
             lq_patches, unfold_shape = unfold_img(lq_pad, unfold_patch_sz)
+
             output_patches = []
             splits = self.test_cfg.unfolding.splits
-            b_split = lq_patches.shape[0] // splits
+            npatches = lq_patches.shape[0]
+            if splits > npatches:
+                splits = npatches
+            b_split = npatches // splits
             for split in range(splits):
                 output_patches.append(
                     self.generator(lq_patches[split * b_split:(split + 1) *
                                               b_split]))
-            if splits * b_split < lq_patches.shape[0]:
+            if splits * b_split < npatches:
                 output_patches.append(
                     self.generator(lq_patches[splits * b_split:]))
             output_patches = torch.cat(output_patches, dim=0)

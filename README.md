@@ -9,6 +9,7 @@ This repository supports some quality enhancement approaches for compressed imag
 - [ ] [MFQEv2 (TPAMI 2019)](https://github.com/ryanxingql/mfqev2.0)
 - [x] [CBDNet (CVPR 2019)](https://arxiv.org/abs/1807.04686)
 - [ ] [EDVR (CVPRW 2019)](https://arxiv.org/abs/1905.02716)
+- [x] [SAN (CVPR 2019)](https://github.com/daitao/SAN)
 - [x] [ESRGAN (ECCVW 2018)](https://arxiv.org/abs/1809.00219)
 - [x] [RDN (CVPR 2018)](https://arxiv.org/abs/1802.08797)
 - [x] [DnCNN (TIP 2017)](https://arxiv.org/abs/1608.03981)
