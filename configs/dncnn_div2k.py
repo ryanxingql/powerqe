@@ -1,38 +1,42 @@
-exp_name = 'esrgan_stage1'
-scale = 1
+bs = 32
+ngpus = 1
+assert bs % ngpus == 0
+
+nf = 64
+nb = 15
+ps = 128
+niter_k = 1000
+
+exp_name = f'dncnn_div2k_nf{nf}_nb{nb}_ps{ps}_bs{bs}_{niter_k}k_g{ngpus}'
 
 # model settings
 model = dict(type='BasicRestorerQE',
-             generator=dict(type='RRDBNetQE',
+             generator=dict(type='DnCNN',
                             in_channels=3,
                             out_channels=3,
-                            mid_channels=64,
-                            num_blocks=23,
-                            growth_channels=32,
-                            upscale_factor=scale),
+                            mid_channels=nf,
+                            num_blocks=nb,
+                            if_bn=False),
              pixel_loss=dict(type='L1Loss', loss_weight=1.0, reduction='mean'))
 
 # model training and testing settings
 train_cfg = None
-test_cfg = dict(metrics=['PSNR', 'SSIM'], crop_border=scale)
+test_cfg = dict(metrics=['PSNR', 'SSIM'], crop_border=1)
 
 # dataset settings
 train_pipeline = [
     dict(type='LoadImageFromFile',
          io_backend='disk',
          key='lq',
-         flag='unchanged'),
+         flag='color',
+         channel_order='rgb'),
     dict(type='LoadImageFromFile',
          io_backend='disk',
          key='gt',
-         flag='unchanged'),
+         flag='color',
+         channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
-    dict(type='Normalize',
-         keys=['lq', 'gt'],
-         mean=[0, 0, 0],
-         std=[1, 1, 1],
-         to_rgb=True),
-    dict(type='PairedRandomCrop', gt_patch_size=128),
+    dict(type='PairedRandomCrop', gt_patch_size=ps),
     dict(type='Flip',
          keys=['lq', 'gt'],
          flip_ratio=0.5,
@@ -46,62 +50,62 @@ test_pipeline = [
     dict(type='LoadImageFromFile',
          io_backend='disk',
          key='lq',
-         flag='unchanged'),
+         flag='color',
+         channel_order='rgb'),
     dict(type='LoadImageFromFile',
          io_backend='disk',
          key='gt',
-         flag='unchanged'),
+         flag='color',
+         channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
-    dict(type='Normalize',
-         keys=['lq', 'gt'],
-         mean=[0, 0, 0],
-         std=[1, 1, 1],
-         to_rgb=True),
     dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path']),
     dict(type='ImageToTensor', keys=['lq', 'gt'])
 ]
 
-data = dict(workers_per_gpu=8,
-            train_dataloader=dict(samples_per_gpu=8, drop_last=True),
+data = dict(workers_per_gpu=bs // ngpus,
+            train_dataloader=dict(samples_per_gpu=bs // ngpus, drop_last=True),
             val_dataloader=dict(samples_per_gpu=1),
             test_dataloader=dict(samples_per_gpu=1),
             train=dict(type='RepeatDataset',
                        times=1000,
-                       dataset=dict(type='QEFolderDataset',
+                       dataset=dict(type='PairedSameSizeImageDataset',
                                     lq_folder='./data/div2k/train/lq',
                                     gt_folder='./data/div2k/train/gt',
                                     pipeline=train_pipeline,
-                                    filename_tmpl='{}.png')),
-            val=dict(type='QEFolderDataset',
+                                    filename_tmpl='{}.png',
+                                    test_mode=False)),
+            val=dict(type='PairedSameSizeImageDataset',
                      lq_folder='./data/div2k/valid/lq',
                      gt_folder='./data/div2k/valid/gt',
                      pipeline=test_pipeline,
-                     filename_tmpl='{}.png'),
-            test=dict(type='QEFolderDataset',
+                     filename_tmpl='{}.png',
+                     test_mode=True),
+            test=dict(type='PairedSameSizeImageDataset',
                       lq_folder='./data/div2k/valid/lq',
                       gt_folder='./data/div2k/valid/gt',
                       pipeline=test_pipeline,
-                      filename_tmpl='{}.png'))
+                      filename_tmpl='{}.png',
+                      test_mode=True))
 
 # optimizer
-optimizers = dict(generator=dict(type='Adam', lr=2e-4, betas=(0.9, 0.999)))
+optimizers = dict(generator=dict(type='Adam', lr=1e-4, betas=(0.9, 0.999)))
 
 # learning policy
-total_iters = 500000
-lr_config = dict(policy='CosineRestart',
-                 by_epoch=False,
-                 periods=[total_iters],
-                 min_lr=1e-7)
+total_iters = niter_k * 1000
+lr_config = dict(
+    policy='CosineRestart',
+    by_epoch=False,
+    periods=[total_iters],
+    min_lr=1e-7,
+)
 
 checkpoint_config = dict(interval=5000, save_optimizer=True, by_epoch=False)
 evaluation = dict(interval=5000, save_image=False, gpu_collect=True)
-log_config = dict(
-    interval=100,
-    hooks=[
-        dict(type='TextLoggerHook', by_epoch=False),
-        dict(type='TensorboardLoggerHook'),
-        # dict(type='PaviLoggerHook', init_kwargs=dict(project='mmedit-sr'))
-    ])
+log_config = dict(interval=100,
+                  hooks=[
+                      dict(type='TextLoggerHook', by_epoch=False),
+                      dict(type='TensorboardLoggerHook'),
+                  ])
 visual_config = None
 
 # runtime settings

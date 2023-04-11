@@ -58,7 +58,7 @@ def scandir(dir_path, suffix=None, recursive=False, case_sensitive=True):
 
 
 @DATASETS.register_module()
-class QEFolderDataset(SRFolderDataset):
+class PairedSameSizeImageDataset(SRFolderDataset):
     """General paired image folder dataset for image restoration.
 
     Adapted from the SRFolderDataset in MMEditing 0.15.
@@ -137,7 +137,7 @@ class QEFolderDataset(SRFolderDataset):
         for gt_path in gt_paths:
             basename, _ = osp.splitext(osp.basename(gt_path))
             lq_path = osp.join(self.lq_folder,
-                               (f'{self.filename_tmpl.format(basename)}'))
+                               f'{self.filename_tmpl.format(basename)}')
             assert lq_path in lq_paths, f'{lq_path} is not in lq_paths.'
             data_infos.append(dict(lq_path=lq_path, gt_path=gt_path))
         return data_infos

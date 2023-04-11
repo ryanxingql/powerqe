@@ -1,14 +1,14 @@
 # RyanXingQL @2022
 from .backbones import (ARCNN, DCAD, RBQE, RDNQE, SAN, CBDNet, DnCNN, MPRNet,
-                        RRDBNetQE, UNet)
+                        RRDBNetQE, STDFNet, UNet)
 from .builder import build_backbone, build_component, build_loss, build_model
 from .losses import PerceptualLossGray
 from .registry import BACKBONES, COMPONENTS, LOSSES, MODELS
-from .restorers import ESRGANQE, BasicRestorerQE
+from .restorers import ESRGANQE, BasicRestorerQE, BasicRestorerVQE
 
 __all__ = [
     'build_backbone', 'build_component', 'build_loss', 'build_model',
     'BACKBONES', 'COMPONENTS', 'LOSSES', 'MODELS', 'ARCNN', 'CBDNet', 'DCAD',
-    'DnCNN', 'MPRNet', 'RBQE', 'RDNQE', 'RRDBNetQE', 'SAN', 'UNet',
-    'BasicRestorerQE', 'ESRGANQE', 'PerceptualLossGray'
+    'DnCNN', 'MPRNet', 'RBQE', 'RDNQE', 'RRDBNetQE', 'SAN', 'STDFNet', 'UNet',
+    'BasicRestorerQE', 'BasicRestorerVQE', 'ESRGANQE', 'PerceptualLossGray'
 ]

@@ -32,8 +32,8 @@ git clone -b v3 --recurse-submodules --depth 1 https://github.com/ryanxingql/pow
 
 ## Environment
 
-- `environment.yml`
-- `requirements.txt`
+- environment.yml
+- requirements.txt
 - MMEditing (PyTorch + MMCV + MMEdit)
 
 First, update mirrors (optional):
@@ -48,7 +48,7 @@ conda env create -f environment.yml  # create the powerqe env
 conda activate powerqe
 ```
 
-Next, install MMEditing following `mmediting/docs/en/install.md`
+Next, install MMEditing following mmediting/docs/en/install.md.
 
 ```bash
 conda install pytorch==1.12.1 torchvision==0.13.1 torchaudio==0.12.1 cudatoolkit=11.3 -c pytorch
@@ -73,21 +73,58 @@ cd powerqe/
 pip3 install -r requirements.txt
 ```
 
+## Data
+
+Create a symbolic link to your data:
+
+```bash
+cd powerqe/
+ln -s <absolute-path-to-your-data> ./data
+```
+
+Place your data like this:
+
+```txt
+powerqe/
+`-- data/
+    `-- div2k/
+        |-- train/
+        |   |-- gt/
+        |   |   |-- 0001.png
+        |   |   |-- ...
+        |   |   `-- 0800.png
+        |   `-- lq/
+        |       |-- 0001.png
+        |       |-- ...
+        |       `-- 0800.png
+        `-- valid/
+            |-- gt/
+            |   |-- 0801.png
+            |   |-- ...
+            |   `-- 0900.png
+            `-- lq/
+                |-- 0801.png
+                |-- ...
+                `-- 0900.png
+```
+
 ## Training
 
 ```bash
 #chmod +x ./tools/dist_train.sh
 
 conda activate powerqe && \
-CUDA_VISIBLE_DEVICES=0 PORT=29500 \
-./tools/dist_train.sh \
-./configs/rdn/rdn_qe_c64b8_div2k_ps128_bs32_1000k_g1.py \
-1
+CUDA_VISIBLE_DEVICES=0 \
+PORT=29500 \
+./tools/dist_train.sh \  # main script
+./configs/rdn/rdn_qe_c64b8_div2k_ps128_bs32_1000k_g1.py \  # config
+1 \  # use one gpu
+<other-options>  # optional
 ```
 
 Other options:
 
-- `--resume-from <ckp-path>`: Resume training status (model weights, number of iterations, optimizer status, etc.) from a checkpoint file.
+- `--resume-from <ckp-path>`: To resume the training status (model weights, number of iterations, optimizer status, etc.) from a checkpoint file.
 
 ## Testing
 
@@ -95,14 +132,19 @@ Other options:
 #chmod +x ./tools/dist_test.sh
 
 conda activate powerqe && \
-CUDA_VISIBLE_DEVICES=0 PORT=29510 \
-./tools/dist_test.sh \
-./configs/rdn/rdn_qe_c64b8_div2k_ps128_bs32_1000k_g1.py \
-./work_dirs/rdn_qe_c64b8_div2k_ps128_bs32_1000k_g1/latest.pth \
-1 \
---save-path ./work_dirs/rdn_qe_c64b8_div2k_ps128_bs32_1000k_g1/results/
+CUDA_VISIBLE_DEVICES=0 \
+PORT=29510 \
+./tools/dist_test.sh \  # main script
+./configs/rdn/rdn_qe_c64b8_div2k_ps128_bs32_1000k_g1.py \  # config
+./work_dirs/rdn_qe_c64b8_div2k_ps128_bs32_1000k_g1/latest.pth \  # model
+1 \  # use one gpu
+<other-options>  # optional
 ```
+
+Other options:
+
+- `--save-path <save-path>`: To save output images.
 
 ## Q&A
 
-See [WIKI](https://github.com/ryanxingql/powerqe/wiki/V3-documentation).
+See [Wiki](./docs/v3.md).

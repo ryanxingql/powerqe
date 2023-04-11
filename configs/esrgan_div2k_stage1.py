@@ -1,33 +1,28 @@
-exp_name = 'esrgan_stage2'
+bs = 16
+ngpus = 2
+assert bs % ngpus == 0
+
+nf = 64
+nb = 23
+gf = 32
+ps = 128
+niter_k = 500
+
+exp_name = (f'esrgan_div2k_stage1_nf{nf}_nb{nb}_gf{gf}'
+            f'_ps{ps}_bs{bs}_{niter_k}k_g{ngpus}')
+
 scale = 1
 
 # model settings
-model = dict(
-    type='ESRGANQE',
-    generator=dict(type='RRDBNetQE',
-                   in_channels=3,
-                   out_channels=3,
-                   mid_channels=64,
-                   num_blocks=23,
-                   growth_channels=32,
-                   upscale_factor=scale),
-    discriminator=dict(type='ModifiedVGG', in_channels=3, mid_channels=64),
-    pixel_loss=dict(type='L1Loss', loss_weight=1e-2, reduction='mean'),
-    perceptual_loss=dict(
-        type='PerceptualLoss',
-        layer_weights={'34': 1.0},
-        vgg_type='vgg19',
-        perceptual_weight=1.0,
-        style_weight=0,
-        norm_img=False,
-        pretrained='https://download.pytorch.org/models/vgg19-dcbb9e9d.pth'),
-    gan_loss=dict(type='GANLoss',
-                  gan_type='vanilla',
-                  loss_weight=5e-3,
-                  real_label_val=1.0,
-                  fake_label_val=0),
-    pretrained='work_dirs/esrgan_stage1/iter_500000.pth',
-)
+model = dict(type='BasicRestorerQE',
+             generator=dict(type='RRDBNetQE',
+                            in_channels=3,
+                            out_channels=3,
+                            mid_channels=nf,
+                            num_blocks=nb,
+                            growth_channels=gf,
+                            upscale_factor=scale),
+             pixel_loss=dict(type='L1Loss', loss_weight=1.0, reduction='mean'))
 
 # model training and testing settings
 train_cfg = None
@@ -49,7 +44,7 @@ train_pipeline = [
          mean=[0, 0, 0],
          std=[1, 1, 1],
          to_rgb=True),
-    dict(type='PairedRandomCrop', gt_patch_size=128),
+    dict(type='PairedRandomCrop', gt_patch_size=ps),
     dict(type='Flip',
          keys=['lq', 'gt'],
          flip_ratio=0.5,
@@ -78,38 +73,42 @@ test_pipeline = [
     dict(type='ImageToTensor', keys=['lq', 'gt'])
 ]
 
-data = dict(workers_per_gpu=8,
-            train_dataloader=dict(samples_per_gpu=8, drop_last=True),
+data = dict(workers_per_gpu=bs // ngpus,
+            train_dataloader=dict(samples_per_gpu=bs // ngpus, drop_last=True),
             val_dataloader=dict(samples_per_gpu=1),
             test_dataloader=dict(samples_per_gpu=1),
             train=dict(type='RepeatDataset',
                        times=1000,
-                       dataset=dict(type='QEFolderDataset',
+                       dataset=dict(type='PairedSameSizeImageDataset',
                                     lq_folder='./data/div2k/train/lq',
                                     gt_folder='./data/div2k/train/gt',
                                     pipeline=train_pipeline,
-                                    filename_tmpl='{}.png')),
-            val=dict(type='QEFolderDataset',
+                                    filename_tmpl='{}.png',
+                                    test_mode=False)),
+            val=dict(type='PairedSameSizeImageDataset',
                      lq_folder='./data/div2k/valid/lq',
                      gt_folder='./data/div2k/valid/gt',
                      pipeline=test_pipeline,
-                     filename_tmpl='{}.png'),
-            test=dict(type='QEFolderDataset',
+                     filename_tmpl='{}.png',
+                     test_mode=True),
+            test=dict(type='PairedSameSizeImageDataset',
                       lq_folder='./data/div2k/valid/lq',
                       gt_folder='./data/div2k/valid/gt',
                       pipeline=test_pipeline,
-                      filename_tmpl='{}.png'))
+                      filename_tmpl='{}.png',
+                      test_mode=True))
 
 # optimizer
-optimizers = dict(generator=dict(type='Adam', lr=1e-4, betas=(0.9, 0.999)),
-                  discriminator=dict(type='Adam', lr=1e-4, betas=(0.9, 0.999)))
+optimizers = dict(generator=dict(type='Adam', lr=2e-4, betas=(0.9, 0.999)))
 
 # learning policy
-total_iters = 400000
-lr_config = dict(policy='Step',
-                 by_epoch=False,
-                 step=[50000, 100000, 200000, 300000],
-                 gamma=0.5)
+total_iters = niter_k * 1000
+lr_config = dict(
+    policy='CosineRestart',
+    by_epoch=False,
+    periods=[total_iters],
+    min_lr=1e-7,
+)
 
 checkpoint_config = dict(interval=5000, save_optimizer=True, by_epoch=False)
 evaluation = dict(interval=5000, save_image=False, gpu_collect=True)

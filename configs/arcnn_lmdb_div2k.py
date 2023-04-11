@@ -1,6 +1,4 @@
-_base_ = './arcnn_c64c32c16k9k7k1k5_div2k_ps128_bs32_1000k_g1.py'
-
-exp_name = 'arcnn_c64c32c16k9k7k1k5_div2k_lmdb_ps128_bs32_1000k_g1'
+_base_ = './arcnn_div2k.py'
 
 train_lq_folder = './data/div2k/train/lq_patches.lmdb'
 train_gt_folder = './data/div2k/train/gt_patches.lmdb'
@@ -26,7 +24,7 @@ train_pipeline = [
         flag='color',
         channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
-    #     dict(type='PairedRandomCrop', gt_patch_size=128),
+    #     dict(type='PairedRandomCrop', gt_patch_size=ps),
     dict(type='Flip',
          keys=['lq', 'gt'],
          flip_ratio=0.5,
@@ -63,19 +61,19 @@ data = dict(train=dict(dataset=dict(_delete_=True,
                                     lq_folder=train_lq_folder,
                                     gt_folder=train_gt_folder,
                                     pipeline=train_pipeline,
-                                    scale=1)),
+                                    scale=1,
+                                    test_mode=False)),
             val=dict(_delete_=True,
                      type='SRLmdbDataset',
                      lq_folder=valid_lq_folder,
                      gt_folder=valid_gt_folder,
                      pipeline=test_pipeline,
-                     scale=1),
+                     scale=1,
+                     test_mode=True),
             test=dict(_delete_=True,
                       type='SRLmdbDataset',
                       lq_folder=valid_lq_folder,
                       gt_folder=valid_gt_folder,
                       pipeline=test_pipeline,
-                      scale=1))
-
-# runtime settings
-work_dir = f'./work_dirs/{exp_name}'
+                      scale=1,
+                      test_mode=True))
