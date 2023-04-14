@@ -72,8 +72,8 @@ class PairedSameSizeImageDataset(SRFolderDataset):
         pipeline (List[dict | callable]): A sequence of data transformations.
         test_mode (bool): Store `True` when building test dataset.
             Default: `False`.
-        filename_tmpl (str): Template for each filename. Note that the
-            template excludes the file extension. Default: '{}.png'.
+        filename_tmpl (str): Template for LQ filename.
+            Default: '{}.png'.
     """
 
     def __init__(self,
@@ -82,20 +82,22 @@ class PairedSameSizeImageDataset(SRFolderDataset):
                  pipeline,
                  test_mode=False,
                  filename_tmpl='{}.png'):
-        # BaseDataset cannot accept the new pipeline outside MMEdit
-        super().__init__(lq_folder=lq_folder,
-                         gt_folder=gt_folder,
-                         pipeline=[],
-                         scale=1,
-                         test_mode=test_mode,
-                         filename_tmpl=filename_tmpl)
+        super().__init__(
+            lq_folder=lq_folder,
+            gt_folder=gt_folder,
+            pipeline=[],  # BaseDataset cannot accept any new
+            # pipelines outside MMEdit
+            scale=1,
+            test_mode=test_mode,
+            filename_tmpl=filename_tmpl)
 
         self.lq_folder = str(lq_folder)
         self.gt_folder = str(gt_folder)
         self.filename_tmpl = filename_tmpl
+
         self.data_infos = self.load_annotations()
 
-        # BaseDataset cannot accept the new pipeline outside MMEdit
+        # BaseDataset cannot accept any new pipelines outside MMEdit
         # we have to create pipeline manually
         self.pipeline = Compose(pipeline)
 
@@ -134,6 +136,7 @@ class PairedSameSizeImageDataset(SRFolderDataset):
         assert len(lq_paths) == len(gt_paths), (
             f'gt and lq datasets have different number of images: '
             f'{len(lq_paths)}, {len(gt_paths)}.')
+
         for gt_path in gt_paths:
             basename, _ = osp.splitext(osp.basename(gt_path))
             lq_path = osp.join(self.lq_folder,
