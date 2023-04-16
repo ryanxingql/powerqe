@@ -117,14 +117,14 @@ conda activate powerqe && \
 CUDA_VISIBLE_DEVICES=0 \
 PORT=29500 \
 ./tools/dist_train.sh \  # main script
-./configs/rdn/rdn_qe_c64b8_div2k_ps128_bs32_1000k_g1.py \  # config
+./configs/<config>.py \  # config path
 1 \  # use one gpu
 <other-options>  # optional
 ```
 
 Other options:
 
-- `--resume-from <ckp-path>`: To resume the training status (model weights, number of iterations, optimizer status, etc.) from a checkpoint file.
+- `--resume-from <ckp>.pth`: To resume the training status (model weights, number of iterations, optimizer status, etc.) from a checkpoint file.
 
 ## Testing
 
@@ -135,15 +135,15 @@ conda activate powerqe && \
 CUDA_VISIBLE_DEVICES=0 \
 PORT=29510 \
 ./tools/dist_test.sh \  # main script
-./configs/rdn/rdn_qe_c64b8_div2k_ps128_bs32_1000k_g1.py \  # config
-./work_dirs/rdn_qe_c64b8_div2k_ps128_bs32_1000k_g1/latest.pth \  # model
+./configs/<config>.py \  # config path
+./work_dirs/<ckp>.pth \  # checkpoint path
 1 \  # use one gpu
 <other-options>  # optional
 ```
 
 Other options:
 
-- `--save-path <save-path>`: To save output images.
+- `--save-path <save-folder>`: To save output images.
 
 ## Q&A
 
