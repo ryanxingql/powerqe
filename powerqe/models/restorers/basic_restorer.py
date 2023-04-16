@@ -178,37 +178,32 @@ class BasicRestorerQE(BasicRestorer):
         # save image
         if save_image:
             lq_path = meta[0]['lq_path']
-            folder_name = osp.splitext(osp.basename(lq_path))[0]
+            lq_name = osp.splitext(osp.basename(lq_path))[0]
             if isinstance(iteration, numbers.Number):
-                """
-                save_path = osp.join(save_path, folder_name,
-                                     f'{folder_name}-{iteration + 1:06d}.png')
-                """
-                save_path_output = osp.join(
-                    save_path, folder_name, 'output',
-                    f'{folder_name}-{iteration + 1:06d}.png')
-                save_path_lq = osp.join(
-                    save_path, folder_name, 'lq',
-                    f'{folder_name}-{iteration + 1:06d}.png')
-                save_path_gt = osp.join(
-                    save_path, folder_name, 'gt',
-                    f'{folder_name}-{iteration + 1:06d}.png')
+                # save_path = osp.join(save_path, lq_name,
+                #                      f'{lq_name}-{iteration + 1:06d}.png')
+                save_path_output = osp.join(save_path, lq_name, 'output',
+                                            f'{iteration + 1:06d}.png')
+                save_path_lq = osp.join(save_path, lq_name, 'lq',
+                                        f'{iteration + 1:06d}.png')
+                save_path_gt = osp.join(save_path, lq_name, 'gt',
+                                        f'{iteration + 1:06d}.png')
             elif iteration is None:
-                # save_path = osp.join(save_path, f'{folder_name}.png')
+                # save_path = osp.join(save_path, f'{lq_name}.png')
                 save_path_output = osp.join(
                     save_path,
                     'output',
-                    f'{folder_name}.png',
+                    f'{lq_name}.png',
                 )
                 save_path_lq = osp.join(
                     save_path,
                     'lq',
-                    f'{folder_name}.png',
+                    f'{lq_name}.png',
                 )
                 save_path_gt = osp.join(
                     save_path,
                     'gt',
-                    f'{folder_name}.png',
+                    f'{lq_name}.png',
                 )
             else:
                 raise ValueError('iteration should be number or None, '
@@ -305,46 +300,37 @@ class BasicRestorerVQE(BasicRestorer):
 
         # save image
         if save_image:
-            lq_path = meta[0]['lq_path'][0]  # take the first frame
-            # of the first frame
-            folder_name = osp.splitext(osp.basename(lq_path))[0]
+            assert lq.shape[0] == 1, 'NOT SUPPORTED.'
+            key_name = meta[0]['key']
             if isinstance(iteration, numbers.Number):
-                """
-                save_path = osp.join(save_path, folder_name,
-                                     f'{folder_name}-{iteration + 1:06d}.png')
-                """
-                save_path_output = osp.join(
-                    save_path, folder_name, 'output',
-                    f'{folder_name}-{iteration + 1:06d}.png')
-                save_path_lq = osp.join(
-                    save_path, folder_name, 'lq',
-                    f'{folder_name}-{iteration + 1:06d}.png')
-                save_path_gt = osp.join(
-                    save_path, folder_name, 'gt',
-                    f'{folder_name}-{iteration + 1:06d}.png')
+                save_path_output = osp.join(save_path, key_name, 'output',
+                                            f'{iteration + 1:06d}.png')
+                save_path_lq = osp.join(save_path, key_name, 'lq',
+                                        f'{iteration + 1:06d}.png')
+                save_path_gt = osp.join(save_path, key_name, 'gt',
+                                        f'{iteration + 1:06d}.png')
             elif iteration is None:
-                # save_path = osp.join(save_path, f'{folder_name}.png')
                 save_path_output = osp.join(
                     save_path,
                     'output',
-                    f'{folder_name}.png',
+                    f'{key_name}.png',
                 )
                 save_path_lq = osp.join(
                     save_path,
                     'lq',
-                    f'{folder_name}.png',
+                    f'{key_name}.png',
                 )
                 save_path_gt = osp.join(
                     save_path,
                     'gt',
-                    f'{folder_name}.png',
+                    f'{key_name}.png',
                 )
             else:
                 raise ValueError('iteration should be number or None, '
                                  f'but got {type(iteration)}')
 
             mmcv.imwrite(tensor2img(output), save_path_output)
-            mmcv.imwrite(tensor2img(tensor2img(lq[:, t // 2, ...])),
+            mmcv.imwrite(tensor2img(lq[:, t // 2, ...]),
                          save_path_lq)  # save the center frame
             if gt is not None:
                 mmcv.imwrite(tensor2img(gt), save_path_gt)
