@@ -106,37 +106,37 @@ powerqe/
 ## Training
 
 ```bash
-#chmod +x ./tools/dist_train.sh
+#chmod +x ./tools/dist_train.sh  # for the first time
 
 conda activate powerqe && \
-CUDA_VISIBLE_DEVICES=0 \
-PORT=29500 \
-./tools/dist_train.sh \  # main script
+CUDA_VISIBLE_DEVICES=0 \  # use GPU 0
+PORT=29500 \  # use port 29500 for communication
+./tools/dist_train.sh \  # training script
 ./configs/<config>.py \  # config path
 1 \  # use one gpu
-<other-options>  # optional
+<optional-options>
 ```
 
-Other options:
+Optional options:
 
 - `--resume-from <ckp>.pth`: To resume the training status (model weights, number of iterations, optimizer status, etc.) from a checkpoint file.
 
 ## Testing
 
 ```bash
-#chmod +x ./tools/dist_test.sh
+#chmod +x ./tools/dist_test.sh  # for the first time
 
 conda activate powerqe && \
-CUDA_VISIBLE_DEVICES=0 \
-PORT=29510 \
-./tools/dist_test.sh \  # main script
+CUDA_VISIBLE_DEVICES=0 \  # use GPU 0
+PORT=29510 \  # use port 29510 for communication
+./tools/dist_test.sh \  # test script
 ./configs/<config>.py \  # config path
 ./work_dirs/<ckp>.pth \  # checkpoint path
 1 \  # use one gpu
-<other-options>  # optional
+<optional-options>
 ```
 
-Other options:
+Optional options:
 
 - `--save-path <save-folder>`: To save output images.
 
