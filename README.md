@@ -2,32 +2,25 @@
 
 This repository supports some quality enhancement approaches for compressed images/videos based on PyTorch and MMEditing (v0.x).
 
-- [ ] [BasicVSR++ (CVPR 2022)](https://arxiv.org/abs/2104.13371)
-- [x] [MPRNet (CVPR 2021)](https://github.com/swz30/MPRNet)
-- [ ] [STDF (AAAI 2020)](https://github.com/ryanxingql/stdf-pytorch)
-- [ ] [RBQE (ECCV 2020)](https://arxiv.org/abs/2006.16581)
-- [ ] [MFQEv2 (TPAMI 2019)](https://github.com/ryanxingql/mfqev2.0)
-- [x] [CBDNet (CVPR 2019)](https://arxiv.org/abs/1807.04686)
-- [ ] [EDVR (CVPRW 2019)](https://arxiv.org/abs/1905.02716)
-- [x] [SAN (CVPR 2019)](https://github.com/daitao/SAN)
-- [x] [ESRGAN (ECCVW 2018)](https://arxiv.org/abs/1809.00219)
-- [x] [RDN (CVPR 2018)](https://arxiv.org/abs/1802.08797)
-- [x] [DnCNN (TIP 2017)](https://arxiv.org/abs/1608.03981)
-- [x] [DCAD (DCC 2017)](https://ieeexplore.ieee.org/abstract/document/7923714)
-- [x] [UNet (MICCAI 2015)](https://arxiv.org/abs/1505.04597)
-- [x] [AR-CNN (ICCV 2015)](https://arxiv.org/abs/1504.06993)
-
-The main difference to MMEditing:
-
-- Support down-sampling before enhancement and up-sampling after enhancement to save memory.
-- Save LQ, GT and output when testing.
-- Evaluate "LQ vs. GT" and "output vs. GT" when testing.
-- Bug fixed.
+- [ ] [BasicVSR++ @ CVPR 22'](https://arxiv.org/abs/2104.13371)
+- [x] [MPRNet @ CVPR 21'](https://github.com/swz30/MPRNet)
+- [ ] [STDF @ AAAI 20](https://github.com/ryanxingql/stdf-pytorch)
+- [x] [RBQE @ ECCV 20'](https://arxiv.org/abs/2006.16581): non-blind version.
+- [ ] [MFQEv2 @ TPAMI 19'](https://github.com/ryanxingql/mfqev2.0)
+- [x] [CBDNet @ CVPR 19'](https://arxiv.org/abs/1807.04686): non-blind version.
+- [ ] [EDVR @ CVPR 19'](https://arxiv.org/abs/1905.02716)
+- [x] [SAN @ CVPR 19'](https://github.com/daitao/SAN)
+- [x] [ESRGAN @ ECCVW 18'](https://arxiv.org/abs/1809.00219)
+- [x] [RDN @ CVPR 18'](https://arxiv.org/abs/1802.08797)
+- [x] [DnCNN @ TIP 17'](https://arxiv.org/abs/1608.03981)
+- [x] [DCAD @ DCC 17'](https://ieeexplore.ieee.org/abstract/document/7923714)
+- [x] [UNet @ MICCAI 15'](https://arxiv.org/abs/1505.04597)
+- [x] [AR-CNN @ ICCV 15'](https://arxiv.org/abs/1504.06993)
 
 MMEditing is a submodule of PowerQE. One can easily upgrade the MMEditing, and add their models to PowerQE without modifying the MMEditing repository. One should clone PowerQE along with MMEditing like this:
 
 ```bash
-git clone -b v3 --recurse-submodules --depth 1 https://github.com/ryanxingql/powerqe.git
+git clone --depth 1 --recurse-submodules --shallow-submodules https://github.com/ryanxingql/powerqe.git
 ```
 
 ## Environment
