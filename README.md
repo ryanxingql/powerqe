@@ -25,23 +25,25 @@ git clone --depth 1 --recurse-submodules --shallow-submodules https://github.com
 
 ## Environment
 
+Summary:
+
 - environment.yml
-- requirements.txt
 - MMEditing (PyTorch + MMCV + MMEdit)
+- requirements.txt
 
-First, update mirrors (optional):
+> You can first update your mirrors:
+>
+> - Conda: https://mirrors.tuna.tsinghua.edu.cn/help/anaconda
+> - pip: https://mirrors.tuna.tsinghua.edu.cn/help/pypi
 
-- Conda: https://mirrors.tuna.tsinghua.edu.cn/help/anaconda
-- pip: https://mirrors.tuna.tsinghua.edu.cn/help/pypi
-
-Then, create a PowerQE environment:
+Create a PowerQE environment:
 
 ```bash
 conda env create -f environment.yml  # create the powerqe env
 conda activate powerqe
 ```
 
-Next, install MMEditing following mmediting/docs/en/install.md.
+Install MMEditing following mmediting/docs/en/install.md.
 
 ```bash
 conda install pytorch==1.12.1 torchvision==0.13.1 torchaudio==0.12.1 cudatoolkit=11.3 -c pytorch
@@ -59,9 +61,9 @@ cd ~
 python -c "import mmedit; print(mmedit.__version__)"
 ```
 
-Finally,
+Install requirements of PowerQE:
 
-```
+```bash
 cd powerqe/
 pip3 install -r requirements.txt
 ```
@@ -140,4 +142,4 @@ Other options:
 
 ## Q&A
 
-See [Wiki](./docs/v3.md).
+Please refer to the [document](./docs/v3.md).
