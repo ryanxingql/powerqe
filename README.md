@@ -2,6 +2,7 @@
 
 This repository supports some quality enhancement approaches for compressed images/videos based on PyTorch and MMEditing (v0.x).
 
+- [ ] [ProVQE @ CVPRW 22'](https://github.com/ryanxingql/winner-ntire22-vqe)
 - [ ] [BasicVSR++ @ CVPR 22'](https://arxiv.org/abs/2104.13371)
 - [x] [MPRNet @ CVPR 21'](https://github.com/swz30/MPRNet)
 - [ ] [STDF @ AAAI 20](https://github.com/ryanxingql/stdf-pytorch)
@@ -14,7 +15,7 @@ This repository supports some quality enhancement approaches for compressed imag
 - [x] [RDN @ CVPR 18'](https://arxiv.org/abs/1802.08797)
 - [x] [DnCNN @ TIP 17'](https://arxiv.org/abs/1608.03981)
 - [x] [DCAD @ DCC 17'](https://ieeexplore.ieee.org/abstract/document/7923714)
-- [x] [UNet @ MICCAI 15'](https://arxiv.org/abs/1505.04597)
+- [x] [U-Net @ MICCAI 15'](https://arxiv.org/abs/1505.04597)
 - [x] [AR-CNN @ ICCV 15'](https://arxiv.org/abs/1504.06993)
 
 MMEditing is a submodule of PowerQE. One can easily upgrade the MMEditing, and add their models to PowerQE without modifying the MMEditing repository. One should clone PowerQE along with MMEditing like this:
@@ -31,7 +32,7 @@ Summary:
 - MMEditing (PyTorch + MMCV + MMEdit)
 - requirements.txt
 
-> You can first update your mirrors:
+> Chinese users may first update mirrors:
 >
 > - Conda: https://mirrors.tuna.tsinghua.edu.cn/help/anaconda
 > - pip: https://mirrors.tuna.tsinghua.edu.cn/help/pypi
