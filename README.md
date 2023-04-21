@@ -1,6 +1,6 @@
 # PowerQE
 
-This repository supports some quality enhancement approaches for compressed images/videos based on PyTorch and MMEditing (v0.x).
+This repository supports some quality enhancement approaches for compressed image/video based on PyTorch and MMEditing.
 
 - [ ] [ProVQE @ CVPRW'22](https://github.com/ryanxingql/winner-ntire22-vqe)
 - [ ] [BasicVSR++ @ CVPR'22](https://arxiv.org/abs/2104.13371)
@@ -18,58 +18,23 @@ This repository supports some quality enhancement approaches for compressed imag
 - [x] [U-Net @ MICCAI'15](https://arxiv.org/abs/1505.04597)
 - [x] [AR-CNN @ ICCV'15](https://arxiv.org/abs/1504.06993)
 
+## Installation
+
 MMEditing is a submodule of PowerQE. One can easily upgrade the MMEditing, and add their models to PowerQE without modifying the MMEditing repository. One should clone PowerQE along with MMEditing like this:
 
 ```bash
 git clone --depth 1 --recurse-submodules --shallow-submodules https://github.com/ryanxingql/powerqe.git
 ```
 
-## Environment
-
-Summary:
+Create environment:
 
 - environment.yml
-- MMEditing (PyTorch + MMCV + MMEdit)
+- MMEditing (PyTorch + MMCV + MMEdit v0.x)
 - requirements.txt
 
-> Chinese users may first update mirrors:
->
-> - Conda: https://mirrors.tuna.tsinghua.edu.cn/help/anaconda
-> - pip: https://mirrors.tuna.tsinghua.edu.cn/help/pypi
+Please refer to the [document](./docs/v3.md#env) for detailed installation.
 
-Create a PowerQE environment:
-
-```bash
-conda env create -f environment.yml  # create the powerqe env
-conda activate powerqe
-```
-
-Install MMEditing following mmediting/docs/en/install.md.
-
-```bash
-conda install pytorch==1.12.1 torchvision==0.13.1 torchaudio==0.12.1 cudatoolkit=11.3 -c pytorch
-
-pip3 install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.12/index.html
-# or
-#pip3 install openmim
-#mim install mmcv-full==1.7.0
-
-cd mmediting/
-pip3 install -e .
-
-# verify
-cd ~
-python -c "import mmedit; print(mmedit.__version__)"
-```
-
-Install requirements of PowerQE:
-
-```bash
-cd powerqe/
-pip3 install -r requirements.txt
-```
-
-## Data
+## Prepare data
 
 Create a symbolic link to your data:
 
@@ -103,6 +68,8 @@ powerqe/
                 |-- ...
                 `-- 0900.png
 ```
+
+Please refer to the [document](./docs/v3.md#compress) for details about image/video compression.
 
 ## Training
 
@@ -140,7 +107,3 @@ PORT=29510 \  # use port 29510 for communication
 Optional options:
 
 - `--save-path <save-folder>`: To save output images.
-
-## Q&A
-
-Please refer to the [document](./docs/v3.md).

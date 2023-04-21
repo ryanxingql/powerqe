@@ -56,7 +56,7 @@ test_pipeline = train_pipeline
 
 dataset_type = 'Vimeo90KTripletCenterGTDataset'
 dataset_gt_dir = './data/vimeo_triplet'
-dataset_lq_dir = './data/vimeo_triplet_x265'
+dataset_lq_dir = './data/vimeo_triplet_lq'
 
 data = dict(workers_per_gpu=bs // ngpus,
             train_dataloader=dict(samples_per_gpu=bs // ngpus, drop_last=True),

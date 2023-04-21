@@ -38,3 +38,4 @@ repos:
           - mdformat-openmmlab
           - mdformat_frontmatter
           - linkify-it-py
+          - mdformat-footnote
