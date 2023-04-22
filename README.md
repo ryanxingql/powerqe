@@ -76,7 +76,7 @@ Please refer to the [document](./docs/v3.md#compress-image-and-video) for detail
 ```bash
 #chmod +x ./tools/dist_train.sh  # for the first time
 
-conda activate powerqe && \
+conda activate powerqe
 CUDA_VISIBLE_DEVICES=0 \  # use GPU 0
 PORT=29500 \  # use port 29500 for communication
 ./tools/dist_train.sh \  # training script
@@ -94,7 +94,7 @@ Optional options:
 ```bash
 #chmod +x ./tools/dist_test.sh  # for the first time
 
-conda activate powerqe && \
+conda activate powerqe
 CUDA_VISIBLE_DEVICES=0 \  # use GPU 0
 PORT=29510 \  # use port 29510 for communication
 ./tools/dist_test.sh \  # test script
