@@ -32,7 +32,7 @@ Create environment:
 - MMEditing (PyTorch + MMCV + MMEdit v0.x)
 - requirements.txt
 
-Please refer to the [document](./docs/v3.md#env) for detailed installation.
+Please refer to the [document](./docs/v3.md#create-environment) for detailed installation.
 
 ## Prepare data
 
@@ -69,7 +69,7 @@ powerqe/
                 `-- 0900.png
 ```
 
-Please refer to the [document](./docs/v3.md#compress) for details about image/video compression.
+Please refer to the [document](./docs/v3.md#compress-image-and-video) for details about image/video compression.
 
 ## Training
 
