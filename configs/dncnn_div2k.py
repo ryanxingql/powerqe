@@ -69,20 +69,20 @@ data = dict(workers_per_gpu=bs // ngpus,
             train=dict(type='RepeatDataset',
                        times=1000,
                        dataset=dict(type='PairedSameSizeImageDataset',
-                                    lq_folder='./data/div2k/train/lq',
-                                    gt_folder='./data/div2k/train/gt',
+                                    lq_folder='data/div2k/train/lq',
+                                    gt_folder='data/div2k/train/gt',
                                     pipeline=train_pipeline,
                                     filename_tmpl='{}.png',
                                     test_mode=False)),
             val=dict(type='PairedSameSizeImageDataset',
-                     lq_folder='./data/div2k/valid/lq',
-                     gt_folder='./data/div2k/valid/gt',
+                     lq_folder='data/div2k/valid/lq',
+                     gt_folder='data/div2k/valid/gt',
                      pipeline=test_pipeline,
                      filename_tmpl='{}.png',
                      test_mode=True),
             test=dict(type='PairedSameSizeImageDataset',
-                      lq_folder='./data/div2k/valid/lq',
-                      gt_folder='./data/div2k/valid/gt',
+                      lq_folder='data/div2k/valid/lq',
+                      gt_folder='data/div2k/valid/gt',
                       pipeline=test_pipeline,
                       filename_tmpl='{}.png',
                       test_mode=True))
@@ -111,7 +111,7 @@ visual_config = None
 # runtime settings
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = f'./work_dirs/{exp_name}'
+work_dir = f'work_dirs/{exp_name}'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]

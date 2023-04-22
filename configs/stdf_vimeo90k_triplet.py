@@ -55,8 +55,8 @@ train_pipeline = [
 test_pipeline = train_pipeline
 
 dataset_type = 'Vimeo90KTripletCenterGTDataset'
-dataset_gt_dir = './data/vimeo_triplet'
-dataset_lq_dir = './data/vimeo_triplet_x265'
+dataset_gt_dir = 'data/vimeo_triplet'
+dataset_lq_dir = 'data/vimeo_triplet_lq'
 
 data = dict(workers_per_gpu=bs // ngpus,
             train_dataloader=dict(samples_per_gpu=bs // ngpus, drop_last=True),
@@ -121,7 +121,7 @@ visual_config = None
 # runtime settings
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = f'./work_dirs/{exp_name}'
+work_dir = f'work_dirs/{exp_name}'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]
