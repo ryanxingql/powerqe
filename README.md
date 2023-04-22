@@ -32,55 +32,46 @@ Create environment:
 - MMEditing (PyTorch + MMCV + MMEdit v0.x)
 - requirements.txt
 
-Please refer to the [document](./docs/v3.md#create-environment) for detailed installation.
+Please refer to the [document](docs/v3.md#create-environment) for detailed installation.
 
 ## Prepare data
 
 Create a symbolic link to your data:
 
 ```bash
-cd powerqe/
-ln -s <absolute-path-to-your-data> ./data
+ln -s <absolute-path-to-your-data> data
 ```
 
 Place your data like this:
 
 ```txt
-powerqe/
-`-- data/
-    `-- div2k/
-        |-- train/
-        |   |-- gt/
-        |   |   |-- 0001.png
-        |   |   |-- ...
-        |   |   `-- 0800.png
-        |   `-- lq/
-        |       |-- 0001.png
-        |       |-- ...
-        |       `-- 0800.png
-        `-- valid/
-            |-- gt/
-            |   |-- 0801.png
-            |   |-- ...
-            |   `-- 0900.png
-            `-- lq/
-                |-- 0801.png
-                |-- ...
-                `-- 0900.png
+powerqe/data/div2k
+`-- train
+`   `-- gt
+`   `   `-- 0001.png
+`   `   `-- ...
+`   `   `-- 0800.png
+`   `-- lq
+`-- valid
+    `-- gt
+    `   `-- 0801.png
+    `   `-- ...
+    `   `-- 0900.png
+    `-- lq
 ```
 
-Please refer to the [document](./docs/v3.md#compress-image-and-video) for details about image/video compression.
+Please refer to the [document](docs/v3.md#compress-image-and-video) for details about image/video compression.
 
 ## Training
 
 ```bash
-#chmod +x ./tools/dist_train.sh  # for the first time
+#chmod +x tools/dist_train.sh  # for the first time
 
 conda activate powerqe
 CUDA_VISIBLE_DEVICES=0 \  # use GPU 0
 PORT=29500 \  # use port 29500 for communication
-./tools/dist_train.sh \  # training script
-./configs/<config>.py \  # config path
+tools/dist_train.sh \  # training script
+configs/<config>.py \  # config path
 1 \  # use one gpu
 <optional-options>
 ```
@@ -92,14 +83,14 @@ Optional options:
 ## Testing
 
 ```bash
-#chmod +x ./tools/dist_test.sh  # for the first time
+#chmod +x tools/dist_test.sh  # for the first time
 
 conda activate powerqe
 CUDA_VISIBLE_DEVICES=0 \  # use GPU 0
 PORT=29510 \  # use port 29510 for communication
-./tools/dist_test.sh \  # test script
-./configs/<config>.py \  # config path
-./work_dirs/<ckp>.pth \  # checkpoint path
+tools/dist_test.sh \  # test script
+configs/<config>.py \  # config path
+work_dirs/<ckp>.pth \  # checkpoint path
 1 \  # use one gpu
 <optional-options>
 ```

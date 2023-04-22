@@ -1,9 +1,9 @@
-_base_ = './arcnn_div2k.py'
+_base_ = 'arcnn_div2k.py'
 
-train_lq_folder = './data/div2k/train/lq_patches.lmdb'
-train_gt_folder = './data/div2k/train/gt_patches.lmdb'
-valid_lq_folder = './data/div2k/valid/lq.lmdb'
-valid_gt_folder = './data/div2k/valid/gt.lmdb'
+train_lq_folder = 'data/div2k/train/lq_patches.lmdb'
+train_gt_folder = 'data/div2k/train/gt_patches.lmdb'
+valid_lq_folder = 'data/div2k/valid/lq.lmdb'
+valid_gt_folder = 'data/div2k/valid/gt.lmdb'
 
 # dataset settings
 train_pipeline = [

@@ -69,8 +69,8 @@ if __name__ == '__main__':
         pool = mp.Pool(processes=MAX_NPRO)
 
         SRC_DIR = os.path.abspath(os.path.join(args.root, 'train/gt'))
-        TMP_DIR = os.path.abspath(os.path.join(args.tmp, 'train/lq/bpg/qp37'))
-        TAR_DIR = os.path.abspath(os.path.join(args.root, 'train/lq/bpg/qp37'))
+        TMP_DIR = os.path.abspath(os.path.join(args.tmp, 'train'))
+        TAR_DIR = os.path.abspath(os.path.join(args.root, 'train/lq'))
         os.makedirs(TMP_DIR)
         os.makedirs(TAR_DIR)
 
@@ -96,8 +96,8 @@ if __name__ == '__main__':
         pool = mp.Pool(processes=MAX_NPRO)
 
         SRC_DIR = os.path.abspath(os.path.join(args.root, 'valid/gt'))
-        TMP_DIR = os.path.abspath(os.path.join(args.tmp, 'valid/lq/bpg/qp37'))
-        TAR_DIR = os.path.abspath(os.path.join(args.root, 'valid/lq/bpg/qp37'))
+        TMP_DIR = os.path.abspath(os.path.join(args.tmp, 'valid'))
+        TAR_DIR = os.path.abspath(os.path.join(args.root, 'valid/lq'))
         os.makedirs(TMP_DIR)
         os.makedirs(TAR_DIR)
 

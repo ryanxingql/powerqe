@@ -304,19 +304,19 @@ def parse_args():
     parser.add_argument(
         '-src',
         '--src',
-        default='./data/div2k/train/gt',
+        default='data/div2k/train/gt',
         help='source path',
     )
     parser.add_argument(
         '-tmp',
         '--tmp',
-        default='./tmp/div2k/train/gt_patches',
+        default='tmp/div2k/train/gt_patches',
         help='temporal path',
     )
     parser.add_argument(
         '-save',
         '--save',
-        default='./data/div2k/train/gt_patches.lmdb',
+        default='data/div2k/train/gt_patches.lmdb',
         help='save path',
     )
     parser.add_argument(
