@@ -1,4 +1,5 @@
 # RyanXingQL @2023
+import copy
 import os
 import os.path as osp
 
@@ -54,6 +55,17 @@ class Vimeo90KTripletCenterGTDataset(BaseVFIDataset):
         # BaseDataset cannot accept the new pipeline outside MMEdit
         # we have to create pipeline manually
         self.pipeline = Compose(pipeline)
+
+    def __getitem__(self, idx):
+        """
+        Different to the __getitem__ of BaseVFIDataset:
+            1. Add results['scale'] = 1 for PairedRandomCrop.
+        """
+        results = copy.deepcopy(self.data_infos[idx])
+        results['folder'] = self.folder
+        results['ann_file'] = self.ann_file
+        results['scale'] = 1
+        return self.pipeline(results)
 
     def load_annotations(self):
         """Load annotations for Vimeo90K dataset.
