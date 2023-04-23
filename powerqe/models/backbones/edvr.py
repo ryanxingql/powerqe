@@ -9,11 +9,17 @@ from mmedit.models.registry import BACKBONES
 class EDVRNetQE(EDVRNet):
     """EDVRNet for quality enhancement."""
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        delattr(self, 'upsample1')
+        delattr(self, 'upsample2')
+        delattr(self, 'img_upsample')
+
     def forward(self, x):
         """
         Different to the forward function for EDVRNet:
-            1. Comment `base = self.img_upsample(x_center)`
-                since x_center is with high resolution.
+            1. Comment all upsamplings
+                since the input is with high resolution.
         """
         n, t, c, h, w = x.size()
         assert h % 4 == 0 and w % 4 == 0, (
@@ -58,8 +64,8 @@ class EDVRNetQE(EDVRNet):
 
         # reconstruction
         out = self.reconstruction(feat)
-        out = self.lrelu(self.upsample1(out))
-        out = self.lrelu(self.upsample2(out))
+        # out = self.lrelu(self.upsample1(out))
+        # out = self.lrelu(self.upsample2(out))
         out = self.lrelu(self.conv_hr(out))
         out = self.conv_last(out)
         # base = self.img_upsample(x_center)
