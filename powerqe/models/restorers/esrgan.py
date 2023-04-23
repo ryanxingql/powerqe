@@ -10,7 +10,6 @@ from .basic_restorer import BasicRestorerQE
 
 @MODELS.register_module()
 class ESRGANQE(BasicRestorerQE):
-    """Support LQ vs. GT testing for BasicRestorerQE."""
 
     def __init__(self,
                  generator,
@@ -21,7 +20,9 @@ class ESRGANQE(BasicRestorerQE):
                  train_cfg=None,
                  test_cfg=None,
                  pretrained=None):
-        # search for the __init__ above BasicRestorerQE
+        """
+        Similar to the __init__ of SRGAN in mmedit.
+        """
         super().__init__(generator=generator,
                          pixel_loss=pixel_loss,
                          train_cfg=train_cfg,
@@ -55,11 +56,9 @@ class ESRGANQE(BasicRestorerQE):
         self.step_counter = 0  # counting training steps
 
     def init_weights(self, pretrained=None):
-        """Init weights for models.
-
-        Args:
-            pretrained (str, optional): Path for pretrained weights. If given
-                None, pretrained weights will not be loaded. Defaults to None.
+        """
+        Init the generator weights using the generator's method.
+            Therefore ^generator. must be removed.
         """
         self.generator.init_weights(pretrained=pretrained,
                                     revise_keys=[(r'^generator\.', ''),
@@ -68,14 +67,8 @@ class ESRGANQE(BasicRestorerQE):
         #     self.discriminator.init_weights(pretrained=pretrained)
 
     def train_step(self, data_batch, optimizer):
-        """Train step.
-
-        Args:
-            data_batch (dict): A batch of data.
-            optimizer (obj): Optimizer.
-
-        Returns:
-            dict: Returned output.
+        """
+        train_step of ESRGAN in mmedit.
         """
         # data
         lq = data_batch['lq']

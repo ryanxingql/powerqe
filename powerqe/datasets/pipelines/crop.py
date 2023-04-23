@@ -4,7 +4,7 @@ from ..registry import PIPELINES
 
 @PIPELINES.register_module()
 class PairedCenterCrop:
-    """Paried center crop.
+    """Paired center crop.
 
     It crops a pair of lq and gt images with corresponding locations.
     It also supports accepting lq list and gt list.

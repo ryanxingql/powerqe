@@ -86,19 +86,15 @@ def crop_img(img, pad_info):
 
 @MODELS.register_module()
 class BasicRestorerQE(BasicRestorer):
-    """Support LQ vs. GT testing for BasicRestorer."""
+    """
+    Difference to BasicRestorer:
+         1. Support LQ vs. GT testing.
+    """
 
-    # def evaluate(self, output, gt):
     def evaluate(self, output, gt, lq):
-        """Evaluation function.
-
-        Args:
-            output (Tensor): Model output with shape (n, c, h, w).
-            gt (Tensor): GT Tensor with shape (n, c, h, w).
+        """
+        New args:
             lq (Tensor): LQ Tensor with shape (n, c, h, w).
-
-        Returns:
-            dict: Evaluation results.
         """
         crop_border = self.test_cfg.crop_border
 
@@ -108,8 +104,6 @@ class BasicRestorerQE(BasicRestorer):
 
         eval_result = dict()
         for metric in self.test_cfg.metrics:
-            # eval_result[metric] = self.allowed_metrics[metric](output, gt,
-            #                                                    crop_border)
             eval_result[metric + '-output'] = self.allowed_metrics[metric](
                 output, gt, crop_border)
             eval_result[metric + '-LQ'] = self.allowed_metrics[metric](
@@ -123,19 +117,10 @@ class BasicRestorerQE(BasicRestorer):
                      save_image=False,
                      save_path=None,
                      iteration=None):
-        """Testing forward function.
-
-        Args:
-            lq (Tensor): LQ Tensor with shape (n, c, h, w).
-            gt (Tensor): GT Tensor with shape (n, c, h, w).
-                Default: None.
-            save_image (bool): Whether to save image. Default: False.
-            save_path (str): Path to save image. Default: None.
-            iteration (int): Iteration for the saving image name.
-                Default: None.
-
-        Returns:
-            dict: Output results.
+        """
+        Difference to the forward_test of BasicRestorer:
+            1. Support unfolding.
+            2. Save LQ, output, and GT.
         """
         if self.test_cfg is not None and 'unfolding' in self.test_cfg:
             unfold_patch_sz = self.test_cfg.unfolding.patch_sz
@@ -164,7 +149,6 @@ class BasicRestorerQE(BasicRestorer):
         if self.test_cfg is not None and self.test_cfg.get('metrics', None):
             assert gt is not None, (
                 'evaluation with metrics must have gt images.')
-            # results = dict(eval_result=self.evaluate(output, gt))
             results = dict(eval_result=self.evaluate(
                 output=output,
                 gt=gt,
@@ -180,8 +164,6 @@ class BasicRestorerQE(BasicRestorer):
             lq_path = meta[0]['lq_path']
             lq_name = osp.splitext(osp.basename(lq_path))[0]
             if isinstance(iteration, numbers.Number):
-                # save_path = osp.join(save_path, lq_name,
-                #                      f'{lq_name}-{iteration + 1:06d}.png')
                 save_path_output = osp.join(save_path, lq_name, 'output',
                                             f'{iteration + 1:06d}.png')
                 save_path_lq = osp.join(save_path, lq_name, 'lq',
@@ -189,7 +171,6 @@ class BasicRestorerQE(BasicRestorer):
                 save_path_gt = osp.join(save_path, lq_name, 'gt',
                                         f'{iteration + 1:06d}.png')
             elif iteration is None:
-                # save_path = osp.join(save_path, f'{lq_name}.png')
                 save_path_output = osp.join(
                     save_path,
                     'output',
@@ -219,20 +200,17 @@ class BasicRestorerQE(BasicRestorer):
 
 @MODELS.register_module()
 class BasicRestorerVQE(BasicRestorer):
-    """Support video for BasicRestorer."""
+    """
+    Difference to BasicRestorer:
+        1. Support LQ vs. GT testing.
+        2. Support sequence LQ.
+            GT corresponds to the center LQ.
+    """
 
-    # def evaluate(self, output, gt):
     def evaluate(self, output, gt, lq):
-        """Evaluation function.
-
-        Args:
-            output (Tensor): Model output with shape (n, c, h, w).
-            gt (Tensor): GT Tensor with shape (n, c, h, w).
+        """
+        New args:
             lq (Tensor): LQ Tensor with shape (n, t, c, h, w).
-                The center frame corresponds to GT.
-
-        Returns:
-            dict: Evaluation results.
         """
         crop_border = self.test_cfg.crop_border
 
@@ -245,8 +223,6 @@ class BasicRestorerVQE(BasicRestorer):
 
         eval_result = dict()
         for metric in self.test_cfg.metrics:
-            # eval_result[metric] = self.allowed_metrics[metric](output, gt,
-            #                                                    crop_border)
             eval_result[metric + '-output'] = self.allowed_metrics[metric](
                 output, gt, crop_border)
             eval_result[metric + '-LQ'] = self.allowed_metrics[metric](
@@ -260,20 +236,9 @@ class BasicRestorerVQE(BasicRestorer):
                      save_image=False,
                      save_path=None,
                      iteration=None):
-        """Testing forward function.
-
-        Args:
-            lq (Tensor): LQ Tensor with shape (n, t, c, h, w).
-                The center frame corresponds to GT.
-            gt (Tensor): GT Tensor with shape (n, c, h, w).
-                Default: None.
-            save_image (bool): Whether to save image. Default: False.
-            save_path (str): Path to save image. Default: None.
-            iteration (int): Iteration for the saving image name.
-                Default: None.
-
-        Returns:
-            dict: Output results.
+        """
+        Difference to the forward_test of BasicRestorer:
+            1. Save LQ, output, and GT.
         """
         t = lq.shape[1]
         assert t % 2 == 1
@@ -287,7 +252,6 @@ class BasicRestorerVQE(BasicRestorer):
         if self.test_cfg is not None and self.test_cfg.get('metrics', None):
             assert gt is not None, (
                 'evaluation with metrics must have gt images.')
-            # results = dict(eval_result=self.evaluate(output, gt))
             results = dict(eval_result=self.evaluate(
                 output=output,
                 gt=gt,

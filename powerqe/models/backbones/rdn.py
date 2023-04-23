@@ -4,71 +4,11 @@ import math
 
 import torch
 from mmcv.runner import load_checkpoint
+from mmedit.models.backbones.sr_backbones.rdn import RDB
 from mmedit.utils import get_root_logger
 from torch import nn
 
 from ..registry import BACKBONES
-
-
-class DenseLayer(nn.Module):
-    """Dense layer.
-
-    Args:
-        in_channels (int): Channel number of inputs.
-        out_channels (int): Channel number of outputs.
-    """
-
-    def __init__(self, in_channels, out_channels):
-        super().__init__()
-        self.conv = nn.Conv2d(in_channels,
-                              out_channels,
-                              kernel_size=3,
-                              padding=3 // 2)
-        self.relu = nn.ReLU(inplace=True)
-
-    def forward(self, x):
-        """Forward function.
-
-        Args:
-            x (Tensor): Input tensor with shape (n, c_in, h, w).
-
-        Returns:
-            Tensor: Forward results, tensor with shape (n, c_in+c_out, h, w).
-        """
-        return torch.cat([x, self.relu(self.conv(x))], 1)
-
-
-class RDB(nn.Module):
-    """Residual Dense Block of Residual Dense Network.
-
-    Args:
-        in_channels (int): Channel number of inputs.
-        channel_growth (int): Channels growth in each layer.
-        num_layers (int): Layer number in the Residual Dense Block.
-    """
-
-    def __init__(self, in_channels, channel_growth, num_layers):
-        super().__init__()
-        self.layers = nn.Sequential(*[
-            DenseLayer(in_channels + channel_growth * i, channel_growth)
-            for i in range(num_layers)
-        ])
-
-        # local feature fusion
-        self.lff = nn.Conv2d(in_channels + channel_growth * num_layers,
-                             in_channels,
-                             kernel_size=1)
-
-    def forward(self, x):
-        """Forward function.
-
-        Args:
-            x (Tensor): Input tensor with shape (n, c, h, w).
-
-        Returns:
-            Tensor: Forward results.
-        """
-        return x + self.lff(self.layers(x))  # local residual learning
 
 
 class Interpolate(nn.Module):
@@ -92,21 +32,12 @@ class Interpolate(nn.Module):
 
 @BACKBONES.register_module()
 class RDNQE(nn.Module):
-    """RDN model for image quality enhancement.
+    """
+    Difference to the RDN in mmedit:
+        1. Support rescaling before/after enhancement.
 
-    Adapted from the RDN in MMEditing 0.15.
-
-    Args:
-        rescale (int): Rescaling factor.
-        in_channels (int): Channel number of inputs.
-        out_channels (int): Channel number of outputs.
-        mid_channels (int): Channel number of intermediate features.
-            Default: 64.
-        num_blocks (int): Block number in the trunk network. Default: 8.
-        num_layer (int): Layer number in the Residual Dense Block.
-            Default: 8.
-        channel_growth(int): Channels growth in each layer of RDB.
-            Default: 64.
+    New args:
+        rescale (int): rescaling factor.
     """
 
     def __init__(
@@ -144,13 +75,6 @@ class RDNQE(nn.Module):
                               padding=3 // 2)
 
         # residual dense blocks
-        """
-        self.rdbs = nn.ModuleList(
-            [RDB(self.mid_channels, self.channel_growth, self.num_layers)])
-        for _ in range(self.num_blocks - 1):
-            self.rdbs.append(
-                RDB(self.channel_growth, self.channel_growth, self.num_layers))
-        """
         self.rdbs = nn.ModuleList()
         for _ in range(self.num_blocks):
             self.rdbs.append(

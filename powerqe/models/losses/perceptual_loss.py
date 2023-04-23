@@ -7,17 +7,11 @@ from ..registry import LOSSES
 
 @LOSSES.register_module()
 class PerceptualLossGray(PerceptualLoss):
-    """Support PerceptualLoss for gray-scale images."""
 
     def forward(self, x, gt):
-        """Forward function.
-
-        Args:
-            x (Tensor): Input tensor with shape (n, c, h, w).
-            gt (Tensor): Ground-truth tensor with shape (n, c, h, w).
-
-        Returns:
-            Tensor: Forward results.
+        """
+        Difference to the forward of PerceptualLoss:
+            1. Input x is a gray-scale image.
         """
         # gray -> color
         # diff 1/1

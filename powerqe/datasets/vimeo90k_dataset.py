@@ -58,7 +58,7 @@ class Vimeo90KTripletCenterGTDataset(BaseVFIDataset):
 
     def __getitem__(self, idx):
         """
-        Different to the __getitem__ of BaseVFIDataset:
+        Difference to the __getitem__ of BaseVFIDataset:
             1. Add results['scale'] = 1 for PairedRandomCrop.
         """
         results = copy.deepcopy(self.data_infos[idx])

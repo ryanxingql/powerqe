@@ -9,11 +9,9 @@ from ..registry import PIPELINES
 
 
 class Compose(MMEditCompose):
-    """Compose a data pipeline with a sequence of transforms.
-
-    Args:
-        transforms (list[dict | callable]):
-            Either config dicts of transforms or transform objects.
+    """
+    Difference to MMEditCompose:
+        1. Use the PIPELINES in powerqe.
     """
 
     def __init__(self, transforms):

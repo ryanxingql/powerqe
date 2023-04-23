@@ -15,13 +15,9 @@ class RRDBNetQE(RRDBNet):
                      pretrained=None,
                      strict=True,
                      revise_keys=[(r'^module\.', '')]):
-        """Init weights for models.
-
-        Args:
-            pretrained (str, optional): Path for pretrained weights. If given
-                None, pretrained weights will not be loaded. Defaults to None.
-            strict (boo, optional): Whether strictly load the pretrained model.
-                Defaults to True.
+        """
+        Accept revise_keys for restorer ESRGANQE.
+            Default value is equal to that of load_checkpoint.
         """
         if isinstance(pretrained, str):
             logger = get_root_logger()
