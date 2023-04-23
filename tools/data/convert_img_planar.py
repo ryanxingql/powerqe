@@ -113,6 +113,11 @@ def parse_args():
         action='store_true',
     )
     parser.add_argument(
+        '--src-re',
+        type=str,
+        default='tmp/comp_planar/vimeo_triplet',
+    )
+    parser.add_argument(
         '--tar-re',
         type=str,
         default='data/vimeo_triplet_lq',
@@ -144,7 +149,7 @@ if __name__ == '__main__':
                                      ),
                                      callback=lambda x: print(x))
         else:
-            vid_paths = sorted(glob(os.path.join(args.tar, '*/')))
+            vid_paths = sorted(glob(os.path.join(args.src_re, '*/')))
             for vid_path in vid_paths:
                 vid_name = vid_path.split('/')[-2]
                 vid_dir = os.path.join(args.tar_re, vid_name)

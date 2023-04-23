@@ -23,7 +23,8 @@ This repository supports some quality enhancement approaches for compressed imag
 MMEditing is a submodule of PowerQE. One can easily upgrade the MMEditing, and add their models to PowerQE without modifying the MMEditing repository. One should clone PowerQE along with MMEditing like this:
 
 ```bash
-git clone --depth 1 --recurse-submodules --shallow-submodules https://github.com/ryanxingql/powerqe.git
+git clone --depth 1 --recurse-submodules --shallow-submodules\
+ https://github.com/ryanxingql/powerqe.git
 ```
 
 Create environment:
@@ -67,14 +68,22 @@ Please refer to the [document](docs/v3.md#compress-image-and-video) for details 
 ```bash
 #chmod +x tools/dist_train.sh  # for the first time
 
-conda activate powerqe
-CUDA_VISIBLE_DEVICES=0 \  # use GPU 0
-PORT=29500 \  # use port 29500 for communication
-tools/dist_train.sh \  # training script
-configs/<config>.py \  # config path
-1 \  # use one gpu
-<optional-options>
+conda activate powerqe &&\
+ CUDA_VISIBLE_DEVICES=0\
+ PORT=29500\
+ tools/dist_train.sh\
+ configs/<config>.py\
+ 1\
+ <optional-options>
 ```
+
+- Activate environment powerqe.
+- Use GPU 0.
+- Use port 29500 for communication.
+- Training script.
+- Configuration.
+- Use one GPU.
+- Optional options.
 
 Optional options:
 
@@ -85,15 +94,24 @@ Optional options:
 ```bash
 #chmod +x tools/dist_test.sh  # for the first time
 
-conda activate powerqe
-CUDA_VISIBLE_DEVICES=0 \  # use GPU 0
-PORT=29510 \  # use port 29510 for communication
-tools/dist_test.sh \  # test script
-configs/<config>.py \  # config path
-work_dirs/<ckp>.pth \  # checkpoint path
-1 \  # use one gpu
-<optional-options>
+conda activate powerqe &&\
+ CUDA_VISIBLE_DEVICES=0\
+ PORT=29510\
+ tools/dist_test.sh\
+ configs/<config>.py\
+ work_dirs/<ckp>.pth\
+ 1\
+ <optional-options>
 ```
+
+- Activate environment powerqe.
+- Use GPU 0.
+- Use port 29510 for communication.
+- Test script.
+- Configuration.
+- Checkpoint.
+- Use one GPU.
+- Optional options.
 
 Optional options:
 
