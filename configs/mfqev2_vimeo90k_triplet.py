@@ -1,37 +1,32 @@
 bs = 32
-ngpus = 4
-assert bs % ngpus == 0, ('Samples in a batch should better be evenly'
-                         ' distributed among all GPUs.')
+ngpus = 2
+assert bs % ngpus == 0
 
-radius = 1
-nfs = [32, 64, 48]
-nbs = [3, 6]
-ps = 128
-niter_k = 1000
+nf = 32
+ps = 256
+niter_k = 600
 
-exp_name = (f'stdf_vimeo90k_triplet'
-            f'_r{radius}_nf{nfs[0]}_{nfs[1]}_{nfs[2]}_nb{nbs[0]}_{nbs[1]}'
+exp_name = (f'mfqev2_vimeo90k_triplet'
+            f'_nf{nf}'
             f'_ps{ps}_bs{bs}_{niter_k}k_g{ngpus}')
 
 rescale = 1  # must be 2^n
 
 # model settings
-model = dict(type='BasicRestorerVQE',
-             generator=dict(
-                 type='STDFNet',
-                 radius=radius,
-                 nf_stdf=nfs[0],
-                 nb_stdf=nbs[0],
-                 nf_stdf_out=nfs[1],
-                 nf_qe=nfs[2],
-                 nb_qe=nbs[1],
-             ),
-             pixel_loss=dict(type='CharbonnierLoss',
-                             loss_weight=1.0,
-                             reduction='mean'))
+model = dict(
+    type='BasicRestorerVQE',
+    generator=dict(
+        type='MFQEv2',
+        in_channels=3,
+        out_channels=3,
+        nf=32,
+        spynet_pretrained='https://download.openmmlab.com/mmediting/restorers/'
+        'basicvsr/spynet_20210409-c6c1bd09.pth',
+    ),
+    pixel_loss=dict(type='CharbonnierLoss', loss_weight=1.0, reduction='mean'))
 
 # model training and testing settings
-train_cfg = None
+train_cfg = dict(fix_iter=5000, fix_module=['spynet'])
 test_cfg = dict(metrics=['PSNR', 'SSIM'], crop_border=rescale)
 
 # dataset settings
@@ -79,10 +74,16 @@ test_pipeline = [
          meta_keys=['lq_path', 'gt_path', 'key'])
 ]
 
-dataset_type = 'Vimeo90KTripletCenterGTDataset'
+dataset_type = 'CompressedVimeo90KTripletCenterGTDataset'
 dataset_gt_dir = 'data/vimeo_triplet'
 dataset_lq_dir = 'data/vimeo_triplet_lq'
-
+qp_info = dict(
+    qp=37,
+    intra_qp_offset=-1,
+    qp_offset=[5, 4] * 3 + [5, 1],
+    qp_offset_model_off=[-6.5] * 7 + [0],
+    qp_offset_model_scale=[0.2590] * 7 + [0],
+)
 data = dict(workers_per_gpu=bs // ngpus,
             train_dataloader=dict(samples_per_gpu=bs // ngpus, drop_last=True),
             val_dataloader=dict(samples_per_gpu=1),
@@ -91,23 +92,26 @@ data = dict(workers_per_gpu=bs // ngpus,
                        times=1000,
                        dataset=dict(
                            type=dataset_type,
-                           folder=f'{dataset_lq_dir}/sequences',
+                           qp_info=qp_info,
+                           folder=f'{dataset_lq_dir}',
                            gt_folder=f'{dataset_gt_dir}/sequences',
-                           ann_file=f'{dataset_lq_dir}/tri_trainlist.txt',
+                           ann_file=f'{dataset_gt_dir}/tri_trainlist.txt',
                            pipeline=train_pipeline,
                            test_mode=False,
                            filename_tmpl='{}.png')),
             val=dict(type=dataset_type,
-                     folder=f'{dataset_lq_dir}/sequences',
+                     qp_info=qp_info,
+                     folder=f'{dataset_lq_dir}',
                      gt_folder=f'{dataset_gt_dir}/sequences',
-                     ann_file=f'{dataset_lq_dir}/tri_validlist.txt',
+                     ann_file=f'{dataset_gt_dir}/tri_validlist.txt',
                      pipeline=test_pipeline,
                      test_mode=True,
                      filename_tmpl='{}.png'),
             test=dict(type=dataset_type,
-                      folder=f'{dataset_lq_dir}/sequences',
+                      qp_info=qp_info,
+                      folder=f'{dataset_lq_dir}',
                       gt_folder=f'{dataset_gt_dir}/sequences',
-                      ann_file=f'{dataset_lq_dir}/tri_testlist.txt',
+                      ann_file=f'{dataset_gt_dir}/tri_testlist.txt',
                       pipeline=test_pipeline,
                       test_mode=True,
                       filename_tmpl='{}.png'))
@@ -150,3 +154,4 @@ work_dir = f'work_dirs/{exp_name}'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]
+find_unused_parameters = True  # for spynet pre-training

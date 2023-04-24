@@ -19,11 +19,11 @@ class STDF(nn.Module):
                  deform_ks=3):
         """
         Args:
-            in_nc: num of input channels.
-            out_nc: num of output channels.
-            nf: num of channels (filters) of each conv layer.
-            nb: num of conv layers.
-            deform_ks: size of the deformable kernel.
+            in_nc (int): num of input channels.
+            out_nc (int): num of output channels.
+            nf (int): num of channels (filters) of each conv layer.
+            nb (int): num of conv layers.
+            deform_ks (int): size of the deformable kernel.
         """
         super().__init__()
 

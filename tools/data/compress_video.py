@@ -77,7 +77,7 @@ if __name__ == '__main__':
                 enc_cmd = (f'{enc_path} -i {src_path} -c {cfg_path}'
                            f' -b {bit_path} -o {tar_path}'
                            f' -wdt 448 -hgt 256 -q {args.qp}'
-                           f' --Level=3.1 -fr 30 -f 3'
+                           ' --Level=3.1 -fr 30 -f 3'
                            f' > {log_path}')
                 pool.apply_async(func=hm_encode,
                                  args=(enc_cmd, ),

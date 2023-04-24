@@ -118,7 +118,7 @@ class BasicRestorerQE(BasicRestorer):
                      save_path=None,
                      iteration=None):
         """
-        Difference to the forward_test of BasicRestorer:
+        Difference to that of BasicRestorer:
             1. Support unfolding.
             2. Save LQ, output, and GT.
         """
@@ -236,7 +236,7 @@ class BasicRestorerVQE(BasicRestorer):
                      save_path=None,
                      iteration=None):
         """
-        Difference to the forward_test of BasicRestorer:
+        Difference to that of BasicRestorer:
             1. Save LQ, output, and GT.
         """
         t = lq.shape[1]
@@ -309,11 +309,23 @@ class BasicRestorerVQESequence(BasicRestorer):
         3. Support parameter fix for some iters.
     """
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(
+        self,
+        generator,
+        pixel_loss,
+        train_cfg=None,
+        test_cfg=None,
+        pretrained=None,
+    ):
+        super().__init__(
+            generator=generator,
+            pixel_loss=pixel_loss,
+            train_cfg=train_cfg,
+            test_cfg=test_cfg,
+            pretrained=pretrained,
+        )
 
         # fix pre-trained networks
-        train_cfg = kwargs['train_cfg']
         self.fix_iter = train_cfg.get('fix_iter', 0) if train_cfg else 0
         self.fix_module = train_cfg.get('fix_module', []) if train_cfg else []
         self.is_weight_fixed = False
@@ -323,7 +335,7 @@ class BasicRestorerVQESequence(BasicRestorer):
 
     def train_step(self, data_batch, optimizer):
         """
-        Difference to the train_step of BasicRestorer:
+        Difference to that of BasicRestorer:
             1. Support parameter fix for some iters.
         """
         # parameter fix
@@ -389,7 +401,7 @@ class BasicRestorerVQESequence(BasicRestorer):
                      save_path=None,
                      iteration=None):
         """
-        Difference to the forward_test of BasicRestorer:
+        Difference to that of BasicRestorer:
             1. Save LQ, output, and GT.
             2. Save sequences.
                 Key: sequence name.

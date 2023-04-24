@@ -21,7 +21,7 @@ if platform.system() != 'Windows':
 
 def build_dataset(cfg, default_args=None):
     """
-    Difference to the build_dataset in mmedit:
+    Difference to that in mmedit:
         1. Use the DATASETS in powerqe.
     """
     if isinstance(cfg, (list, tuple)):

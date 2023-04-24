@@ -37,10 +37,7 @@ class PairedSameSizeImageDataset(SRFolderDataset):
             # pipelines outside MMEdit
             scale=1,
             test_mode=test_mode,
-            filename_tmpl=osp.splitext(filename_tmpl)[0])
-
-        self.filename_tmpl = filename_tmpl
-        self.data_infos = self.load_annotations()
+            filename_tmpl=filename_tmpl)
 
         # BaseDataset cannot accept any new pipelines outside MMEdit
         # we have to create pipeline manually
@@ -48,7 +45,7 @@ class PairedSameSizeImageDataset(SRFolderDataset):
 
     def load_annotations(self):
         """
-        Difference to the load_annotations of SRFolderDataset:
+        Difference to that of SRFolderDataset:
             1. Use self-defined ext (in self.filename_tmpl) for lq_path.
         """
         data_infos = []

@@ -3,7 +3,7 @@
 import torch
 from mmedit.models.common import set_requires_grad
 
-from ..builder import build_backbone, build_component, build_loss
+from ..builder import build_component, build_loss
 from ..registry import MODELS
 from .basic_restorer import BasicRestorerQE
 
@@ -23,29 +23,23 @@ class ESRGANQE(BasicRestorerQE):
         """
         Similar to the __init__ of SRGAN in mmedit.
         """
-        super().__init__(generator=generator,
-                         pixel_loss=pixel_loss,
-                         train_cfg=train_cfg,
-                         test_cfg=test_cfg,
-                         pretrained=pretrained)
+        super().__init__(
+            generator=generator,
+            pixel_loss=pixel_loss,
+            train_cfg=train_cfg,
+            test_cfg=test_cfg,
+            pretrained=pretrained,
+        )
 
-        self.train_cfg = train_cfg
-        self.test_cfg = test_cfg
-
-        # generator
-        self.generator = build_backbone(generator)
-        self.init_weights(pretrained)
+        # generator is defined in the __init__() of BasicRestorer
 
         # discriminator
         self.discriminator = build_component(
             discriminator) if discriminator else None
 
-        # support fp16
-        self.fp16_enabled = False
-
         # loss
+        # pixel_loss is defined in the __init__() of BasicRestorer
         self.gan_loss = build_loss(gan_loss) if gan_loss else None
-        self.pixel_loss = build_loss(pixel_loss) if pixel_loss else None
         self.perceptual_loss = build_loss(
             perceptual_loss) if perceptual_loss else None
 
