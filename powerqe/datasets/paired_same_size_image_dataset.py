@@ -55,13 +55,13 @@ class PairedSameSizeImageDataset(SRFolderDataset):
         lq_paths = self.scan_folder(self.lq_folder)
         gt_paths = self.scan_folder(self.gt_folder)
         assert len(lq_paths) == len(gt_paths), (
-            f'gt and lq datasets have different number of images: '
+            f'GT and LQ datasets have different number of images: '
             f'{len(lq_paths)}, {len(gt_paths)}.')
 
         for gt_path in gt_paths:
             basename, _ = osp.splitext(osp.basename(gt_path))
             lq_path = osp.join(self.lq_folder,
                                f'{self.filename_tmpl.format(basename)}')
-            assert lq_path in lq_paths, f'{lq_path} is not in lq_paths.'
+            assert lq_path in lq_paths, f'{lq_path} is not in "lq_paths".'
             data_infos.append(dict(lq_path=lq_path, gt_path=gt_path))
         return data_infos

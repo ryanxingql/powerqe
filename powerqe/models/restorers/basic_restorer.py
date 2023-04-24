@@ -147,8 +147,7 @@ class BasicRestorerQE(BasicRestorer):
             output = self.generator(lq)
 
         if self.test_cfg is not None and self.test_cfg.get('metrics', None):
-            assert gt is not None, (
-                'evaluation with metrics must have gt images.')
+            assert gt is not None, 'Evaluation with metrics must have GT.'
             results = dict(eval_result=self.evaluate(
                 output=output,
                 gt=gt,
@@ -164,12 +163,12 @@ class BasicRestorerQE(BasicRestorer):
             lq_path = meta[0]['lq_path']
             lq_name = osp.splitext(osp.basename(lq_path))[0]
             if isinstance(iteration, numbers.Number):
-                save_path_output = osp.join(save_path, lq_name, 'output',
-                                            f'{iteration + 1:06d}.png')
-                save_path_lq = osp.join(save_path, lq_name, 'lq',
-                                        f'{iteration + 1:06d}.png')
-                save_path_gt = osp.join(save_path, lq_name, 'gt',
-                                        f'{iteration + 1:06d}.png')
+                save_path_output = osp.join(save_path, 'output', lq_name,
+                                            f'{iteration + 1}.png')
+                save_path_lq = osp.join(save_path, 'lq', lq_name,
+                                        f'{iteration + 1}.png')
+                save_path_gt = osp.join(save_path, 'gt', lq_name,
+                                        f'{iteration + 1}.png')
             elif iteration is None:
                 save_path_output = osp.join(
                     save_path,
@@ -187,8 +186,8 @@ class BasicRestorerQE(BasicRestorer):
                     f'{lq_name}.png',
                 )
             else:
-                raise ValueError('iteration should be number or None, '
-                                 f'but got {type(iteration)}')
+                raise ValueError('"iteration" should be number or None,'
+                                 f' but got {type(iteration)}.')
 
             mmcv.imwrite(tensor2img(output), save_path_output)
             mmcv.imwrite(tensor2img(lq), save_path_lq)
@@ -250,8 +249,7 @@ class BasicRestorerVQE(BasicRestorer):
             output = self.generator(lq)
 
         if self.test_cfg is not None and self.test_cfg.get('metrics', None):
-            assert gt is not None, (
-                'evaluation with metrics must have gt images.')
+            assert gt is not None, 'Evaluation with metrics must have GT.'
             results = dict(eval_result=self.evaluate(
                 output=output,
                 gt=gt,
@@ -264,15 +262,15 @@ class BasicRestorerVQE(BasicRestorer):
 
         # save image
         if save_image:
-            assert lq.shape[0] == 1, 'NOT SUPPORTED.'
+            assert lq.shape[0] == 1, 'Batch size > 1 is not supported.'
             key_name = meta[0]['key']
             if isinstance(iteration, numbers.Number):
-                save_path_output = osp.join(save_path, key_name, 'output',
-                                            f'{iteration + 1:06d}.png')
-                save_path_lq = osp.join(save_path, key_name, 'lq',
-                                        f'{iteration + 1:06d}.png')
-                save_path_gt = osp.join(save_path, key_name, 'gt',
-                                        f'{iteration + 1:06d}.png')
+                save_path_output = osp.join(save_path, 'output', key_name,
+                                            f'{iteration + 1}.png')
+                save_path_lq = osp.join(save_path, 'lq', key_name,
+                                        f'{iteration + 1}.png')
+                save_path_gt = osp.join(save_path, 'gt', key_name,
+                                        f'{iteration + 1}.png')
             elif iteration is None:
                 save_path_output = osp.join(
                     save_path,
@@ -290,13 +288,168 @@ class BasicRestorerVQE(BasicRestorer):
                     f'{key_name}.png',
                 )
             else:
-                raise ValueError('iteration should be number or None, '
-                                 f'but got {type(iteration)}')
+                raise ValueError('"iteration" should be number or None,'
+                                 f' but got {type(iteration)}.')
 
             mmcv.imwrite(tensor2img(output), save_path_output)
             mmcv.imwrite(tensor2img(lq[:, t // 2, ...]),
                          save_path_lq)  # save the center frame
             if gt is not None:
                 mmcv.imwrite(tensor2img(gt), save_path_gt)
+
+        return results
+
+
+@MODELS.register_module()
+class BasicRestorerVQESequence(BasicRestorer):
+    """
+    Difference to BasicRestorer:
+        1. Support LQ vs. GT testing.
+        2. Support sequence LQ and sequence GT.
+        3. Support parameter fix for some iters.
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        # fix pre-trained networks
+        train_cfg = kwargs['train_cfg']
+        self.fix_iter = train_cfg.get('fix_iter', 0) if train_cfg else 0
+        self.fix_module = train_cfg.get('fix_module', []) if train_cfg else []
+        self.is_weight_fixed = False
+
+        # count training steps
+        self.register_buffer('step_counter', torch.zeros(1))
+
+    def train_step(self, data_batch, optimizer):
+        """
+        Difference to the train_step of BasicRestorer:
+            1. Support parameter fix for some iters.
+        """
+        # parameter fix
+        if self.step_counter < self.fix_iter:
+            if not self.is_weight_fixed:
+                self.is_weight_fixed = True
+                for k, v in self.generator.named_parameters():
+                    for fix_module in self.fix_module:
+                        if fix_module in k:
+                            v.requires_grad_(False)
+                            break
+        elif self.step_counter == self.fix_iter:
+            # train all the parameters
+            self.generator.requires_grad_(True)
+
+        outputs = self(**data_batch, test_mode=False)
+        loss, log_vars = self.parse_losses(outputs.pop('losses'))
+
+        # optimize
+        optimizer['generator'].zero_grad()
+        loss.backward()
+        optimizer['generator'].step()
+
+        self.step_counter += 1
+
+        outputs.update({'log_vars': log_vars})
+        return outputs
+
+    def evaluate(self, output, gt, lq):
+        """
+        New args:
+            lq (Tensor): LQ Tensor with shape (n, t, c, h, w).
+        """
+        crop_border = self.test_cfg.crop_border
+
+        eval_result = dict()
+        for metric in self.test_cfg.metrics:
+            output_results = []
+            lq_results = []
+            for it in range(output.shape[1]):
+                output_it = tensor2img(output[:, it, ...])
+                gt_it = tensor2img(gt[:, it, ...])
+                lq_it = tensor2img(lq[:, it, ...])
+                output_results.append(self.allowed_metrics[metric](
+                    output_it,
+                    gt_it,
+                    crop_border,
+                ))
+                lq_results.append(self.allowed_metrics[metric](
+                    lq_it,
+                    gt_it,
+                    crop_border,
+                ))
+            eval_result[metric + '-output'] = np.mean(output_results)
+            eval_result[metric + '-LQ'] = np.mean(lq_results)
+        return eval_result
+
+    def forward_test(self,
+                     lq,
+                     gt=None,
+                     meta=None,
+                     save_image=False,
+                     save_path=None,
+                     iteration=None):
+        """
+        Difference to the forward_test of BasicRestorer:
+            1. Save LQ, output, and GT.
+            2. Save sequences.
+                Key: sequence name.
+        """
+        if self.test_cfg is not None and 'unfolding' in self.test_cfg:
+            raise NotImplementedError(
+                'Unfolding is currently not supported for video tensor.')
+        else:
+            output = self.generator(lq)
+
+        if self.test_cfg is not None and self.test_cfg.get('metrics', None):
+            assert gt is not None, 'Evaluation with metrics must have GT.'
+            results = dict(eval_result=self.evaluate(
+                output=output,
+                gt=gt,
+                lq=lq,
+            ))
+        else:
+            results = dict(lq=lq.cpu(), output=output.cpu())
+            if gt is not None:
+                results['gt'] = gt.cpu()
+
+        # save image
+        if save_image:
+            key_name = meta[0]['key']
+            for it in range(output.shape[1]):
+                if isinstance(iteration, numbers.Number):
+                    save_path_output = osp.join(save_path, 'output', key_name,
+                                                f'{iteration + 1}.png')
+                    save_path_lq = osp.join(save_path, 'lq', key_name,
+                                            f'{iteration + 1}.png')
+                    save_path_gt = osp.join(save_path, 'gt', key_name,
+                                            f'{iteration + 1}.png')
+                elif iteration is None:
+                    save_path_output = osp.join(
+                        save_path,
+                        'output',
+                        key_name,
+                        f'{it+1}.png',
+                    )
+                    save_path_lq = osp.join(
+                        save_path,
+                        'lq',
+                        key_name,
+                        f'{it+1}.png',
+                    )
+                    save_path_gt = osp.join(
+                        save_path,
+                        'gt',
+                        key_name,
+                        f'{it+1}.png',
+                    )
+                else:
+                    raise ValueError('"iteration" should be number or None,'
+                                     f' but got {type(iteration)}.')
+
+                mmcv.imwrite(tensor2img(output[:, it, ...]), save_path_output)
+                mmcv.imwrite(tensor2img(lq[:, it, ...]),
+                             save_path_lq)  # save the center frame
+                if gt is not None:
+                    mmcv.imwrite(tensor2img(gt[:, it, ...]), save_path_gt)
 
         return results

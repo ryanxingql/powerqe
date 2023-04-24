@@ -15,7 +15,7 @@ reduce_method_lst = ['add', 'concat']
 class Up(nn.Module):
 
     def __init__(self, method, nf_in=None):
-        assert method in up_method_lst, 'NOT SUPPORTED YET!'
+        assert method in up_method_lst, f'{method} is not supported yet.'
 
         super().__init__()
 
@@ -82,9 +82,9 @@ class UNet(nn.Module):
         reduce='concat',
         residual=True,
     ):
-        assert down in down_method_lst, 'NOT SUPPORTED YET!'
-        assert up in up_method_lst, 'NOT SUPPORTED YET!'
-        assert reduce in reduce_method_lst, 'NOT SUPPORTED YET!'
+        assert down in down_method_lst, f'{down} is not supported yet.'
+        assert up in up_method_lst, f'{up} is not supported yet.'
+        assert reduce in reduce_method_lst, f'{reduce} is not supported yet.'
 
         super().__init__()
 
@@ -93,8 +93,8 @@ class UNet(nn.Module):
         self.residual = residual
 
         if residual:
-            assert nf_in == nf_out, (f'Expect nf_in [{nf_in}] '
-                                     f'== nf_out [{nf_out}]')
+            assert nf_in == nf_out, (f'nf_in ({nf_in})'
+                                     f' != nf_out ({nf_out}).')
 
         self.inc = nn.Sequential(
             nn.Conv2d(in_channels=nf_in,
@@ -245,5 +245,5 @@ class UNet(nn.Module):
         elif pretrained is None:
             pass  # use default initialization
         else:
-            raise TypeError('"pretrained" must be a str or None. '
-                            f'But received {type(pretrained)}.')
+            raise TypeError('"pretrained" must be a str or None.'
+                            f' But received {type(pretrained)}.')

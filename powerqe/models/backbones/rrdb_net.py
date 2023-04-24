@@ -36,5 +36,5 @@ class RRDBNetQE(RRDBNet):
             ]:
                 default_init_weights(m, 0.1)
         else:
-            raise TypeError(f'"pretrained" must be a str or None. '
-                            f'But received {type(pretrained)}.')
+            raise TypeError('"pretrained" must be a str or None.'
+                            f' But received {type(pretrained)}.')

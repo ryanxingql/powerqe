@@ -117,8 +117,7 @@ class GaussianSmoothing(nn.Module):
             self.conv = F.conv3d
         else:
             raise RuntimeError(
-                'Only 1, 2 and 3 dimensions are supported. Received {}.'.
-                format(dim))
+                f'Only 1, 2 and 3 dimensions are supported. Received {dim}.')
 
     def forward(self, x):
         """
@@ -318,7 +317,8 @@ class Down(nn.Module):
     E.g., from C2,1 to C3,2."""
 
     def __init__(self, nf_in, nf_out, method, if_separable, if_eca):
-        assert method in ['avepool2d', 'strideconv'], '> not supported!'
+        assert method in ['avepool2d',
+                          'strideconv'], f'{method} is not supported yet.'
 
         super().__init__()
 
@@ -398,7 +398,8 @@ class Up(nn.Module):
     E.g., from C3,1 and C2,1 to C2,2."""
 
     def __init__(self, nf_in_s, nf_in, nf_out, method, if_separable, if_eca):
-        assert method in ['upsample', 'transpose2d'], '> not supported yet.'
+        assert method in ['upsample',
+                          'transpose2d'], f'{method} is not supported yet.'
 
         super().__init__()
 
@@ -608,8 +609,8 @@ class RBQE(nn.Module):
             0, 1, ..., (self.nlevel-1): output from the assigned exit.
         """
         if self.if_only_last_output:
-            assert idx_out is None, ('You cannot indicate the exit since the '
-                                     'network has only a single exit.')
+            assert idx_out is None, ('You cannot indicate the exit since the'
+                                     ' network has only a single exit.')
             idx_out = self.nlevel - 1
 
         feat = self.in_conv_seq(x)
@@ -686,5 +687,5 @@ class RBQE(nn.Module):
         elif pretrained is None:
             pass  # use default initialization
         else:
-            raise TypeError('"pretrained" must be a str or None. '
-                            f'But received {type(pretrained)}.')
+            raise TypeError('"pretrained" must be a str or None.'
+                            f' But received {type(pretrained)}.')

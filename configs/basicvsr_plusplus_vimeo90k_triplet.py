@@ -1,37 +1,36 @@
-bs = 32
-ngpus = 4
+# Inherited from mmediting/configs/restorers/basicvsr_plusplus/
+# basicvsr_plusplus_c64n7_8x1_600k_reds4
+bs = 8
+ngpus = 2
 assert bs % ngpus == 0, ('Samples in a batch should better be evenly'
                          ' distributed among all GPUs.')
 
-radius = 1
-nfs = [32, 64, 48]
-nbs = [3, 6]
-ps = 128
-niter_k = 1000
+nf = 64
+nb = 7
+ps = 256
+niter_k = 600
 
-exp_name = (f'stdf_vimeo90k_triplet'
-            f'_r{radius}_nf{nfs[0]}_{nfs[1]}_{nfs[2]}_nb{nbs[0]}_{nbs[1]}'
+exp_name = (f'basicvsr_plus_plus_vimeo90k_triplet'
+            f'_nf{nf}_nb{nb}'
             f'_ps{ps}_bs{bs}_{niter_k}k_g{ngpus}')
 
 rescale = 1  # must be 2^n
 
 # model settings
-model = dict(type='BasicRestorerVQE',
-             generator=dict(
-                 type='STDFNet',
-                 radius=radius,
-                 nf_stdf=nfs[0],
-                 nb_stdf=nbs[0],
-                 nf_stdf_out=nfs[1],
-                 nf_qe=nfs[2],
-                 nb_qe=nbs[1],
-             ),
-             pixel_loss=dict(type='CharbonnierLoss',
-                             loss_weight=1.0,
-                             reduction='mean'))
+model = dict(
+    type='BasicRestorerVQESequence',
+    generator=dict(
+        type='BasicVSRPlusPlus',
+        mid_channels=nf,
+        num_blocks=nb,
+        is_low_res_input=False,
+        spynet_pretrained='https://download.openmmlab.com/mmediting/restorers/'
+        'basicvsr/spynet_20210409-c6c1bd09.pth',
+    ),
+    pixel_loss=dict(type='CharbonnierLoss', loss_weight=1.0, reduction='mean'))
 
 # model training and testing settings
-train_cfg = None
+train_cfg = dict(fix_iter=5000, fix_module=['edvr', 'spynet'])
 test_cfg = dict(metrics=['PSNR', 'SSIM'], crop_border=rescale)
 
 # dataset settings
@@ -39,23 +38,39 @@ train_pipeline = [
     dict(type='LoadImageFromFileList',
          io_backend='disk',
          key='lq',
-         channel_order='rgb',
-         backend='pillow'),
-    dict(type='LoadImageFromFile',
+         flag='unchanged'),
+    dict(type='LoadImageFromFileList',
          io_backend='disk',
          key='gt',
-         channel_order='rgb',
-         backend='pillow'),
+         flag='unchanged'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
-    dict(type='FramesToTensor', keys=['lq']),
-    dict(type='ImageToTensor', keys=['gt']),
+    dict(type='PairedRandomCrop', gt_patch_size=ps),
+    dict(type='Flip',
+         keys=['lq', 'gt'],
+         flip_ratio=0.5,
+         direction='horizontal'),
+    dict(type='Flip', keys=['lq', 'gt'], flip_ratio=0.5, direction='vertical'),
+    dict(type='RandomTransposeHW', keys=['lq', 'gt'], transpose_ratio=0.5),
+    dict(type='FramesToTensor', keys=['lq', 'gt']),
+    dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path']),
+]
+test_pipeline = [
+    dict(type='LoadImageFromFileList',
+         io_backend='disk',
+         key='lq',
+         flag='unchanged'),
+    dict(type='LoadImageFromFileList',
+         io_backend='disk',
+         key='gt',
+         flag='unchanged'),
+    dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
+    dict(type='FramesToTensor', keys=['lq', 'gt']),
     dict(type='Collect',
          keys=['lq', 'gt'],
-         meta_keys=['lq_path', 'gt_path', 'key'])
+         meta_keys=['lq_path', 'gt_path', 'key']),
 ]
-test_pipeline = train_pipeline
 
-dataset_type = 'Vimeo90KTripletCenterGTDataset'
+dataset_type = 'Vimeo90KTripletSequenceDataset'
 dataset_gt_dir = 'data/vimeo_triplet'
 dataset_lq_dir = 'data/vimeo_triplet_lq'
 
@@ -67,29 +82,34 @@ data = dict(workers_per_gpu=bs // ngpus,
                        times=1000,
                        dataset=dict(
                            type=dataset_type,
-                           folder=f'{dataset_lq_dir}/sequences',
+                           folder=f'{dataset_lq_dir}',
                            gt_folder=f'{dataset_gt_dir}/sequences',
-                           ann_file=f'{dataset_lq_dir}/tri_trainlist.txt',
+                           ann_file=f'{dataset_gt_dir}/tri_trainlist.txt',
                            pipeline=train_pipeline,
                            test_mode=False,
                            filename_tmpl='{}.png')),
             val=dict(type=dataset_type,
-                     folder=f'{dataset_lq_dir}/sequences',
+                     folder=f'{dataset_lq_dir}',
                      gt_folder=f'{dataset_gt_dir}/sequences',
-                     ann_file=f'{dataset_lq_dir}/tri_validlist.txt',
+                     ann_file=f'{dataset_gt_dir}/tri_validlist.txt',
                      pipeline=test_pipeline,
                      test_mode=True,
                      filename_tmpl='{}.png'),
             test=dict(type=dataset_type,
-                      folder=f'{dataset_lq_dir}/sequences',
+                      folder=f'{dataset_lq_dir}',
                       gt_folder=f'{dataset_gt_dir}/sequences',
-                      ann_file=f'{dataset_lq_dir}/tri_testlist.txt',
+                      ann_file=f'{dataset_gt_dir}/tri_testlist.txt',
                       pipeline=test_pipeline,
                       test_mode=True,
                       filename_tmpl='{}.png'))
 
 # optimizer
-optimizers = dict(generator=dict(type='Adam', lr=1e-4, betas=(0.9, 0.999)))
+optimizers = dict(generator=dict(
+    type='Adam',
+    lr=1e-4,
+    betas=(0.9, 0.99),
+    paramwise_cfg=dict(custom_keys={'spynet': dict(lr_mult=0.25)}),
+))
 
 # learning policy
 total_iters = niter_k * 1000
@@ -97,6 +117,7 @@ lr_config = dict(
     policy='CosineRestart',
     by_epoch=False,
     periods=[total_iters],
+    restart_weights=[1],
     min_lr=1e-7,
 )
 
@@ -126,3 +147,4 @@ work_dir = f'work_dirs/{exp_name}'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]
+find_unused_parameters = True  # for spynet pre-training

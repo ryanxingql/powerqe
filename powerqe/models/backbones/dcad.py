@@ -74,5 +74,5 @@ class DCAD(nn.Module):
         elif pretrained is None:
             pass  # use default initialization
         else:
-            raise TypeError('"pretrained" must be a str or None. '
-                            f'But received {type(pretrained)}.')
+            raise TypeError('"pretrained" must be a str or None.'
+                            f' But received {type(pretrained)}.')

@@ -38,7 +38,7 @@ def crop_one_image(path, opt, extension_save='.png'):
     if img.ndim == 2 or img.ndim == 3:
         h, w = img.shape[:2]
     else:
-        raise ValueError(f'Image ndim should be 2 or 3, but got {img.ndim}')
+        raise ValueError(f'Image ndim should be 2 or 3, but got {img.ndim}.')
 
     h_space = np.arange(0, h - crop_size + 1, step)
     if h - (h_space[-1] + crop_size) > thresh_size:
@@ -212,12 +212,12 @@ def make_lmdb(data_path,
         n_thread (int): For multiprocessing.
     """
     assert len(img_path_list) == len(keys), (
-        'img_path_list and keys should have the same length, '
-        f'but got {len(img_path_list)} and {len(keys)}')
+        '"img_path_list" and "keys" should have the same length,'
+        f' but got {len(img_path_list)} and {len(keys)}')
     print(f'Create lmdb for {data_path}, save to {lmdb_path}...')
     print(f'Total images: {len(img_path_list)}')
     if not lmdb_path.endswith('.lmdb'):
-        raise ValueError("lmdb_path must end with '.lmdb'.")
+        raise ValueError("'lmdb_path' must end with '.lmdb'.")
 
     if multiprocessing_read:
         # read all the images to memory (multiprocessing)
@@ -360,8 +360,7 @@ def parse_args():
 if __name__ == '__main__':
     args = parse_args()
     assert not (args.no_patch
-                and args.no_lmdb), 'No work: No patching and no LMDB'
-    assert not osp.exists(args.save), f'Exist: [{args.save}]'
+                and args.no_lmdb), 'Nothing to do; patching and LMDB are off.'
     os.makedirs(args.save)
 
     if args.no_patch:
@@ -370,7 +369,6 @@ if __name__ == '__main__':
         if args.no_lmdb:
             main_crop_patches(args, args.src, args.save)
         else:
-            assert not osp.exists(args.tmp), f'Exist: [{args.tmp}]'
             os.makedirs(args.tmp)
             main_crop_patches(args, args.src, args.tmp)
             main_make_lmdb(args.tmp, args.save)

@@ -128,3 +128,47 @@ class Vimeo90KTripletCenterGTDataset(BaseVFIDataset):
                 ))
 
         return data_infos
+
+
+@DATASETS.register_module()
+class Vimeo90KTripletSequenceDataset(Vimeo90KTripletCenterGTDataset):
+    """
+    Difference to Vimeo90KTripletCenterGTDataset:
+        1. Load the whole sequence for LQ and GT.
+    """
+
+    def load_annotations(self):
+        """
+        Difference to that of Vimeo90KTripletCenterGTDataset:
+            1. Record the whole sequence for GT.
+            2. Record only one sequence.
+        """
+        # get keys
+        with open(self.ann_file, 'r') as f:
+            keys = f.read().split('\n')
+            keys = [
+                k.strip() for k in keys if (k.strip() is not None and k != '')
+            ]
+
+        data_infos = []
+        for key in keys:
+            key = key.replace('/', os.sep)
+            key_folder = osp.join(self.lq_folder, key)
+            gt_folder = osp.join(self.gt_folder, key)
+
+            lq_path = [
+                osp.join(key_folder, f'{self.filename_tmpl.format("im1")}'),
+                osp.join(key_folder, f'{self.filename_tmpl.format("im2")}'),
+                osp.join(key_folder, f'{self.filename_tmpl.format("im3")}')
+            ]
+            gt_path = [
+                osp.join(gt_folder, 'im1.png'),
+                osp.join(gt_folder, 'im2.png'),
+                osp.join(gt_folder, 'im3.png')
+            ]
+            data_infos.append(dict(
+                lq_path=lq_path,
+                gt_path=gt_path,
+                key=key,
+            ))
+        return data_infos

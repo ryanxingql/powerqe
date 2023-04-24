@@ -24,5 +24,5 @@ class Compose(MMEditCompose):
             elif callable(transform):
                 self.transforms.append(transform)
             else:
-                raise TypeError(f'transform must be callable or a dict, '
-                                f'but got {type(transform)}')
+                raise TypeError(f'"transform" must be callable or a dict,'
+                                f' but got {type(transform)}')

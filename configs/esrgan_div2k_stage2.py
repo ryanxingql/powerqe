@@ -1,6 +1,7 @@
 bs = 16
 ngpus = 2
-assert bs % ngpus == 0
+assert bs % ngpus == 0, ('Samples in a batch should better be evenly'
+                         ' distributed among all GPUs.')
 
 nf = 64
 nb = 23
