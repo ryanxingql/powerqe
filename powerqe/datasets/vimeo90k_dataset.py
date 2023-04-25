@@ -158,9 +158,10 @@ class CompressedVimeo90KTripletCenterGTDataset(Vimeo90KTripletCenterGTDataset):
 
         # POC 1, 2, ...
         for idx in range(nfrms - 1):
-            qp = qp_info['qp'] + qp_info['qp_offset'][idx] + qp_info[
-                'qp_offset_model_off'][idx] + qp_info['qp_offset_model_scale'][
-                    idx] * qp_info['qp']
+            idx1 = idx % len(qp_info['qp_offset'])
+            qp = qp_info['qp'] + qp_info['qp_offset'][idx1] +\
+                qp_info['qp_offset_model_off'][idx1] +\
+                qp_info['qp_offset_model_scale'][idx1] * qp_info['qp']
             qps.append(qp)
         return qps
 
