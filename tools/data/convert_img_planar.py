@@ -9,7 +9,8 @@ import numpy as np
 
 
 def write_planar(img, planar_path):
-    """
+    """Write planar.
+
     img: list of (h, w) array; each list item represents a channel.
     """
     planar_file = open(planar_path, 'wb')
@@ -22,7 +23,8 @@ def write_planar(img, planar_path):
 
 
 def read_planar(planar_path, fmt=((1080, 1920), (1080, 1920), (1080, 1920))):
-    """
+    """Read planar.
+
     fmt: tuple of (h, w) tuple; each tuple item represents a channel.
 
     https://numpy.org/doc/stable/reference/generated/numpy.fromfile.html

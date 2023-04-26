@@ -9,7 +9,7 @@ valid_gt_folder = 'data/div2k/valid/gt.lmdb'
 train_pipeline = [
     dict(
         type='LoadImageFromFile',
-        #     io_backend='disk',
+        # io_backend='disk',
         io_backend='lmdb',
         db_path=train_lq_folder,
         key='lq',
@@ -17,14 +17,14 @@ train_pipeline = [
         channel_order='rgb'),
     dict(
         type='LoadImageFromFile',
-        #     io_backend='disk',
+        # io_backend='disk',
         io_backend='lmdb',
         db_path=train_gt_folder,
         key='gt',
         flag='color',
         channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
-    #     dict(type='PairedRandomCrop', gt_patch_size=ps),
+    # dict(type='PairedRandomCrop', gt_patch_size=params['patchsize']),
     dict(type='Flip',
          keys=['lq', 'gt'],
          flip_ratio=0.5,
@@ -37,7 +37,7 @@ train_pipeline = [
 test_pipeline = [
     dict(
         type='LoadImageFromFile',
-        #  io_backend='disk',
+        # io_backend='disk',
         io_backend='lmdb',
         db_path=valid_lq_folder,
         key='lq',
@@ -45,7 +45,7 @@ test_pipeline = [
         channel_order='rgb'),
     dict(
         type='LoadImageFromFile',
-        #  io_backend='disk',
+        # io_backend='disk',
         io_backend='lmdb',
         db_path=valid_gt_folder,
         key='gt',

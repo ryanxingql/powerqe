@@ -1,14 +1,16 @@
 # RyanXingQL @2022
 from .builder import build_dataset
 from .paired_same_size_image_dataset import PairedSameSizeImageDataset
+from .paired_same_size_vimeo90k_dataset import (
+    PairedSameSizeVimeo90KTripletDataset,
+    PairedSameSizeVimeo90KTripletKeyFrameDataset)
 from .registry import DATASETS, PIPELINES
-from .vimeo90k_dataset import (CompressedVimeo90KTripletCenterGTDataset,
-                               Vimeo90KTripletCenterGTDataset,
-                               Vimeo90KTripletSequenceDataset)
 
 __all__ = [
-    'DATASETS', 'PIPELINES', 'build_dataset', 'PairedSameSizeImageDataset',
-    'Vimeo90KTripletCenterGTDataset',
-    'CompressedVimeo90KTripletCenterGTDataset',
-    'Vimeo90KTripletSequenceDataset'
+    'DATASETS',
+    'PIPELINES',
+    'build_dataset',
+    'PairedSameSizeImageDataset',
+    'PairedSameSizeVimeo90KTripletDataset',
+    'PairedSameSizeVimeo90KTripletKeyFrameDataset',
 ]

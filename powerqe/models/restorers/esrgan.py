@@ -20,9 +20,8 @@ class ESRGANQE(BasicRestorerQE):
                  train_cfg=None,
                  test_cfg=None,
                  pretrained=None):
-        """
-        Similar to the __init__ of SRGAN in mmedit.
-        """
+        """Similar to the __init__ of SRGAN in mmedit."""
+
         super().__init__(
             generator=generator,
             pixel_loss=pixel_loss,
@@ -50,10 +49,11 @@ class ESRGANQE(BasicRestorerQE):
         self.step_counter = 0  # counting training steps
 
     def init_weights(self, pretrained=None):
+        """Init the generator weights using the generator's method.
+
+        Therefore ^generator. must be removed.
         """
-        Init the generator weights using the generator's method.
-            Therefore ^generator. must be removed.
-        """
+
         self.generator.init_weights(pretrained=pretrained,
                                     revise_keys=[(r'^generator\.', ''),
                                                  (r'^module\.', '')])
@@ -61,9 +61,8 @@ class ESRGANQE(BasicRestorerQE):
         #     self.discriminator.init_weights(pretrained=pretrained)
 
     def train_step(self, data_batch, optimizer):
-        """
-        train_step of ESRGAN in mmedit.
-        """
+        """train_step of ESRGAN in mmedit."""
+
         # data
         lq = data_batch['lq']
         gt = data_batch['gt']

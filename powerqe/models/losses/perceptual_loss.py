@@ -9,9 +9,10 @@ from ..registry import LOSSES
 class PerceptualLossGray(PerceptualLoss):
 
     def forward(self, x, gt):
-        """
+        """Forward.
+
         Difference to that of PerceptualLoss:
-            1. Input x is a gray-scale image.
+        1. Input x is a gray-scale image.
         """
         # gray -> color
         # diff 1/1
@@ -60,6 +61,7 @@ class PerceptualLossGray(PerceptualLoss):
         Returns:
             torch.Tensor: Gram matrix.
         """
+
         (n, c, h, w) = x.size()
         features = x.view(n, c, w * h)
         features_t = features.transpose(1, 2)

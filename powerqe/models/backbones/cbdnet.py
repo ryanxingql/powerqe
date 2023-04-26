@@ -1,15 +1,14 @@
 # RyanXingQL @2022
 import torch
 import torch.nn as nn
-from mmcv.runner import load_checkpoint
-from mmedit.utils import get_root_logger
 
 from ..registry import BACKBONES
+from .base import BaseNet
 from .unet import UNet
 
 
 @BACKBONES.register_module()
-class CBDNet(nn.Module):
+class CBDNet(BaseNet):
     """CBDNet network structure.
 
     Args:
@@ -43,19 +42,17 @@ class CBDNet(nn.Module):
             Default: add.
     """
 
-    def __init__(
-        self,
-        in_channels=3,
-        estimate_channels=32,
-        nlevel_denoise=3,
-        nf_base_denoise=64,
-        nf_gr_denoise=2,
-        nl_base_denoise=1,
-        nl_gr_denoise=2,
-        down_denoise='avepool2d',
-        up_denoise='transpose2d',
-        reduce_denoise='add',
-    ):
+    def __init__(self,
+                 in_channels=3,
+                 estimate_channels=32,
+                 nlevel_denoise=3,
+                 nf_base_denoise=64,
+                 nf_gr_denoise=2,
+                 nl_base_denoise=1,
+                 nl_gr_denoise=2,
+                 down_denoise='avepool2d',
+                 up_denoise='transpose2d',
+                 reduce_denoise='add'):
 
         super().__init__()
 
@@ -109,21 +106,3 @@ class CBDNet(nn.Module):
         x = res + x
 
         return x
-
-    def init_weights(self, pretrained=None, strict=True):
-        """Init weights for models.
-
-        Args:
-            pretrained (str, optional): Path for pretrained weights. If given
-                None, pretrained weights will not be loaded. Defaults to None.
-            strict (boo, optional): Whether strictly load the pretrained model.
-                Defaults to True.
-        """
-        if isinstance(pretrained, str):
-            logger = get_root_logger()
-            load_checkpoint(self, pretrained, strict=strict, logger=logger)
-        elif pretrained is None:
-            pass  # use default initialization
-        else:
-            raise TypeError('"pretrained" must be a str or None.'
-                            f' But received {type(pretrained)}.')

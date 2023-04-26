@@ -14,6 +14,17 @@ from .stdf import STDFNet
 from .unet import UNet
 
 __all__ = [
-    'ARCNN', 'CBDNet', 'DCAD', 'DnCNN', 'EDVRNetQE', 'MFQEv2', 'MPRNet',
-    'RBQE', 'RDNQE', 'RRDBNetQE', 'SAN', 'STDFNet', 'UNet'
+    'ARCNN',
+    'CBDNet',
+    'DCAD',
+    'DnCNN',
+    'EDVRNetQE',
+    'MFQEv2',
+    'MPRNet',
+    'RBQE',
+    'RDNQE',
+    'RRDBNetQE',
+    'SAN',
+    'STDFNet',
+    'UNet',
 ]

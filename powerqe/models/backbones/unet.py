@@ -2,10 +2,9 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from mmcv.runner import load_checkpoint
-from mmedit.utils import get_root_logger
 
 from ..registry import BACKBONES
+from .base import BaseNet
 
 up_method_lst = ['upsample', 'transpose2d']
 down_method_lst = ['avepool2d', 'strideconv']
@@ -63,25 +62,23 @@ class Up(nn.Module):
 
 
 @BACKBONES.register_module()
-class UNet(nn.Module):
+class UNet(BaseNet):
     """U-Net for enhancement."""
 
-    def __init__(
-        self,
-        nf_in,
-        nf_out,
-        nlevel,
-        nf_base,
-        nf_max=1024,
-        nf_gr=2,
-        nl_base=1,
-        nl_max=8,
-        nl_gr=2,
-        down='avepool2d',
-        up='transpose2d',
-        reduce='concat',
-        residual=True,
-    ):
+    def __init__(self,
+                 nf_in,
+                 nf_out,
+                 nlevel,
+                 nf_base,
+                 nf_max=1024,
+                 nf_gr=2,
+                 nl_base=1,
+                 nl_max=8,
+                 nl_gr=2,
+                 down='avepool2d',
+                 up='transpose2d',
+                 reduce='concat',
+                 residual=True):
         assert down in down_method_lst, f'{down} is not supported yet.'
         assert up in up_method_lst, f'{up} is not supported yet.'
         assert reduce in reduce_method_lst, f'{reduce} is not supported yet.'
@@ -110,8 +107,8 @@ class UNet(nn.Module):
             nf_new = nf_lst[-1] * nf_gr if (nf_lst[-1] *
                                             nf_gr) <= nf_max else nf_max
             nf_lst.append(nf_new)
-            nl_new = nl_lst[-1] * nl_gr if (
-                (nl_lst[-1] * nl_gr) <= nl_max) else nl_max
+            nl_new = nl_lst[-1] * nl_gr if ((nl_lst[-1] *
+                                             nl_gr) <= nl_max) else nl_max
             nl_lst.append(nl_new)
 
             # define downsampling operator
@@ -229,21 +226,3 @@ class UNet(nn.Module):
             out_t += inp_t
 
         return out_t
-
-    def init_weights(self, pretrained=None, strict=True):
-        """Init weights for models.
-
-        Args:
-            pretrained (str, optional): Path for pretrained weights. If given
-                None, pretrained weights will not be loaded. Defaults to None.
-            strict (boo, optional): Whether strictly load the pretrained model.
-                Defaults to True.
-        """
-        if isinstance(pretrained, str):
-            logger = get_root_logger()
-            load_checkpoint(self, pretrained, strict=strict, logger=logger)
-        elif pretrained is None:
-            pass  # use default initialization
-        else:
-            raise TypeError('"pretrained" must be a str or None.'
-                            f' But received {type(pretrained)}.')

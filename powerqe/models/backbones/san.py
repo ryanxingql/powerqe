@@ -14,11 +14,10 @@ import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from mmcv.runner import load_checkpoint
-from mmedit.utils import get_root_logger
 from torch.autograd import Function
 
 from ..registry import BACKBONES
+from .base import BaseNet
 
 
 class Covpool(Function):
@@ -562,20 +561,18 @@ class Upsampler(nn.Sequential):
 
 
 @BACKBONES.register_module()
-class SAN(nn.Module):
+class SAN(BaseNet):
 
-    def __init__(
-        self,
-        n_resgroups=20,
-        n_resblocks=10,
-        n_feats=64,
-        kernel_size=3,
-        reduction=16,
-        scale=1,
-        rgb_range=1,
-        n_colors=3,
-        res_scale=1,
-    ):
+    def __init__(self,
+                 n_resgroups=20,
+                 n_resblocks=10,
+                 n_feats=64,
+                 kernel_size=3,
+                 reduction=16,
+                 scale=1,
+                 rgb_range=1,
+                 n_colors=3,
+                 res_scale=1):
         super(SAN, self).__init__()
 
         conv = default_conv
@@ -593,7 +590,6 @@ class SAN(nn.Module):
         # define body module
         # share-source skip connection
 
-        #
         self.gamma = nn.Parameter(torch.zeros(1))
         self.n_resgroups = n_resgroups
         self.RG = nn.ModuleList([
@@ -645,21 +641,3 @@ class SAN(nn.Module):
         x = self.add_mean(x)
 
         return x
-
-    def init_weights(self, pretrained=None, strict=True):
-        """Init weights for models.
-
-        Args:
-            pretrained (str, optional): Path for pretrained weights. If given
-                None, pretrained weights will not be loaded. Defaults to None.
-            strict (boo, optional): Whether strictly load the pretrained model.
-                Defaults to True.
-        """
-        if isinstance(pretrained, str):
-            logger = get_root_logger()
-            load_checkpoint(self, pretrained, strict=strict, logger=logger)
-        elif pretrained is None:
-            pass  # use default initialization
-        else:
-            raise TypeError('"pretrained" must be a str or None.'
-                            f' But received {type(pretrained)}.')

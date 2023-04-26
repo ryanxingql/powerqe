@@ -2,47 +2,45 @@
 # Modified by RyanXingQL @2023
 import torch
 from mmedit.models import EDVRNet
-from mmedit.models.registry import BACKBONES
+
+from ..registry import BACKBONES
 
 
 @BACKBONES.register_module()
 class EDVRNetQE(EDVRNet):
     """EDVRNet for quality enhancement."""
 
-    def __init__(
-        self,
-        in_channels,
-        out_channels,
-        mid_channels=64,
-        num_frames=5,
-        deform_groups=8,
-        num_blocks_extraction=5,
-        num_blocks_reconstruction=10,
-        center_frame_idx=2,
-        with_tsa=True,
-    ):
-        super().__init__(
-            in_channels=in_channels,
-            out_channels=out_channels,
-            mid_channels=mid_channels,
-            num_frames=num_frames,
-            deform_groups=deform_groups,
-            num_blocks_extraction=num_blocks_extraction,
-            num_blocks_reconstruction=num_blocks_reconstruction,
-            center_frame_idx=center_frame_idx,
-            with_tsa=with_tsa,
-        )
+    def __init__(self,
+                 in_channels,
+                 out_channels,
+                 mid_channels=64,
+                 num_frames=5,
+                 deform_groups=8,
+                 num_blocks_extraction=5,
+                 num_blocks_reconstruction=10,
+                 center_frame_idx=2,
+                 with_tsa=True):
+        super().__init__(in_channels=in_channels,
+                         out_channels=out_channels,
+                         mid_channels=mid_channels,
+                         num_frames=num_frames,
+                         deform_groups=deform_groups,
+                         num_blocks_extraction=num_blocks_extraction,
+                         num_blocks_reconstruction=num_blocks_reconstruction,
+                         center_frame_idx=center_frame_idx,
+                         with_tsa=with_tsa)
         # remove unused parameters
         delattr(self, 'upsample1')
         delattr(self, 'upsample2')
         delattr(self, 'img_upsample')
 
     def forward(self, x):
-        """
+        """Forward function.
+
         Difference to that of EDVRNet:
-            1. Comment all upsamplings
-                since the input is with high resolution.
+        1. Comment all upsamplings since the input is with high resolution.
         """
+
         n, t, c, h, w = x.size()
         assert h % 4 == 0 and w % 4 == 0, (
             'The height and width of inputs should be a multiple of 4, '

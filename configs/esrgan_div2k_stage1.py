@@ -1,33 +1,33 @@
-bs = 16
-ngpus = 2
-assert bs % ngpus == 0, ('Samples in a batch should better be evenly'
-                         ' distributed among all GPUs.')
+from .script import generate_exp_name
 
-nf = 64
-nb = 23
-gf = 32
-ps = 128
-niter_k = 500
+params = dict(batchsize=16,
+              ngpus=2,
+              patchsize=128,
+              kiters=500,
+              nchannels=64,
+              nblocks=23,
+              growthfactor=32)
 
-exp_name = (f'esrgan_div2k_stage1_nf{nf}_nb{nb}_gf{gf}'
-            f'_ps{ps}_bs{bs}_{niter_k}k_g{ngpus}')
+exp_name = generate_exp_name('esrgan_div2k_stage1', params)
 
-scale = 1
+assert params['batchsize'] % params['ngpus'] == 0, (
+    'Samples in a batch should better be evenly'
+    ' distributed among all GPUs.')
 
 # model settings
 model = dict(type='BasicRestorerQE',
              generator=dict(type='RRDBNetQE',
                             in_channels=3,
                             out_channels=3,
-                            mid_channels=nf,
-                            num_blocks=nb,
-                            growth_channels=gf,
-                            upscale_factor=scale),
+                            mid_channels=params['nchannels'],
+                            num_blocks=params['nblocks'],
+                            growth_channels=params['growthfactor'],
+                            upscale_factor=1),
              pixel_loss=dict(type='L1Loss', loss_weight=1.0, reduction='mean'))
 
 # model training and testing settings
 train_cfg = None
-test_cfg = dict(metrics=['PSNR', 'SSIM'], crop_border=scale)
+test_cfg = dict(metrics=['PSNR', 'SSIM'], crop_border=1)
 
 # dataset settings
 train_pipeline = [
@@ -45,7 +45,7 @@ train_pipeline = [
          mean=[0, 0, 0],
          std=[1, 1, 1],
          to_rgb=True),
-    dict(type='PairedRandomCrop', gt_patch_size=ps),
+    dict(type='PairedRandomCrop', gt_patch_size=params['patchsize']),
     dict(type='Flip',
          keys=['lq', 'gt'],
          flip_ratio=0.5,
@@ -74,8 +74,10 @@ test_pipeline = [
     dict(type='ImageToTensor', keys=['lq', 'gt'])
 ]
 
-data = dict(workers_per_gpu=bs // ngpus,
-            train_dataloader=dict(samples_per_gpu=bs // ngpus, drop_last=True),
+batchsize_gpu = params['batchsize'] // params['ngpus']
+data = dict(workers_per_gpu=batchsize_gpu,
+            train_dataloader=dict(samples_per_gpu=batchsize_gpu,
+                                  drop_last=True),
             val_dataloader=dict(samples_per_gpu=1),
             test_dataloader=dict(samples_per_gpu=1),
             train=dict(type='RepeatDataset',
@@ -103,23 +105,19 @@ data = dict(workers_per_gpu=bs // ngpus,
 optimizers = dict(generator=dict(type='Adam', lr=2e-4, betas=(0.9, 0.999)))
 
 # learning policy
-total_iters = niter_k * 1000
-lr_config = dict(
-    policy='CosineRestart',
-    by_epoch=False,
-    periods=[total_iters],
-    min_lr=1e-7,
-)
+total_iters = params['kiters'] * 1000
+lr_config = dict(policy='CosineRestart',
+                 by_epoch=False,
+                 periods=[total_iters],
+                 min_lr=1e-7)
 
 checkpoint_config = dict(interval=5000, save_optimizer=True, by_epoch=False)
 evaluation = dict(interval=5000, save_image=False, gpu_collect=True)
-log_config = dict(
-    interval=100,
-    hooks=[
-        dict(type='TextLoggerHook', by_epoch=False),
-        dict(type='TensorboardLoggerHook'),
-        # dict(type='PaviLoggerHook', init_kwargs=dict(project='mmedit-sr'))
-    ])
+log_config = dict(interval=100,
+                  hooks=[
+                      dict(type='TextLoggerHook', by_epoch=False),
+                      dict(type='TensorboardLoggerHook')
+                  ])
 visual_config = None
 
 # runtime settings

@@ -3,8 +3,9 @@
 from mmcv.runner import load_checkpoint
 from mmedit.models import RRDBNet
 from mmedit.models.common import default_init_weights
-from mmedit.models.registry import BACKBONES
 from mmedit.utils import get_root_logger
+
+from ..registry import BACKBONES
 
 
 @BACKBONES.register_module()
@@ -15,9 +16,10 @@ class RRDBNetQE(RRDBNet):
                      pretrained=None,
                      strict=True,
                      revise_keys=[(r'^module\.', '')]):
-        """
-        Accept revise_keys for restorer ESRGANQE.
-            Default value is equal to that of load_checkpoint.
+        """Init weights for models.
+
+        Accept revise_keys for restorer ESRGANQE. Default value is equal to
+        that of load_checkpoint.
         """
         if isinstance(pretrained, str):
             logger = get_root_logger()

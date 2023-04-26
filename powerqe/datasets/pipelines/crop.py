@@ -73,8 +73,3 @@ class PairedCenterCrop:
         if not gt_is_list:
             results['gt'] = results['gt'][0]
         return results
-
-    def __repr__(self):
-        repr_str = self.__class__.__name__
-        repr_str += f'(gt_patch_size={self.gt_patch_size})'
-        return repr_str

@@ -3,10 +3,9 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from mmcv.runner import load_checkpoint
-from mmedit.utils import get_root_logger
 
 from ..registry import BACKBONES
+from .base import BaseNet
 
 
 def conv(in_channels, out_channels, kernel_size, bias=False, stride=1):
@@ -395,7 +394,7 @@ class ORSNet(nn.Module):
 
 
 @BACKBONES.register_module()
-class MPRNet(nn.Module):
+class MPRNet(BaseNet):
     """MPRNet for enhancement."""
 
     def __init__(self,
@@ -548,21 +547,3 @@ class MPRNet(nn.Module):
         stage3_img = self.tail(x3_cat)
 
         return stage3_img + x3_img
-
-    def init_weights(self, pretrained=None, strict=True):
-        """Init weights for models.
-
-        Args:
-            pretrained (str, optional): Path for pretrained weights. If given
-                None, pretrained weights will not be loaded. Defaults to None.
-            strict (boo, optional): Whether strictly load the pretrained model.
-                Defaults to True.
-        """
-        if isinstance(pretrained, str):
-            logger = get_root_logger()
-            load_checkpoint(self, pretrained, strict=strict, logger=logger)
-        elif pretrained is None:
-            pass  # use default initialization
-        else:
-            raise TypeError('"pretrained" must be a str or None.'
-                            f' But received {type(pretrained)}.')

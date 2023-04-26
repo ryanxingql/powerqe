@@ -1,37 +1,30 @@
-bs = 16
-ngpus = 1
-assert bs % ngpus == 0, ('Samples in a batch should better be evenly'
-                         ' distributed among all GPUs.')
+from .script import generate_exp_name
 
-nf = 96
-ps = 128
-niter_k = 300
+params = dict(batchsize=16, ngpus=1, patchsize=128, kiters=300, nchannels=96)
 
-exp_name = f'mprnet_div2k_nf{nf}_ps{ps}_bs{bs}_{niter_k}k_g{ngpus}'
+exp_name = generate_exp_name('mprnet_div2k', params)
+
+assert params['batchsize'] % params['ngpus'] == 0, (
+    'Samples in a batch should better be evenly'
+    ' distributed among all GPUs.')
 
 # model settings
 model = dict(type='BasicRestorerQE',
-             generator=dict(
-                 type='MPRNet',
-                 in_c=3,
-                 out_c=3,
-                 n_feat=nf,
-             ),
-             pixel_loss=dict(
-                 type='CharbonnierLoss',
-                 loss_weight=1.0,
-                 reduction='mean',
-             ))
+             generator=dict(type='MPRNet',
+                            in_c=3,
+                            out_c=3,
+                            n_feat=params['nchannels']),
+             pixel_loss=dict(type='CharbonnierLoss',
+                             loss_weight=1.0,
+                             reduction='mean'))
 
 # model training and testing settings
 train_cfg = None
 test_cfg = dict(
     metrics=['PSNR', 'SSIM'],
     crop_border=1,
-    unfolding=dict(
-        patch_sz=ps,
-        splits=4,
-    )  # to save memory for testing
+    unfolding=dict(patch_sz=params['patchsize'],
+                   splits=4)  # to save memory for testing
 )
 
 # dataset settings
@@ -47,7 +40,7 @@ train_pipeline = [
          flag='color',
          channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
-    dict(type='PairedRandomCrop', gt_patch_size=ps),
+    dict(type='PairedRandomCrop', gt_patch_size=params['patchsize']),
     dict(type='Flip',
          keys=['lq', 'gt'],
          flip_ratio=0.5,
@@ -69,7 +62,7 @@ valid_pipeline = [
          flag='color',
          channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
-    # dict(type='PairedCenterCrop', gt_patch_size=ps),
+    # dict(type='PairedCenterCrop', gt_patch_size=params['patchsize']),
     dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path']),
     dict(type='ImageToTensor', keys=['lq', 'gt'])
 ]
@@ -89,8 +82,10 @@ test_pipeline = [
     dict(type='ImageToTensor', keys=['lq', 'gt'])
 ]
 
-data = dict(workers_per_gpu=bs // ngpus,
-            train_dataloader=dict(samples_per_gpu=bs // ngpus, drop_last=True),
+batchsize_gpu = params['batchsize'] // params['ngpus']
+data = dict(workers_per_gpu=batchsize_gpu,
+            train_dataloader=dict(samples_per_gpu=batchsize_gpu,
+                                  drop_last=True),
             val_dataloader=dict(samples_per_gpu=1),
             test_dataloader=dict(samples_per_gpu=1),
             train=dict(type='RepeatDataset',
@@ -118,20 +113,18 @@ data = dict(workers_per_gpu=bs // ngpus,
 optimizers = dict(generator=dict(type='Adam', lr=2e-4, betas=(0.9, 0.999)))
 
 # learning policy
-total_iters = niter_k * 1000
-lr_config = dict(
-    policy='CosineRestart',
-    by_epoch=False,
-    periods=[total_iters],
-    min_lr=1e-6,
-)
+total_iters = params['kiters'] * 1000
+lr_config = dict(policy='CosineRestart',
+                 by_epoch=False,
+                 periods=[total_iters],
+                 min_lr=1e-6)
 
 checkpoint_config = dict(interval=5000, save_optimizer=True, by_epoch=False)
 evaluation = dict(interval=5000, save_image=False, gpu_collect=True)
 log_config = dict(interval=100,
                   hooks=[
                       dict(type='TextLoggerHook', by_epoch=False),
-                      dict(type='TensorboardLoggerHook'),
+                      dict(type='TensorboardLoggerHook')
                   ])
 visual_config = None
 

@@ -2,13 +2,21 @@
 import torch
 import torch.nn as nn
 from mmcv.ops import ModulatedDeformConv2d
-from mmcv.runner import load_checkpoint
-from mmedit.utils import get_root_logger
 
 from ..registry import BACKBONES
+from .base import BaseNet
 
 
 class STDF(nn.Module):
+    """STDF.
+
+    Args:
+        in_nc (int): num of input channels.
+        out_nc (int): num of output channels.
+        nf (int): num of channels (filters) of each conv layer.
+        nb (int): num of conv layers.
+        deform_ks (int): size of the deformable kernel.
+    """
 
     def __init__(self,
                  in_nc=3,
@@ -17,14 +25,6 @@ class STDF(nn.Module):
                  nb=3,
                  base_ks=3,
                  deform_ks=3):
-        """
-        Args:
-            in_nc (int): num of input channels.
-            out_nc (int): num of output channels.
-            nf (int): num of channels (filters) of each conv layer.
-            nb (int): num of conv layers.
-            deform_ks (int): size of the deformable kernel.
-        """
         super().__init__()
 
         self.in_nc = in_nc
@@ -121,15 +121,17 @@ class STDF(nn.Module):
 
 
 class QENet(nn.Module):
+    """QE subnet.
+
+    Args:
+        in_nc: num of input channels from STDF.
+        nf: num of channels (filters) of each conv layer.
+        nb: num of conv layers.
+        out_nc: num of output channel. 3 for RGB, 1 for Y.
+    """
 
     def __init__(self, in_nc=64, nf=48, nb=6, out_nc=3, base_ks=3):
-        """
-        Args:
-            in_nc: num of input channels from STDF.
-            nf: num of channels (filters) of each conv layer.
-            nb: num of conv layers.
-            out_nc: num of output channel. 3 for RGB, 1 for Y.
-        """
+
         super().__init__()
 
         padding = base_ks // 2
@@ -151,7 +153,7 @@ class QENet(nn.Module):
 
 
 @BACKBONES.register_module()
-class STDFNet(nn.Module):
+class STDFNet(BaseNet):
     """STDF network structure.
 
     Ref: https://github.com/ryanxingql/stdf-pytorch
@@ -212,22 +214,7 @@ class STDFNet(nn.Module):
         Returns:
             Tensor: Out center frame with shape (n, c, h, w).
         """
+
         out = self.stdf(x)
         out = self.qe_net(out)
         return out + x[:, self.radius, ...]  # residual learning
-
-    def init_weights(self, pretrained=None, strict=True):
-        """Init weights for models.
-
-        Args:
-            pretrained (str, optional): Path for pretrained weights. If given
-                None, pretrained weights will not be loaded. Default: None.
-            strict (bool, optional): Whether strictly load the pretrained
-                model. Default: True.
-        """
-        if isinstance(pretrained, str):
-            logger = get_root_logger()
-            load_checkpoint(self, pretrained, strict=strict, logger=logger)
-        elif pretrained is not None:
-            raise TypeError('"pretrained" must be a str or None.'
-                            f' But received {type(pretrained)}.')

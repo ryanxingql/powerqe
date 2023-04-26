@@ -9,9 +9,10 @@ from ..registry import PIPELINES
 
 
 class Compose(MMEditCompose):
-    """
+    """Compose a data pipeline with a sequence of transforms.
+
     Difference to MMEditCompose:
-        1. Use the PIPELINES in powerqe.
+    1. Use the PIPELINES in powerqe.
     """
 
     def __init__(self, transforms):

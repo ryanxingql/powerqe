@@ -1,13 +1,12 @@
 # RyanXingQL @2022
 import torch.nn as nn
-from mmcv.runner import load_checkpoint
-from mmedit.utils import get_root_logger
 
 from ..registry import BACKBONES
+from .base import BaseNet
 
 
 @BACKBONES.register_module()
-class ARCNN(nn.Module):
+class ARCNN(BaseNet):
     """AR-CNN network structure.
 
     Paper: https://arxiv.org/pdf/1504.06993.pdf
@@ -82,22 +81,5 @@ class ARCNN(nn.Module):
         Returns:
             Tensor: Forward results.
         """
+
         return self.layers(x) + x
-
-    def init_weights(self, pretrained=None, strict=True):
-        """Init weights for models.
-
-        Args:
-            pretrained (str, optional): Path for pretrained weights. If given
-                None, pretrained weights will not be loaded. Defaults to None.
-            strict (boo, optional): Whether strictly load the pretrained model.
-                Defaults to True.
-        """
-        if isinstance(pretrained, str):
-            logger = get_root_logger()
-            load_checkpoint(self, pretrained, strict=strict, logger=logger)
-        elif pretrained is None:
-            pass  # use default initialization
-        else:
-            raise TypeError('"pretrained" must be a str or None.'
-                            f' But received {type(pretrained)}.')

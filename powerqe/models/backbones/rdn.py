@@ -3,12 +3,11 @@
 import math
 
 import torch
-from mmcv.runner import load_checkpoint
 from mmedit.models.backbones.sr_backbones.rdn import RDB
-from mmedit.utils import get_root_logger
 from torch import nn
 
 from ..registry import BACKBONES
+from .base import BaseNet
 
 
 class Interpolate(nn.Module):
@@ -31,13 +30,13 @@ class Interpolate(nn.Module):
 
 
 @BACKBONES.register_module()
-class RDNQE(nn.Module):
-    """
-    Difference to the RDN in mmedit:
-        1. Support rescaling before/after enhancement.
+class RDNQE(BaseNet):
+    """RDN for quality enhancement.
 
-    New args:
-        rescale (int): rescaling factor.
+    Difference to the RDN in mmedit:
+    1. Support rescaling before/after enhancement.
+
+    New args: rescale (int): rescaling factor.
     """
 
     def __init__(
@@ -58,6 +57,7 @@ class RDNQE(nn.Module):
         self.num_blocks = num_blocks
         self.num_layers = num_layers
 
+        assert math.log2(rescale).is_integer()
         if rescale == 1:
             self.downscale = nn.Identity()
         else:
@@ -111,7 +111,6 @@ class RDNQE(nn.Module):
         #             self.mid_channels * (upscale_factor**2),
         #             kernel_size=3,
         #             padding=3 // 2), nn.PixelShuffle(upscale_factor))
-        assert math.log2(rescale).is_integer()
         if rescale == 1:
             self.upscale = nn.Identity()
         else:
@@ -158,21 +157,3 @@ class RDNQE(nn.Module):
         x = self.upscale(x)
         x = self.output(x)
         return x
-
-    def init_weights(self, pretrained=None, strict=True):
-        """Init weights for models.
-
-        Args:
-            pretrained (str, optional): Path for pretrained weights. If given
-                None, pretrained weights will not be loaded. Defaults to None.
-            strict (boo, optional): Whether strictly load the pretrained model.
-                Defaults to True.
-        """
-        if isinstance(pretrained, str):
-            logger = get_root_logger()
-            load_checkpoint(self, pretrained, strict=strict, logger=logger)
-        elif pretrained is None:
-            pass  # use default initialization
-        else:
-            raise TypeError('"pretrained" must be a str or None.'
-                            f' But received {type(pretrained)}.')

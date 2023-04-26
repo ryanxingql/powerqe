@@ -10,18 +10,26 @@ from .registry import DATASETS
 
 
 @DATASETS.register_module()
-class Vimeo90KTripletCenterGTDataset(BaseVFIDataset):
-    """
+class PairedSameSizeVimeo90KTripletDataset(BaseVFIDataset):
+    """Paired Vimeo-90K triplet dataset. GT and LQ are with the same size.
+
     Difference to the VFIVimeo90KDataset in mmedit:
-        1. Require GT for im2.png.
-        2. Support different ext between GT and LQ
-            with filename_tmpl.
-        3. Use the Compose in powerqe.
+    1. Load GT.
+    2. Support different ext between GT and LQ by filename_tmpl.
+    3. Use the Compose in powerqe.
+
+    Similar to the SRVimeo90KDataset in mmedit.
 
     New args:
         gt_folder: for GT im2.
         filename_tmpl (str): Template for each filename of LQ.
             Default: '{}.png'.
+        edge_padding (bool): if True, record three sub-sequences in
+            annotations. if False, only one three-frame sequence is recorded.
+            Default: False.
+        center_gt (bool): if True, only the center frame is recorded in GT.
+            Note that gt_path is always a list.
+            Default: False.
     """
 
     def __init__(self,
@@ -30,12 +38,18 @@ class Vimeo90KTripletCenterGTDataset(BaseVFIDataset):
                  gt_folder,
                  ann_file,
                  test_mode=False,
-                 filename_tmpl='{}.png'):
+                 filename_tmpl='{}.png',
+                 edge_padding=False,
+                 center_gt=False):
         super().__init__(pipeline, folder, ann_file, test_mode)
 
         self.lq_folder = self.folder
         self.gt_folder = str(gt_folder)
         self.filename_tmpl = filename_tmpl
+        self.edge_padding = edge_padding
+        self.center_gt = center_gt
+
+        # __init__ of BaseVFIDataset does not have this step
         self.data_infos = self.load_annotations()
 
         # BaseDataset cannot accept the new pipeline outside MMEdit
@@ -43,9 +57,10 @@ class Vimeo90KTripletCenterGTDataset(BaseVFIDataset):
         self.pipeline = Compose(pipeline)
 
     def __getitem__(self, idx):
-        """
+        """Get a sample.
+
         Difference to that of BaseVFIDataset:
-            1. Add results['scale'] = 1 for PairedRandomCrop.
+        1. Add results['scale'] = 1 for PairedRandomCrop.
         """
         results = copy.deepcopy(self.data_infos[idx])
         results['folder'] = self.folder
@@ -54,10 +69,11 @@ class Vimeo90KTripletCenterGTDataset(BaseVFIDataset):
         return self.pipeline(results)
 
     def load_annotations(self):
-        """
+        """Load annotations and record samples.
+
         Difference to that of VFIVimeo90KDataset:
-            1. Load LQ and GT for im2.
-            2. Record 3 sub-sequences for one sequence.
+        1. Load GT.
+        2. Support different ext between GT and LQ by filename_tmpl.
         """
         # get keys
         with open(self.ann_file, 'r') as f:
@@ -69,87 +85,90 @@ class Vimeo90KTripletCenterGTDataset(BaseVFIDataset):
         data_infos = []
         for key in keys:
             key = key.replace('/', os.sep)
-            key_folder = osp.join(self.lq_folder, key)
-
-            # GT: im1
+            lq_folder = osp.join(self.lq_folder, key)
+            gt_folder = osp.join(self.gt_folder, key)
             lq_path = [
-                osp.join(key_folder, f'{self.filename_tmpl.format("im1")}'),
-                osp.join(key_folder, f'{self.filename_tmpl.format("im1")}'),
-                osp.join(key_folder, f'{self.filename_tmpl.format("im2")}')
+                osp.join(lq_folder, f'{self.filename_tmpl.format("im1")}'),
+                osp.join(lq_folder, f'{self.filename_tmpl.format("im2")}'),
+                osp.join(lq_folder, f'{self.filename_tmpl.format("im3")}')
             ]
-            gt_path = osp.join(self.gt_folder, key, 'im1.png')
-            data_infos.append(
-                dict(
-                    lq_path=lq_path,
-                    gt_path=gt_path,
-                    key=key + '/im1',
-                ))
+            if self.center_gt:
+                gt_path = [osp.join(gt_folder, 'im2.png')]
+            else:
+                gt_path = [
+                    osp.join(gt_folder, 'im1.png'),
+                    osp.join(gt_folder, 'im2.png'),
+                    osp.join(gt_folder, 'im3.png')
+                ]
+            data_infos.append(dict(lq_path=lq_path, gt_path=gt_path, key=key))
 
-            # GT: im2
-            lq_path = [
-                osp.join(key_folder, f'{self.filename_tmpl.format("im1")}'),
-                osp.join(key_folder, f'{self.filename_tmpl.format("im2")}'),
-                osp.join(key_folder, f'{self.filename_tmpl.format("im3")}')
-            ]
-            gt_path = osp.join(self.gt_folder, key, 'im2.png')
-            data_infos.append(
-                dict(
-                    lq_path=lq_path,
-                    gt_path=gt_path,
-                    key=key + '/im2',
-                ))
+            if self.edge_padding:
+                lq_path = [
+                    osp.join(lq_folder, f'{self.filename_tmpl.format("im1")}'),
+                    osp.join(lq_folder, f'{self.filename_tmpl.format("im1")}'),
+                    osp.join(lq_folder, f'{self.filename_tmpl.format("im2")}')
+                ]
+                if self.center_gt:
+                    gt_path = [osp.join(gt_folder, 'im1.png')]
+                else:
+                    gt_path = [
+                        osp.join(gt_folder, 'im1.png'),
+                        osp.join(gt_folder, 'im1.png'),
+                        osp.join(gt_folder, 'im2.png')
+                    ]
+                data_infos.append(
+                    dict(lq_path=lq_path, gt_path=gt_path, key=key))
 
-            # GT: im3
-            lq_path = [
-                osp.join(key_folder, f'{self.filename_tmpl.format("im2")}'),
-                osp.join(key_folder, f'{self.filename_tmpl.format("im3")}'),
-                osp.join(key_folder, f'{self.filename_tmpl.format("im3")}')
-            ]
-            gt_path = osp.join(self.gt_folder, key, 'im3.png')
-            data_infos.append(
-                dict(
-                    lq_path=lq_path,
-                    gt_path=gt_path,
-                    key=key + '/im3',
-                ))
-
+                lq_path = [
+                    osp.join(lq_folder, f'{self.filename_tmpl.format("im2")}'),
+                    osp.join(lq_folder, f'{self.filename_tmpl.format("im3")}'),
+                    osp.join(lq_folder, f'{self.filename_tmpl.format("im3")}')
+                ]
+                if self.center_gt:
+                    gt_path = [osp.join(gt_folder, 'im2.png')]
+                else:
+                    gt_path = [
+                        osp.join(gt_folder, 'im2.png'),
+                        osp.join(gt_folder, 'im3.png'),
+                        osp.join(gt_folder, 'im3.png')
+                    ]
+                data_infos.append(
+                    dict(lq_path=lq_path, gt_path=gt_path, key=key))
         return data_infos
 
 
 @DATASETS.register_module()
-class CompressedVimeo90KTripletCenterGTDataset(Vimeo90KTripletCenterGTDataset):
-    """
-    Difference to Vimeo90KTripletCenterGTDataset:
-        1. Use high-quality frames instead of neighboring frames.
+class PairedSameSizeVimeo90KTripletKeyFrameDataset(
+        PairedSameSizeVimeo90KTripletDataset):
+    """Paired Vimeo-90K triplet dataset. GT and LQ are with the same size.
+
+    Difference to PairedSameSizeVimeo90KTripletDataset:
+    1. Use high-quality key frames instead of neighboring frames.
 
     New args: qp_info (dict). See PowerQE doc.
     """
 
-    def __init__(
-        self,
-        pipeline,
-        folder,
-        gt_folder,
-        ann_file,
-        test_mode=False,
-        filename_tmpl='{}.png',
-        qp_info=dict(
-            qp=37,
-            intra_qp_offset=-1,
-            qp_offset=[5, 4] * 3 + [5, 1],
-            qp_offset_model_off=[-6.5] * 7 + [0],
-            qp_offset_model_scale=[0.2590] * 7 + [0],
-        ),
-    ):
+    def __init__(self,
+                 pipeline,
+                 folder,
+                 gt_folder,
+                 ann_file,
+                 test_mode=False,
+                 filename_tmpl='{}.png',
+                 qp_info=dict(
+                     qp=37,
+                     intra_qp_offset=-1,
+                     qp_offset=[5, 4] * 3 + [5, 1],
+                     qp_offset_model_off=[-6.5] * 7 + [0],
+                     qp_offset_model_scale=[0.2590] * 7 + [0],
+                 )):
         self.qps = self.cal_qps(qp_info, nfrms=3)
-        super().__init__(
-            pipeline=pipeline,
-            folder=folder,
-            gt_folder=gt_folder,
-            ann_file=ann_file,
-            test_mode=test_mode,
-            filename_tmpl=filename_tmpl,
-        )
+        super().__init__(pipeline=pipeline,
+                         folder=folder,
+                         gt_folder=gt_folder,
+                         ann_file=ann_file,
+                         test_mode=test_mode,
+                         filename_tmpl=filename_tmpl)
 
     @staticmethod
     def cal_qps(qp_info, nfrms=3):
@@ -166,9 +185,10 @@ class CompressedVimeo90KTripletCenterGTDataset(Vimeo90KTripletCenterGTDataset):
         return qps
 
     def load_annotations(self):
-        """
+        """Load annotations and record samples.
+
         Difference to that of Vimeo90KTripletCenterGTDataset:
-            1. Record high-quality frames instead of neighboring frames.
+        1. Record high-quality frames instead of neighboring frames.
         """
         # get keys
         with open(self.ann_file, 'r') as f:
@@ -230,48 +250,4 @@ class CompressedVimeo90KTripletCenterGTDataset(Vimeo90KTripletCenterGTDataset):
                     key=key + '/im3',
                 ))
 
-        return data_infos
-
-
-@DATASETS.register_module()
-class Vimeo90KTripletSequenceDataset(Vimeo90KTripletCenterGTDataset):
-    """
-    Difference to Vimeo90KTripletCenterGTDataset:
-        1. Load the whole sequence for LQ and GT.
-    """
-
-    def load_annotations(self):
-        """
-        Difference to that of Vimeo90KTripletCenterGTDataset:
-            1. Record the whole sequence for GT.
-            2. Record only one sequence.
-        """
-        # get keys
-        with open(self.ann_file, 'r') as f:
-            keys = f.read().split('\n')
-            keys = [
-                k.strip() for k in keys if (k.strip() is not None and k != '')
-            ]
-
-        data_infos = []
-        for key in keys:
-            key = key.replace('/', os.sep)
-            key_folder = osp.join(self.lq_folder, key)
-            gt_folder = osp.join(self.gt_folder, key)
-
-            lq_path = [
-                osp.join(key_folder, f'{self.filename_tmpl.format("im1")}'),
-                osp.join(key_folder, f'{self.filename_tmpl.format("im2")}'),
-                osp.join(key_folder, f'{self.filename_tmpl.format("im3")}')
-            ]
-            gt_path = [
-                osp.join(gt_folder, 'im1.png'),
-                osp.join(gt_folder, 'im2.png'),
-                osp.join(gt_folder, 'im3.png')
-            ]
-            data_infos.append(dict(
-                lq_path=lq_path,
-                gt_path=gt_path,
-                key=key,
-            ))
         return data_infos

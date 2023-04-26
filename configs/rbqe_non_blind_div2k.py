@@ -1,30 +1,32 @@
-bs = 32
-ngpus = 1
-assert bs % ngpus == 0, ('Samples in a batch should better be evenly'
-                         ' distributed among all GPUs.')
+from .script import generate_exp_name
 
-nf = 32
-nl = 5
-comp_type = 'hevc'
-ps = 128
-niter_k = 1000
+params = dict(batchsize=32,
+              ngpus=1,
+              patchsize=128,
+              kiters=1000,
+              nchannels=32,
+              nlevels=5,
+              comptype='hevc')
 
-exp_name = (f'rbqe_non_blind_div2k_nf{nf}_nl{nl}_{comp_type}'
-            f'_ps{ps}_bs{bs}_{niter_k}k_g{ngpus}')
+exp_name = generate_exp_name('rbqe_non_blind_div2k', params)
+
+assert params['batchsize'] % params['ngpus'] == 0, (
+    'Samples in a batch should better be evenly'
+    ' distributed among all GPUs.')
 
 # model settings
 model = dict(type='BasicRestorerQE',
              generator=dict(type='RBQE',
                             nf_in=3,
-                            nf_base=nf,
-                            nlevel=nl,
+                            nf_base=params['nchannels'],
+                            nlevel=params['nlevels'],
                             down_method='strideconv',
                             up_method='transpose2d',
                             if_separable=False,
                             if_eca=True,
                             nf_out=3,
                             if_only_last_output=True,
-                            comp_type=comp_type),
+                            comp_type=params['comptype']),
              pixel_loss=dict(type='L1Loss', loss_weight=1.0, reduction='mean'))
 
 # model training and testing settings
@@ -44,7 +46,7 @@ train_pipeline = [
          flag='color',
          channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
-    dict(type='PairedRandomCrop', gt_patch_size=ps),
+    dict(type='PairedRandomCrop', gt_patch_size=params['patchsize']),
     dict(type='Flip',
          keys=['lq', 'gt'],
          flip_ratio=0.5,
@@ -70,8 +72,10 @@ test_pipeline = [
     dict(type='ImageToTensor', keys=['lq', 'gt'])
 ]
 
-data = dict(workers_per_gpu=bs // ngpus,
-            train_dataloader=dict(samples_per_gpu=bs // ngpus, drop_last=True),
+batchsize_gpu = params['batchsize'] // params['ngpus']
+data = dict(workers_per_gpu=batchsize_gpu,
+            train_dataloader=dict(samples_per_gpu=batchsize_gpu,
+                                  drop_last=True),
             val_dataloader=dict(samples_per_gpu=1),
             test_dataloader=dict(samples_per_gpu=1),
             train=dict(type='RepeatDataset',
@@ -99,20 +103,18 @@ data = dict(workers_per_gpu=bs // ngpus,
 optimizers = dict(generator=dict(type='Adam', lr=1e-4, betas=(0.9, 0.999)))
 
 # learning policy
-total_iters = niter_k * 1000
-lr_config = dict(
-    policy='CosineRestart',
-    by_epoch=False,
-    periods=[total_iters],
-    min_lr=1e-7,
-)
+total_iters = params['kiters'] * 1000
+lr_config = dict(policy='CosineRestart',
+                 by_epoch=False,
+                 periods=[total_iters],
+                 min_lr=1e-7)
 
 checkpoint_config = dict(interval=5000, save_optimizer=True, by_epoch=False)
 evaluation = dict(interval=5000, save_image=False, gpu_collect=True)
 log_config = dict(interval=100,
                   hooks=[
                       dict(type='TextLoggerHook', by_epoch=False),
-                      dict(type='TensorboardLoggerHook'),
+                      dict(type='TensorboardLoggerHook')
                   ])
 visual_config = None
 

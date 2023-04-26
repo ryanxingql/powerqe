@@ -1,15 +1,15 @@
 # RyanXingQL @2023
 import torch
 import torch.nn as nn
-from mmcv.runner import load_checkpoint
 from mmedit.models.backbones.sr_backbones.basicvsr_net import SPyNet
 from mmedit.models.common import flow_warp
-from mmedit.models.registry import BACKBONES
-from mmedit.utils import get_root_logger
+
+from ..registry import BACKBONES
+from .base import BaseNet
 
 
 @BACKBONES.register_module()
-class MFQEv2(nn.Module):
+class MFQEv2(BaseNet):
     """MFQEv2 network structure.
 
     Note: We use a pre-trained SpyNet instead of the MC subnet in the paper.
@@ -124,7 +124,7 @@ class MFQEv2(nn.Module):
         return aligned_frm
 
     def forward(self, x):
-        """Forward function for MFQEv2.
+        """Forward function.
 
         Args:
             x (Tensor): Input tensor with shape (n, 3, c, h, w).
@@ -132,6 +132,7 @@ class MFQEv2(nn.Module):
         Returns:
             Tensor: Out center frame with shape (n, c, h, w).
         """
+
         # alignment
         center_frm = x[:, 1, ...]  # n c=3 h w
         aligned_left_pqf = self.align_frm(inp_frm=x[:, 0, ...],
@@ -168,19 +169,3 @@ class MFQEv2(nn.Module):
         out = self.rec_conv[5](out)  # c15 in the paper
         out += center_frm  # res: add middle frame
         return out
-
-    def init_weights(self, pretrained=None, strict=True):
-        """Init weights for models.
-
-        Args:
-            pretrained (str, optional): Path for pretrained weights. If given
-                None, pretrained weights will not be loaded. Default: None.
-            strict (bool, optional): Whether strictly load the pretrained
-                model. Default: True.
-        """
-        if isinstance(pretrained, str):
-            logger = get_root_logger()
-            load_checkpoint(self, pretrained, strict=strict, logger=logger)
-        elif pretrained is not None:
-            raise TypeError('"pretrained" must be a str or None.'
-                            f' But received {type(pretrained)}.')

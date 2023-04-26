@@ -19,9 +19,10 @@ def cal_diff(sz, sz_mul):
 
 
 def pad_img(img, sz_mul):
-    """
-    img (tensor): (b c h w), float
-    pad_info (tuple): (pad_left, pad_right, pad_top, pad_bottom)
+    """Image padding.
+
+    img (tensor): (b c h w), float. pad_info (tuple): (pad_left, pad_right,
+    pad_top, pad_bottom).
     """
     h, w = img.shape[2:]
     assert (h >= sz_mul) and (w >= sz_mul)
@@ -33,9 +34,9 @@ def pad_img(img, sz_mul):
 
 
 def unfold_img(img, patch_sz):
-    """
-    img (tensor): (b c h w)
+    """Image unfolding.
 
+    img (tensor): (b c h w).
     https://pytorch.org/docs/stable/generated/torch.Tensor.unfold.html
     """
     patches = img.unfold(2, patch_sz, patch_sz).unfold(3, patch_sz, patch_sz)
@@ -51,9 +52,10 @@ def unfold_img(img, patch_sz):
 
 
 def combine_patches(patches, unfold_shape):
-    """
-    patches (tensor): (b*num_patch_h*num_patch_w c patch_sz patch_sz)
-    unfold_shape (tuple): (b num_patch_h num_patch_w c patch_sz patch_sz)
+    """Patch combination.
+
+    patches (tensor): (b*num_patch_h*num_patch_w c patch_sz patch_sz).
+    unfold_shape (tuple): (b num_patch_h num_patch_w c patch_sz patch_sz).
     """
     b, c = unfold_shape[0], unfold_shape[3]
     h_pad = unfold_shape[1] * unfold_shape[4]
@@ -69,9 +71,10 @@ def combine_patches(patches, unfold_shape):
 
 
 def crop_img(img, pad_info):
-    """
-    img (tensor): (b c h w)
-    pad_info (tuple): (pad_left, pad_right, pad_top, pad_bottom)
+    """Image cropping.
+
+    img (tensor): (b c h w). pad_info (tuple): (pad_left, pad_right, pad_top,
+    pad_bottom).
     """
     if pad_info[3] == 0 and pad_info[1] == 0:
         img = img[..., pad_info[2]:, pad_info[0]:]
@@ -86,16 +89,18 @@ def crop_img(img, pad_info):
 
 @MODELS.register_module()
 class BasicRestorerQE(BasicRestorer):
-    """
+    """Basic restorer for quality enhancement.
+
     Difference to BasicRestorer:
-         1. Support LQ vs. GT testing.
+    1. Support LQ vs. GT testing.
     """
 
     def evaluate(self, output, gt, lq):
+        """Evaluation.
+
+        New args: lq (Tensor): LQ Tensor with shape (n, c, h, w).
         """
-        New args:
-            lq (Tensor): LQ Tensor with shape (n, c, h, w).
-        """
+
         crop_border = self.test_cfg.crop_border
 
         output = tensor2img(output)
@@ -117,10 +122,11 @@ class BasicRestorerQE(BasicRestorer):
                      save_image=False,
                      save_path=None,
                      iteration=None):
-        """
+        """Test forward.
+
         Difference to that of BasicRestorer:
-            1. Support unfolding.
-            2. Save LQ, output, and GT.
+        1. Support unfolding.
+        2. Save LQ, output, and GT.
         """
         if self.test_cfg is not None and 'unfolding' in self.test_cfg:
             unfold_patch_sz = self.test_cfg.unfolding.patch_sz
@@ -199,17 +205,17 @@ class BasicRestorerQE(BasicRestorer):
 
 @MODELS.register_module()
 class BasicRestorerVQE(BasicRestorer):
-    """
+    """Basic restorer for video quality enhancement.
+
     Difference to BasicRestorer:
-        1. Support LQ vs. GT testing.
-        2. Support sequence LQ.
-            GT corresponds to the center LQ.
+    1. Support LQ vs. GT testing.
+    2. Support sequence LQ. GT corresponds to the center LQ.
     """
 
     def evaluate(self, output, gt, lq):
-        """
-        New args:
-            lq (Tensor): LQ Tensor with shape (n, t, c, h, w).
+        """Evaluation.
+
+        New args: lq (Tensor): LQ Tensor with shape (n, t, c, h, w).
         """
         crop_border = self.test_cfg.crop_border
 
@@ -235,9 +241,10 @@ class BasicRestorerVQE(BasicRestorer):
                      save_image=False,
                      save_path=None,
                      iteration=None):
-        """
+        """Test forward.
+
         Difference to that of BasicRestorer:
-            1. Save LQ, output, and GT.
+        1. Save LQ, output, and GT.
         """
         t = lq.shape[1]
         assert t % 2 == 1
@@ -302,28 +309,25 @@ class BasicRestorerVQE(BasicRestorer):
 
 @MODELS.register_module()
 class BasicRestorerVQESequence(BasicRestorer):
-    """
+    """Basic restorer for video quality enhancement.
+
     Difference to BasicRestorer:
-        1. Support LQ vs. GT testing.
-        2. Support sequence LQ and sequence GT.
-        3. Support parameter fix for some iters.
+    1. Support LQ vs. GT testing.
+    2. Support sequence LQ and sequence GT.
+    3. Support parameter fix for some iters.
     """
 
-    def __init__(
-        self,
-        generator,
-        pixel_loss,
-        train_cfg=None,
-        test_cfg=None,
-        pretrained=None,
-    ):
-        super().__init__(
-            generator=generator,
-            pixel_loss=pixel_loss,
-            train_cfg=train_cfg,
-            test_cfg=test_cfg,
-            pretrained=pretrained,
-        )
+    def __init__(self,
+                 generator,
+                 pixel_loss,
+                 train_cfg=None,
+                 test_cfg=None,
+                 pretrained=None):
+        super().__init__(generator=generator,
+                         pixel_loss=pixel_loss,
+                         train_cfg=train_cfg,
+                         test_cfg=test_cfg,
+                         pretrained=pretrained)
 
         # fix pre-trained networks
         self.fix_iter = train_cfg.get('fix_iter', 0) if train_cfg else 0
@@ -334,9 +338,10 @@ class BasicRestorerVQESequence(BasicRestorer):
         self.register_buffer('step_counter', torch.zeros(1))
 
     def train_step(self, data_batch, optimizer):
-        """
+        """Training step.
+
         Difference to that of BasicRestorer:
-            1. Support parameter fix for some iters.
+        1. Support parameter fix for some iters.
         """
         # parameter fix
         if self.step_counter < self.fix_iter:
@@ -365,9 +370,9 @@ class BasicRestorerVQESequence(BasicRestorer):
         return outputs
 
     def evaluate(self, output, gt, lq):
-        """
-        New args:
-            lq (Tensor): LQ Tensor with shape (n, t, c, h, w).
+        """Evaluation.
+
+        New args: lq (Tensor): LQ Tensor with shape (n, t, c, h, w).
         """
         crop_border = self.test_cfg.crop_border
 
@@ -400,11 +405,11 @@ class BasicRestorerVQESequence(BasicRestorer):
                      save_image=False,
                      save_path=None,
                      iteration=None):
-        """
+        """Test forward.
+
         Difference to that of BasicRestorer:
-            1. Save LQ, output, and GT.
-            2. Save sequences.
-                Key: sequence name.
+        1. Save LQ, output, and GT.
+        2. Save sequences. Key: sequence name.
         """
         if self.test_cfg is not None and 'unfolding' in self.test_cfg:
             raise NotImplementedError(

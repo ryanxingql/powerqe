@@ -9,10 +9,11 @@ from .registry import DATASETS
 
 @DATASETS.register_module()
 class PairedSameSizeImageDataset(SRFolderDataset):
-    """
+    """Paired image dataset. GT and LQ are with the same size.
+
     Difference to SRFolderDataset:
-        1. Scale == 1.
-        2. Support different extension between GT and LQ.
+    1. Scale == 1.
+    2. Support different extension between GT and LQ.
 
     Args:
         lq_folder (str | :obj:`Path`): Path to a lq folder.
@@ -44,9 +45,10 @@ class PairedSameSizeImageDataset(SRFolderDataset):
         self.pipeline = Compose(pipeline)
 
     def load_annotations(self):
-        """
+        """Load annotations and record samples.
+
         Difference to that of SRFolderDataset:
-            1. Use self-defined ext (in self.filename_tmpl) for lq_path.
+        1. Use self-defined ext (in self.filename_tmpl) for lq_path.
         """
         data_infos = []
         lq_paths = self.scan_folder(self.lq_folder)

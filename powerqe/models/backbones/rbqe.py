@@ -5,14 +5,14 @@ import numbers
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from mmcv.runner import load_checkpoint
-from mmedit.utils import get_root_logger
 
 from ..registry import BACKBONES
+from .base import BaseNet
 
 
 class ECA(nn.Module):
     """Efficient Channel Attention.
+
     https://github.com/BangguWu/ECANet/blob/
     3adf7a99f829ffa2e94a0de1de8a362614d66958/models/eca_module.py#L5
     """
@@ -28,11 +28,13 @@ class ECA(nn.Module):
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
-        """
+        """Forward function.
+
         B C H W -> B C 1 1
         -> B C 1 -> B 1 C -> conv (just like FC, but ks=3)
         -> B 1 C -> B C 1 -> B C 1 1
         """
+
         logic = self.avg_pool(x)
         logic = self.conv(logic.squeeze(-1).transpose(-1, -2)).transpose(
             -1, -2).unsqueeze(-1)
@@ -66,9 +68,9 @@ class SeparableConv2d(nn.Module):
 
 
 class GaussianSmoothing(nn.Module):
-    """
-    Apply gaussian smoothing on a
-    1d, 2d or 3d tensor. Filtering is performed separately for each channel
+    """Apply gaussian smoothing on a 1d, 2d or 3d tensor.
+
+    Filtering is performed separately for each channel
     in the input using a depthwise convolution.
     Arguments:
         channels (int, sequence): Number of channels of the input tensors.
@@ -120,8 +122,8 @@ class GaussianSmoothing(nn.Module):
                 f'Only 1, 2 and 3 dimensions are supported. Received {dim}.')
 
     def forward(self, x):
-        """
-        Apply gaussian filter to input.
+        """Apply gaussian filter to input.
+
         Arguments:
             x (torch.Tensor): Input to apply gaussian filter on.
         Returns:
@@ -220,9 +222,9 @@ class IQAM:
         return moments
 
     def forward(self, x):
-        """
-        (B=1 C H W)
-        only test one channel, e.g., Red
+        """Forward.
+
+        (B=1 C H W) only test one channel, e.g., Red.
         """
         h, w = x.shape[2:]
         h_cut = h // self.patch_sz * self.patch_sz
@@ -313,8 +315,10 @@ class IQAM:
 
 
 class Down(nn.Module):
-    """Downsample for one time.
-    E.g., from C2,1 to C3,2."""
+    """Downsampling.
+
+    Downsample for one time. E.g., from C2,1 to C3,2.
+    """
 
     def __init__(self, nf_in, nf_out, method, if_separable, if_eca):
         assert method in ['avepool2d',
@@ -394,8 +398,10 @@ class Down(nn.Module):
 
 
 class Up(nn.Module):
-    """Upsample for one time.
-    E.g., from C3,1 and C2,1 to C2,2."""
+    """Upsampling.
+
+    Upsample for one time. E.g., from C3,1 and C2,1 to C2,2.
+    """
 
     def __init__(self, nf_in_s, nf_in, nf_out, method, if_separable, if_eca):
         assert method in ['upsample',
@@ -493,7 +499,7 @@ class Up(nn.Module):
 
 
 @BACKBONES.register_module()
-class RBQE(nn.Module):
+class RBQE(BaseNet):
 
     def __init__(self,
                  nf_in=3,
@@ -602,12 +608,14 @@ class RBQE(nn.Module):
             self.iqam = IQAM(comp_type=comp_type)
 
     def forward(self, x, idx_out=None):
-        """
+        """Forward.
+
         idx_out:
-            -2: judge by IQAM.
-            -1: output all images from all outputs for training.
-            0, 1, ..., (self.nlevel-1): output from the assigned exit.
+        -2: judge by IQAM.
+        -1: output all images from all outputs for training.
+        0, 1, ..., (self.nlevel-1): output from the assigned exit.
         """
+
         if self.if_only_last_output:
             assert idx_out is None, ('You cannot indicate the exit since the'
                                      ' network has only a single exit.')
@@ -629,13 +637,11 @@ class RBQE(nn.Module):
             # for the first u-net (idx=0), up one time
             for idx_up in range(idx_unet + 1):
                 dense_inp_list = []
-                """
-                To obtain C2,4
-                It is the second upsampling, idx_up == 2
-                It needs C2,1 to C2,3 at feat_level_unet[1][0],
-                feat_level_unet[2][1] and feat_level_unet[3][2]
-                feat_level_unet now contains 4 lists.
-                """
+                # To obtain C2,4
+                # It is the second upsampling, idx_up == 2.
+                # It needs C2,1 to C2,3 at feat_level_unet[1][0],
+                # feat_level_unet[2][1] and feat_level_unet[3][2].
+                # feat_level_unet now contains 4 lists.
                 for idx_, feat_level in enumerate(
                         feat_level_unet[-(idx_up + 1):]):
                     dense_inp_list.append(
@@ -671,21 +677,3 @@ class RBQE(nn.Module):
             return torch.stack(out_img_list, dim=0)  # (self.nlevel B C H W)
         else:
             return out_img  # (B=1 C H W)
-
-    def init_weights(self, pretrained=None, strict=True):
-        """Init weights for models.
-
-        Args:
-            pretrained (str, optional): Path for pretrained weights. If given
-                None, pretrained weights will not be loaded. Defaults to None.
-            strict (boo, optional): Whether strictly load the pretrained model.
-                Defaults to True.
-        """
-        if isinstance(pretrained, str):
-            logger = get_root_logger()
-            load_checkpoint(self, pretrained, strict=strict, logger=logger)
-        elif pretrained is None:
-            pass  # use default initialization
-        else:
-            raise TypeError('"pretrained" must be a str or None.'
-                            f' But received {type(pretrained)}.')

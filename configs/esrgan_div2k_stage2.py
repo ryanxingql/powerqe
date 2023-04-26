@@ -1,25 +1,25 @@
-bs = 16
-ngpus = 2
-assert bs % ngpus == 0, ('Samples in a batch should better be evenly'
-                         ' distributed among all GPUs.')
+from .script import generate_exp_name
 
-nf = 64
-nb = 23
-gf = 32
-ps = 128
-niter_k = 400
+params = dict(batchsize=16,
+              ngpus=2,
+              patchsize=128,
+              kiters=400,
+              nchannels=64,
+              nblocks=23,
+              growthfactor=32,
+              klrsteps=[50, 100, 200, 300])
 
-pretrained = ('work_dirs/'
-              'esrgan_div2k_stage1_nf64_nb23_gf32_ps128_bs16_500k_g2/'
-              'iter_500000.pth')
+exp_name = generate_exp_name('esrgan_div2k_stage2', params)
 
-lr_steps = [50, 100, 200, 300]
-lr_steps = [s * 1000 for s in lr_steps]
+assert params['batchsize'] % params['ngpus'] == 0, (
+    'Samples in a batch should better be evenly'
+    ' distributed among all GPUs.')
 
-exp_name = (f'esrgan_div2k_stage2_nf{nf}_nb{nb}_gf{gf}'
-            f'_ps{ps}_bs{bs}_{niter_k}k_g{ngpus}')
-
-scale = 1
+stage1_ckpt = (
+    'work_dirs/'
+    'esrgan_div2k_stage1_batchsize_16_ngpus_2'
+    '_patchsize_128_kiters_500_nchannels_64_nblocks_23_growthfactor_32/'
+    'iter_500000.pth')
 
 # model settings
 model = dict(
@@ -27,10 +27,10 @@ model = dict(
     generator=dict(type='RRDBNetQE',
                    in_channels=3,
                    out_channels=3,
-                   mid_channels=nf,
-                   num_blocks=nb,
-                   growth_channels=gf,
-                   upscale_factor=scale),
+                   mid_channels=params['nchannels'],
+                   num_blocks=params['nblocks'],
+                   growth_channels=params['growthfactor'],
+                   upscale_factor=1),
     discriminator=dict(type='ModifiedVGG', in_channels=3, mid_channels=64),
     pixel_loss=dict(type='L1Loss', loss_weight=1e-2, reduction='mean'),
     perceptual_loss=dict(
@@ -41,17 +41,18 @@ model = dict(
         style_weight=0,
         norm_img=False,
         pretrained='https://download.pytorch.org/models/vgg19-dcbb9e9d.pth'),
-    gan_loss=dict(type='GANLoss',
-                  gan_type='vanilla',
-                  loss_weight=5e-3,
-                  real_label_val=1.0,
-                  fake_label_val=0),
-    pretrained=pretrained,
-)
+    gan_loss=dict(
+        type='GANLoss',
+        gan_type='vanilla',
+        loss_weight=5e-3,
+        real_label_val=1.0,
+        fake_label_val=0,
+    ),
+    pretrained=stage1_ckpt)
 
 # model training and testing settings
 train_cfg = None
-test_cfg = dict(metrics=['PSNR', 'SSIM'], crop_border=scale)
+test_cfg = dict(metrics=['PSNR', 'SSIM'], crop_border=1)
 
 # dataset settings
 train_pipeline = [
@@ -69,7 +70,7 @@ train_pipeline = [
          mean=[0, 0, 0],
          std=[1, 1, 1],
          to_rgb=True),
-    dict(type='PairedRandomCrop', gt_patch_size=ps),
+    dict(type='PairedRandomCrop', gt_patch_size=params['patchsize']),
     dict(type='Flip',
          keys=['lq', 'gt'],
          flip_ratio=0.5,
@@ -98,8 +99,10 @@ test_pipeline = [
     dict(type='ImageToTensor', keys=['lq', 'gt'])
 ]
 
-data = dict(workers_per_gpu=bs // ngpus,
-            train_dataloader=dict(samples_per_gpu=bs // ngpus, drop_last=True),
+batchsize_gpu = params['batchsize'] // params['ngpus']
+data = dict(workers_per_gpu=batchsize_gpu,
+            train_dataloader=dict(samples_per_gpu=batchsize_gpu,
+                                  drop_last=True),
             val_dataloader=dict(samples_per_gpu=1),
             test_dataloader=dict(samples_per_gpu=1),
             train=dict(type='RepeatDataset',
@@ -128,18 +131,19 @@ optimizers = dict(generator=dict(type='Adam', lr=1e-4, betas=(0.9, 0.999)),
                   discriminator=dict(type='Adam', lr=1e-4, betas=(0.9, 0.999)))
 
 # learning policy
-total_iters = niter_k * 1000
-lr_config = dict(policy='Step', by_epoch=False, step=lr_steps, gamma=0.5)
+total_iters = params['kiters'] * 1000
+lr_config = dict(policy='Step',
+                 by_epoch=False,
+                 step=[s * 1000 for s in params['klrsteps']],
+                 gamma=0.5)
 
 checkpoint_config = dict(interval=5000, save_optimizer=True, by_epoch=False)
 evaluation = dict(interval=5000, save_image=False, gpu_collect=True)
-log_config = dict(
-    interval=100,
-    hooks=[
-        dict(type='TextLoggerHook', by_epoch=False),
-        dict(type='TensorboardLoggerHook'),
-        # dict(type='PaviLoggerHook', init_kwargs=dict(project='mmedit-sr'))
-    ])
+log_config = dict(interval=100,
+                  hooks=[
+                      dict(type='TextLoggerHook', by_epoch=False),
+                      dict(type='TensorboardLoggerHook')
+                  ])
 visual_config = None
 
 # runtime settings

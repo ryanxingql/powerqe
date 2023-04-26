@@ -1,30 +1,29 @@
-bs = 32
-ngpus = 4
-assert bs % ngpus == 0, ('Samples in a batch should better be evenly'
-                         ' distributed among all GPUs.')
+from .script import generate_exp_name
 
-radius = 1
-nfs = [32, 64, 48]
-nbs = [3, 6]
-ps = 128
-niter_k = 1000
+params = dict(batchsize=32,
+              ngpus=4,
+              patchsize=128,
+              kiters=1000,
+              radius=1,
+              nchannels=[32, 64, 48],
+              nblocks=[3, 6])
 
-exp_name = (f'stdf_vimeo90k_triplet'
-            f'_r{radius}_nf{nfs[0]}_{nfs[1]}_{nfs[2]}_nb{nbs[0]}_{nbs[1]}'
-            f'_ps{ps}_bs{bs}_{niter_k}k_g{ngpus}')
+exp_name = generate_exp_name('stdf_vimeo90k_triplet', params)
 
-rescale = 1  # must be 2^n
+assert params['batchsize'] % params['ngpus'] == 0, (
+    'Samples in a batch should better be evenly'
+    ' distributed among all GPUs.')
 
 # model settings
 model = dict(type='BasicRestorerVQE',
              generator=dict(
                  type='STDFNet',
-                 radius=radius,
-                 nf_stdf=nfs[0],
-                 nb_stdf=nbs[0],
-                 nf_stdf_out=nfs[1],
-                 nf_qe=nfs[2],
-                 nb_qe=nbs[1],
+                 radius=params['radius'],
+                 nf_stdf=params['nchannels'][0],
+                 nb_stdf=params['nblocks'][0],
+                 nf_stdf_out=params['nchannels'][1],
+                 nf_qe=params['nchannels'][2],
+                 nb_qe=params['nblocks'][1],
              ),
              pixel_loss=dict(type='CharbonnierLoss',
                              loss_weight=1.0,
@@ -32,7 +31,7 @@ model = dict(type='BasicRestorerVQE',
 
 # model training and testing settings
 train_cfg = None
-test_cfg = dict(metrics=['PSNR', 'SSIM'], crop_border=rescale)
+test_cfg = dict(metrics=['PSNR', 'SSIM'], crop_border=1)
 
 # dataset settings
 train_pipeline = [
@@ -41,18 +40,14 @@ train_pipeline = [
          key='lq',
          channel_order='rgb',
          backend='pillow'),
-    dict(type='LoadImageFromFile',
+    dict(type='LoadImageFromFileList',
          io_backend='disk',
          key='gt',
          channel_order='rgb',
-         backend='pillow'
-         ),  # gt is a single image for Vimeo90KTripletCenterGTDataset
+         backend='pillow'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
-    dict(type='PairedRandomCrop', gt_patch_size=ps),
-    dict(type='FramesToTensor', keys=['lq']),
-    dict(type='ImageToTensor',
-         keys=['gt'
-               ]),  # gt is a single image for Vimeo90KTripletCenterGTDataset
+    dict(type='PairedRandomCrop', gt_patch_size=params['patchsize']),
+    dict(type='FramesToTensor', keys=['lq', 'gt']),
     dict(type='Collect',
          keys=['lq', 'gt'],
          meta_keys=['lq_path', 'gt_path', 'key'])
@@ -63,28 +58,26 @@ test_pipeline = [
          key='lq',
          channel_order='rgb',
          backend='pillow'),
-    dict(type='LoadImageFromFile',
+    dict(type='LoadImageFromFileList',
          io_backend='disk',
          key='gt',
          channel_order='rgb',
-         backend='pillow'
-         ),  # gt is a single image for Vimeo90KTripletCenterGTDataset
+         backend='pillow'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
-    dict(type='FramesToTensor', keys=['lq']),
-    dict(type='ImageToTensor',
-         keys=['gt'
-               ]),  # gt is a single image for Vimeo90KTripletCenterGTDataset
+    dict(type='FramesToTensor', keys=['lq', 'gt']),
     dict(type='Collect',
          keys=['lq', 'gt'],
          meta_keys=['lq_path', 'gt_path', 'key'])
 ]
 
-dataset_type = 'Vimeo90KTripletCenterGTDataset'
+dataset_type = 'PairedSameSizeVimeo90KTripletDataset'
 dataset_gt_dir = 'data/vimeo_triplet'
 dataset_lq_dir = 'data/vimeo_triplet_lq'
 
-data = dict(workers_per_gpu=bs // ngpus,
-            train_dataloader=dict(samples_per_gpu=bs // ngpus, drop_last=True),
+batchsize_gpu = params['batchsize'] // params['ngpus']
+data = dict(workers_per_gpu=batchsize_gpu,
+            train_dataloader=dict(samples_per_gpu=batchsize_gpu,
+                                  drop_last=True),
             val_dataloader=dict(samples_per_gpu=1),
             test_dataloader=dict(samples_per_gpu=1),
             train=dict(type='RepeatDataset',
@@ -96,51 +89,45 @@ data = dict(workers_per_gpu=bs // ngpus,
                            ann_file=f'{dataset_lq_dir}/tri_trainlist.txt',
                            pipeline=train_pipeline,
                            test_mode=False,
-                           filename_tmpl='{}.png')),
+                           filename_tmpl='{}.png',
+                           edge_padding=True,
+                           center_gt=True)),
             val=dict(type=dataset_type,
                      folder=f'{dataset_lq_dir}/sequences',
                      gt_folder=f'{dataset_gt_dir}/sequences',
                      ann_file=f'{dataset_lq_dir}/tri_validlist.txt',
                      pipeline=test_pipeline,
                      test_mode=True,
-                     filename_tmpl='{}.png'),
+                     filename_tmpl='{}.png',
+                     edge_padding=True,
+                     center_gt=True),
             test=dict(type=dataset_type,
                       folder=f'{dataset_lq_dir}/sequences',
                       gt_folder=f'{dataset_gt_dir}/sequences',
                       ann_file=f'{dataset_lq_dir}/tri_testlist.txt',
                       pipeline=test_pipeline,
                       test_mode=True,
-                      filename_tmpl='{}.png'))
+                      filename_tmpl='{}.png',
+                      edge_padding=True,
+                      center_gt=True))
 
 # optimizer
 optimizers = dict(generator=dict(type='Adam', lr=1e-4, betas=(0.9, 0.999)))
 
 # learning policy
-total_iters = niter_k * 1000
-lr_config = dict(
-    policy='CosineRestart',
-    by_epoch=False,
-    periods=[total_iters],
-    min_lr=1e-7,
-)
+total_iters = params['kiters'] * 1000
+lr_config = dict(policy='CosineRestart',
+                 by_epoch=False,
+                 periods=[total_iters],
+                 min_lr=1e-7)
 
-checkpoint_config = dict(
-    interval=5000,
-    save_optimizer=True,
-    by_epoch=False,
-)
-evaluation = dict(
-    interval=5000,
-    save_image=False,
-    gpu_collect=True,
-)
-log_config = dict(
-    interval=100,
-    hooks=[
-        dict(type='TextLoggerHook', by_epoch=False),
-        dict(type='TensorboardLoggerHook'),
-    ],
-)
+checkpoint_config = dict(interval=5000, save_optimizer=True, by_epoch=False)
+evaluation = dict(interval=5000, save_image=False, gpu_collect=True)
+log_config = dict(interval=100,
+                  hooks=[
+                      dict(type='TextLoggerHook', by_epoch=False),
+                      dict(type='TensorboardLoggerHook')
+                  ])
 visual_config = None
 
 # runtime settings
