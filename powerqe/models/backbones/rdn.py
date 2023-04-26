@@ -139,7 +139,6 @@ class RDNQE(BaseNet):
         Returns:
             Tensor: Forward results.
         """
-
         x = self.downscale(x)
 
         sfe1 = self.sfe1(x)

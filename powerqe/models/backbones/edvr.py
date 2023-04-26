@@ -40,7 +40,6 @@ class EDVRNetQE(EDVRNet):
         Difference to that of EDVRNet:
         1. Comment all upsamplings since the input is with high resolution.
         """
-
         n, t, c, h, w = x.size()
         assert h % 4 == 0 and w % 4 == 0, (
             'The height and width of inputs should be a multiple of 4, '

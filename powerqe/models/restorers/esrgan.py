@@ -53,7 +53,6 @@ class ESRGANQE(BasicRestorerQE):
 
         Therefore ^generator. must be removed.
         """
-
         self.generator.init_weights(pretrained=pretrained,
                                     revise_keys=[(r'^generator\.', ''),
                                                  (r'^module\.', '')])
@@ -62,7 +61,6 @@ class ESRGANQE(BasicRestorerQE):
 
     def train_step(self, data_batch, optimizer):
         """train_step of ESRGAN in mmedit."""
-
         # data
         lq = data_batch['lq']
         gt = data_batch['gt']

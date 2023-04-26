@@ -61,7 +61,6 @@ class PerceptualLossGray(PerceptualLoss):
         Returns:
             torch.Tensor: Gram matrix.
         """
-
         (n, c, h, w) = x.size()
         features = x.view(n, c, w * h)
         features_t = features.transpose(1, 2)

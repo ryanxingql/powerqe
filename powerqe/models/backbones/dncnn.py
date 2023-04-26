@@ -74,5 +74,4 @@ class DnCNN(BaseNet):
         Returns:
             Tensor: Forward results.
         """
-
         return self.layers(x) + x

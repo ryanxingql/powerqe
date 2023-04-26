@@ -132,7 +132,6 @@ class MFQEv2(BaseNet):
         Returns:
             Tensor: Out center frame with shape (n, c, h, w).
         """
-
         # alignment
         center_frm = x[:, 1, ...]  # n c=3 h w
         aligned_left_pqf = self.align_frm(inp_frm=x[:, 0, ...],

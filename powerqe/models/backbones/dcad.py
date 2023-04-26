@@ -56,5 +56,4 @@ class DCAD(BaseNet):
         Returns:
             Tensor: Forward results.
         """
-
         return self.layers(x) + x

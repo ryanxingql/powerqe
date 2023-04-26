@@ -16,7 +16,6 @@ class BaseNet(nn.Module):
             strict (boo, optional): Whether strictly load the pretrained model.
                 Defaults to True.
         """
-
         if isinstance(pretrained, str):
             logger = get_root_logger()
             load_checkpoint(self, pretrained, strict=strict, logger=logger)

@@ -214,7 +214,6 @@ class STDFNet(BaseNet):
         Returns:
             Tensor: Out center frame with shape (n, c, h, w).
         """
-
         out = self.stdf(x)
         out = self.qe_net(out)
         return out + x[:, self.radius, ...]  # residual learning

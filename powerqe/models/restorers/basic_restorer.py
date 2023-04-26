@@ -100,7 +100,6 @@ class BasicRestorerQE(BasicRestorer):
 
         New args: lq (Tensor): LQ Tensor with shape (n, c, h, w).
         """
-
         crop_border = self.test_cfg.crop_border
 
         output = tensor2img(output)
@@ -128,6 +127,7 @@ class BasicRestorerQE(BasicRestorer):
         1. Support unfolding.
         2. Save LQ, output, and GT.
         """
+        # obtain output
         if self.test_cfg is not None and 'unfolding' in self.test_cfg:
             unfold_patch_sz = self.test_cfg.unfolding.patch_sz
             lq_pad, pad_info = pad_img(lq, unfold_patch_sz)
@@ -152,13 +152,11 @@ class BasicRestorerQE(BasicRestorer):
         else:
             output = self.generator(lq)
 
+        # eval and record numerical results
         if self.test_cfg is not None and self.test_cfg.get('metrics', None):
             assert gt is not None, 'Evaluation with metrics must have GT.'
-            results = dict(eval_result=self.evaluate(
-                output=output,
-                gt=gt,
-                lq=lq,
-            ))
+            results = dict(
+                eval_result=self.evaluate(output=output, gt=gt, lq=lq))
         else:
             results = dict(lq=lq.cpu(), output=output.cpu())
             if gt is not None:

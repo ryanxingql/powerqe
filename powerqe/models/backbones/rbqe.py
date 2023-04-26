@@ -34,7 +34,6 @@ class ECA(nn.Module):
         -> B C 1 -> B 1 C -> conv (just like FC, but ks=3)
         -> B 1 C -> B C 1 -> B C 1 1
         """
-
         logic = self.avg_pool(x)
         logic = self.conv(logic.squeeze(-1).transpose(-1, -2)).transpose(
             -1, -2).unsqueeze(-1)
@@ -615,7 +614,6 @@ class RBQE(BaseNet):
         -1: output all images from all outputs for training.
         0, 1, ..., (self.nlevel-1): output from the assigned exit.
         """
-
         if self.if_only_last_output:
             assert idx_out is None, ('You cannot indicate the exit since the'
                                      ' network has only a single exit.')
