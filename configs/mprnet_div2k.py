@@ -1,14 +1,12 @@
 from .script import generate_exp_name
 
 params = dict(batchsize=16, ngpus=1, patchsize=128, kiters=300, nchannels=96)
-
 exp_name = generate_exp_name('mprnet_div2k', params)
 
 assert params['batchsize'] % params['ngpus'] == 0, (
     'Samples in a batch should better be evenly'
     ' distributed among all GPUs.')
 
-# model settings
 model = dict(type='BasicRestorerQE',
              generator=dict(type='MPRNet',
                             in_c=3,
@@ -18,16 +16,14 @@ model = dict(type='BasicRestorerQE',
                              loss_weight=1.0,
                              reduction='mean'))
 
-# model training and testing settings
 train_cfg = None
 test_cfg = dict(
     metrics=['PSNR', 'SSIM'],
     crop_border=1,
-    unfolding=dict(patch_sz=params['patchsize'],
+    unfolding=dict(patchsize=params['patchsize'],
                    splits=4)  # to save memory for testing
 )
 
-# dataset settings
 train_pipeline = [
     dict(type='LoadImageFromFile',
          io_backend='disk',
@@ -109,10 +105,7 @@ data = dict(workers_per_gpu=batchsize_gpu,
                       filename_tmpl='{}.png',
                       test_mode=True))
 
-# optimizer
 optimizers = dict(generator=dict(type='Adam', lr=2e-4, betas=(0.9, 0.999)))
-
-# learning policy
 total_iters = params['kiters'] * 1000
 lr_config = dict(policy='CosineRestart',
                  by_epoch=False,
@@ -128,7 +121,6 @@ log_config = dict(interval=100,
                   ])
 visual_config = None
 
-# runtime settings
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
 work_dir = f'work_dirs/{exp_name}'

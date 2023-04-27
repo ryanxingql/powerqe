@@ -8,14 +8,12 @@ params = dict(batchsize=16,
               reduction=16,
               nblocks=10,
               ngroups=20)
-
 exp_name = generate_exp_name('san_div2k', params)
 
 assert params['batchsize'] % params['ngpus'] == 0, (
     'Samples in a batch should better be evenly'
     ' distributed among all GPUs.')
 
-# model settings
 model = dict(type='BasicRestorerQE',
              generator=dict(type='SAN',
                             n_resgroups=params['ngroups'],
@@ -31,16 +29,14 @@ model = dict(type='BasicRestorerQE',
                              loss_weight=1.0,
                              reduction='mean'))
 
-# model training and testing settings
 train_cfg = None
 test_cfg = dict(
     metrics=['PSNR', 'SSIM'],
     crop_border=1,
-    unfolding=dict(patch_sz=params['patchsize'],
+    unfolding=dict(patchsize=params['patchsize'],
                    splits=16)  # to save memory for testing
 )
 
-# dataset settings
 train_pipeline = [
     dict(type='LoadImageFromFile',
          io_backend='disk',
@@ -60,8 +56,8 @@ train_pipeline = [
          direction='horizontal'),
     dict(type='Flip', keys=['lq', 'gt'], flip_ratio=0.5, direction='vertical'),
     dict(type='RandomTransposeHW', keys=['lq', 'gt'], transpose_ratio=0.5),
-    dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path']),
-    dict(type='ImageToTensor', keys=['lq', 'gt'])
+    dict(type='ImageToTensor', keys=['lq', 'gt']),
+    dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path'])
 ]
 valid_pipeline = [
     dict(type='LoadImageFromFile',
@@ -76,8 +72,8 @@ valid_pipeline = [
          channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
     dict(type='PairedCenterCrop', gt_patch_size=params['patchsize']),
-    dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path']),
-    dict(type='ImageToTensor', keys=['lq', 'gt'])
+    dict(type='ImageToTensor', keys=['lq', 'gt']),
+    dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path'])
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile',
@@ -91,8 +87,8 @@ test_pipeline = [
          flag='color',
          channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
-    dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path']),
-    dict(type='ImageToTensor', keys=['lq', 'gt'])
+    dict(type='ImageToTensor', keys=['lq', 'gt']),
+    dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path'])
 ]
 
 batchsize_gpu = params['batchsize'] // params['ngpus']
@@ -122,10 +118,7 @@ data = dict(workers_per_gpu=batchsize_gpu,
                       filename_tmpl='{}.png',
                       test_mode=True))
 
-# optimizer
 optimizers = dict(generator=dict(type='Adam', lr=2e-4, betas=(0.9, 0.999)))
-
-# learning policy
 total_iters = params['kiters'] * 1000
 lr_config = dict(policy='CosineRestart',
                  by_epoch=False,
@@ -141,7 +134,6 @@ log_config = dict(interval=100,
                   ])
 visual_config = None
 
-# runtime settings
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
 work_dir = f'work_dirs/{exp_name}'

@@ -36,7 +36,7 @@ class Interpolate(nn.Module):
 class RDNQE(BaseNet):
     """RDN for quality enhancement.
 
-    Difference to the `RDN` in mmedit:
+    Differences to the `RDN` in mmedit:
     - Support rescaling before/after enhancement.
 
     New args:

@@ -13,7 +13,7 @@ from .registry import DATASETS
 class PairedSameSizeVimeo90KTripletDataset(BaseVFIDataset):
     """Paired Vimeo-90K triplet dataset. GT and LQ are with the same size.
 
-    Difference to the `VFIVimeo90KDataset` in mmedit:
+    Differences to the `VFIVimeo90KDataset` in mmedit:
     - Load GT.
     - Support different extensions between GT and LQ by `filename_tmpl`.
     - Use the `Compose` in powerqe.
@@ -58,7 +58,7 @@ class PairedSameSizeVimeo90KTripletDataset(BaseVFIDataset):
     def __getitem__(self, idx):
         """Get a sample.
 
-        Difference to that of `BaseVFIDataset`:
+        Differences to that of `BaseVFIDataset`:
         - Set `results['scale']` to `1` for `PairedRandomCrop`.
         """
         results = copy.deepcopy(self.data_infos[idx])
@@ -70,7 +70,7 @@ class PairedSameSizeVimeo90KTripletDataset(BaseVFIDataset):
     def load_annotations(self):
         """Load annotations and record samples.
 
-        Difference to that of `VFIVimeo90KDataset`:
+        Differences to that of `VFIVimeo90KDataset`:
         - Load GT.
         - Support different extensions between GT and LQ
         by `self.filename_tmpl`.
@@ -142,7 +142,7 @@ class PairedSameSizeVimeo90KTripletKeyFrameDataset(
         PairedSameSizeVimeo90KTripletDataset):
     """Paired Vimeo-90K triplet dataset. GT and LQ are with the same size.
 
-    Difference to `PairedSameSizeVimeo90KTripletDataset`:
+    Differences to `PairedSameSizeVimeo90KTripletDataset`:
     - Use high-quality key frames instead of neighboring frames.
 
     New args:
@@ -188,7 +188,7 @@ class PairedSameSizeVimeo90KTripletKeyFrameDataset(
     def load_annotations(self):
         """Load annotations and record samples.
 
-        Difference to that of `Vimeo90KTripletCenterGTDataset`:
+        Differences to that of `Vimeo90KTripletCenterGTDataset`:
         - Record high-quality frames instead of neighboring frames.
         """
         # get keys

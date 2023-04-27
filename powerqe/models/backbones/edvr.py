@@ -38,7 +38,7 @@ class EDVRNetQE(EDVRNet):
     def forward(self, x):
         """Forward function.
 
-        Difference to that of `EDVRNet`:
+        Differences to that of `EDVRNet`:
         - Comment all upsamplings since the input is with high resolution.
         """
         n, t, c, h, w = x.size()

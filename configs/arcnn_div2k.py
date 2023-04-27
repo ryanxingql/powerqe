@@ -6,14 +6,12 @@ params = dict(batchsize=32,
               kiters=1000,
               nchannels=[64, 32, 16],
               kernelsize=[9, 7, 1, 5])
-
 exp_name = generate_exp_name('arcnn_div2k', params)
 
 assert params['batchsize'] % params['ngpus'] == 0, (
     'Samples in a batch should better be evenly'
     ' distributed among all GPUs.')
 
-# model settings
 model = dict(type='BasicRestorerQE',
              generator=dict(type='ARCNN',
                             in_channels=3,
@@ -27,11 +25,9 @@ model = dict(type='BasicRestorerQE',
                             out_kernel_size=params['kernelsize'][3]),
              pixel_loss=dict(type='L1Loss', loss_weight=1.0, reduction='mean'))
 
-# model training and testing settings
 train_cfg = None
 test_cfg = dict(metrics=['PSNR', 'SSIM'], crop_border=1)
 
-# dataset settings
 train_pipeline = [
     dict(type='LoadImageFromFile',
          io_backend='disk',
@@ -97,10 +93,7 @@ data = dict(workers_per_gpu=batchsize_gpu,
                       filename_tmpl='{}.png',
                       test_mode=True))
 
-# optimizer
 optimizers = dict(generator=dict(type='Adam', lr=1e-4, betas=(0.9, 0.999)))
-
-# learning policy
 total_iters = params['kiters'] * 1000
 lr_config = dict(policy='CosineRestart',
                  by_epoch=False,
@@ -116,7 +109,6 @@ log_config = dict(interval=100,
                   ])
 visual_config = None
 
-# runtime settings
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
 work_dir = f'work_dirs/{exp_name}'

@@ -11,7 +11,7 @@ class PerceptualLossGray(PerceptualLoss):
     def forward(self, x, gt):
         """Forward.
 
-        Difference to that of `PerceptualLoss`:
+        Differences to that of `PerceptualLoss`:
         - Input `x` is a gray-scale image.
         """
         # gray -> color

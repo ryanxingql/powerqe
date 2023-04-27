@@ -11,13 +11,13 @@ from .registry import DATASETS
 class PairedSameSizeImageDataset(SRFolderDataset):
     """Paired image dataset. GT and LQ are with the same size.
 
-    Difference to `SRFolderDataset`:
+    Differences to `SRFolderDataset`:
     - `scale` is set to `1`.
-    - Support different extensions between GT and LQ.
+    - Support different extensions between GT and LQ. See `load_annotations`.
 
     Args:
-    - `lq_folder` (str | :obj:`Path`): Path to a lq folder.
-    - `gt_folder` (str | :obj:`Path`): Path to a gt folder.
+    - `lq_folder` (str | `Path` object): Path to a lq folder.
+    - `gt_folder` (str | `Path` object): Path to a gt folder.
     - `pipeline` (List[dict | callable]): A sequence of data transformations.
     - `test_mode` (bool): Store `True` when building test dataset.
     Default: `False`.
@@ -30,34 +30,35 @@ class PairedSameSizeImageDataset(SRFolderDataset):
                  pipeline,
                  test_mode=False,
                  filename_tmpl='{}.png'):
-        super().__init__(
-            lq_folder=lq_folder,
-            gt_folder=gt_folder,
-            pipeline=[],  # BaseDataset cannot accept any new
-            # pipelines outside MMEdit
-            scale=1,
-            test_mode=test_mode,
-            filename_tmpl=filename_tmpl)
-
-        # BaseDataset cannot accept any new pipelines outside MMEdit
-        # we have to create pipeline manually
+        # `BaseDataset` cannot accept any pipelines outside mmedit
+        # pass `[]` into `__init__`
+        super().__init__(lq_folder=lq_folder,
+                         gt_folder=gt_folder,
+                         pipeline=[],
+                         scale=1,
+                         test_mode=test_mode,
+                         filename_tmpl=filename_tmpl)
         self.pipeline = Compose(pipeline)
 
     def load_annotations(self):
-        """Load annotations and record samples.
+        """Scan GT and LQ folders and record samples.
 
-        Difference to that of `SRFolderDataset`:
-        - Support different extensions between GT and LQ
-        by `self.filename_tmpl`.
+        The GT folder includes all images by default.
+        LQ images are matches by `self.filename_tmpl`.
+        LQ images can use a different image extension than GT images,
+        which is indicated in `self.filename_tmpl`.
+
+        Returns:
+        - list[dict]: Sample information.
         """
-        data_infos = []
-        lq_paths = self.scan_folder(self.lq_folder)
         gt_paths = self.scan_folder(self.gt_folder)
-        if len(lq_paths) != len(gt_paths):
+        lq_paths = self.scan_folder(self.lq_folder)
+        if len(gt_paths) != len(lq_paths):
             raise ValueError(
                 'GT and LQ folders should have the same number of images;'
-                f' received `{len(lq_paths)}` vs. `{len(gt_paths)}`.')
+                f' received `{len(gt_paths)}` vs. `{len(lq_paths)}`.')
 
+        data_infos = []
         for gt_path in gt_paths:
             basename, _ = osp.splitext(osp.basename(gt_path))
             lq_path = osp.join(self.lq_folder,
@@ -65,5 +66,5 @@ class PairedSameSizeImageDataset(SRFolderDataset):
             if lq_path not in lq_paths:
                 raise FileNotFoundError(
                     f'Cannot find `{lq_path}` in `{self.lq_folder}`.')
-            data_infos.append(dict(lq_path=lq_path, gt_path=gt_path))
+            data_infos.append(dict(gt_path=gt_path, lq_path=lq_path))
         return data_infos

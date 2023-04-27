@@ -11,7 +11,7 @@ from ..registry import PIPELINES
 class Compose(MMEditCompose):
     """Compose a data pipeline with a sequence of transforms.
 
-    Difference to `MMEditCompose`:
+    Differences to `MMEditCompose`:
     - Use the `PIPELINES` in powerqe.
     """
 
