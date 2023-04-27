@@ -29,6 +29,7 @@ class EDVRNetQE(EDVRNet):
                          num_blocks_reconstruction=num_blocks_reconstruction,
                          center_frame_idx=center_frame_idx,
                          with_tsa=with_tsa)
+
         # remove unused parameters
         delattr(self, 'upsample1')
         delattr(self, 'upsample2')
@@ -37,13 +38,13 @@ class EDVRNetQE(EDVRNet):
     def forward(self, x):
         """Forward function.
 
-        Difference to that of EDVRNet:
-        1. Comment all upsamplings since the input is with high resolution.
+        Difference to that of `EDVRNet`:
+        - Comment all upsamplings since the input is with high resolution.
         """
         n, t, c, h, w = x.size()
-        assert h % 4 == 0 and w % 4 == 0, (
-            'The height and width of inputs should be a multiple of 4, '
-            f'but got {h} and {w}.')
+        if h % 4 != 0 or w % 4 != 0:
+            raise ValueError(
+                f'Height (`{h}`) and width (`{w}`) should be divisible by 4.')
 
         x_center = x[:, self.center_frame_idx, :, :, :].contiguous()
 

@@ -11,12 +11,15 @@ from .base import BaseNet
 
 
 class Interpolate(nn.Module):
-    """
-    https://discuss.pytorch.org/t/using-nn-function-interpolate-inside-nn-sequential/23588/2
+    """Interpolation.
+
+    https://discuss.pytorch.org/t
+    /using-nn-function-interpolate-inside-nn-sequential/23588/2
     """
 
     def __init__(self, scale_factor, mode):
-        super(Interpolate, self).__init__()
+        super().__init__()
+
         self.interp = nn.functional.interpolate
         self.scale_factor = scale_factor
         self.mode = mode
@@ -33,10 +36,11 @@ class Interpolate(nn.Module):
 class RDNQE(BaseNet):
     """RDN for quality enhancement.
 
-    Difference to the RDN in mmedit:
-    1. Support rescaling before/after enhancement.
+    Difference to the `RDN` in mmedit:
+    - Support rescaling before/after enhancement.
 
-    New args: rescale (int): rescaling factor.
+    New args:
+    - `rescale` (int): Rescaling factor.
     """
 
     def __init__(
@@ -46,18 +50,21 @@ class RDNQE(BaseNet):
             out_channels,
             mid_channels=64,
             num_blocks=8,
-            #  upscale_factor=4,
+            # upscale_factor=4,
             num_layers=8,
             channel_growth=64):
-
         super().__init__()
+
         self.rescale = rescale
         self.mid_channels = mid_channels
         self.channel_growth = channel_growth
         self.num_blocks = num_blocks
         self.num_layers = num_layers
 
-        assert math.log2(rescale).is_integer()
+        if not math.log2(rescale).is_integer():
+            raise ValueError(
+                f'Rescale factor (`{rescale}`) should be a power of 2.')
+
         if rescale == 1:
             self.downscale = nn.Identity()
         else:
@@ -91,26 +98,6 @@ class RDNQE(BaseNet):
                       padding=3 // 2))
 
         # up-sampling
-        # assert 2 <= upscale_factor <= 4
-        # if upscale_factor == 2 or upscale_factor == 4:
-        #     self.upscale = []
-        #     for _ in range(upscale_factor // 2):
-        #         self.upscale.extend([
-        #             nn.Conv2d(
-        #                 self.mid_channels,
-        #                 self.mid_channels * (2**2),
-        #                 kernel_size=3,
-        #                 padding=3 // 2),
-        #             nn.PixelShuffle(2)
-        #         ])
-        #     self.upscale = nn.Sequential(*self.upscale)
-        # else:
-        #     self.upscale = nn.Sequential(
-        #         nn.Conv2d(
-        #             self.mid_channels,
-        #             self.mid_channels * (upscale_factor**2),
-        #             kernel_size=3,
-        #             padding=3 // 2), nn.PixelShuffle(upscale_factor))
         if rescale == 1:
             self.upscale = nn.Identity()
         else:
@@ -131,13 +118,13 @@ class RDNQE(BaseNet):
                                 padding=3 // 2)
 
     def forward(self, x):
-        """Forward function.
+        """Forward.
 
         Args:
-            x (Tensor): Input tensor with shape (n, c, h, w).
+        - `x` (Tensor): Input tensor with the shape of (N, C, H, W).
 
         Returns:
-            Tensor: Forward results.
+        - `x` (Tensor)
         """
         x = self.downscale(x)
 

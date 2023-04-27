@@ -10,12 +10,11 @@ class DnCNN(BaseNet):
     """DnCNN network structure.
 
     Args:
-        in_channels (int): Channel number of inputs.
-        out_channels (int): Channel number of outputs.
-        mid_channels (int): Channel number of intermediate features.
-            Default: 64.
-        num_blocks (int): Block number in the trunk network. Default: 15.
-        if_bn (bool): If use BN layer. Default: False.
+    - `in_channels` (int): Channel number of inputs.
+    - `out_channels` (int): Channel number of outputs.
+    - `mid_channels` (int): Channel number of intermediate features.
+    - `num_blocks` (int): Block number in the trunk network.
+    - `if_bn` (bool): If use BN layer. Default: `False`.
     """
 
     def __init__(self,
@@ -24,7 +23,6 @@ class DnCNN(BaseNet):
                  mid_channels=64,
                  num_blocks=15,
                  if_bn=False):
-
         super().__init__()
 
         layers = []
@@ -60,7 +58,7 @@ class DnCNN(BaseNet):
         # output conv
         layers += [
             nn.ReLU(inplace=True),
-            nn.Conv2d(mid_channels, out_channels, 3, padding=1),
+            nn.Conv2d(mid_channels, out_channels, 3, padding=1)
         ]
 
         self.layers = nn.Sequential(*layers)
@@ -69,9 +67,10 @@ class DnCNN(BaseNet):
         """Forward function.
 
         Args:
-            x (Tensor): Input tensor with shape (n, c, h, w).
+        - `x` (Tensor): Input tensor with the shape of (N, C, H, W).
 
         Returns:
-            Tensor: Forward results.
+        - `out` (Tensor)
         """
-        return self.layers(x) + x
+        out = self.layers(x) + x
+        return out

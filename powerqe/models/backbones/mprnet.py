@@ -21,7 +21,8 @@ def conv(in_channels, out_channels, kernel_size, bias=False, stride=1):
 class CALayer(nn.Module):
 
     def __init__(self, channel, reduction=16, bias=False):
-        super(CALayer, self).__init__()
+        super().__init__()
+
         # global average pooling: feature --> point
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
         # feature channel downscale and upscale --> channel weight
@@ -41,7 +42,8 @@ class CALayer(nn.Module):
 class CAB(nn.Module):
 
     def __init__(self, n_feat, kernel_size, reduction, bias, act):
-        super(CAB, self).__init__()
+        super().__init__()
+
         modules_body = []
         modules_body.append(conv(n_feat, n_feat, kernel_size, bias=bias))
         modules_body.append(act)
@@ -61,7 +63,8 @@ class CAB(nn.Module):
 class SAM(nn.Module):
 
     def __init__(self, n_feat, kernel_size, bias):
-        super(SAM, self).__init__()
+        super().__init__()
+
         self.conv1 = conv(n_feat, n_feat, kernel_size, bias=bias)
         self.conv2 = conv(n_feat, 3, kernel_size, bias=bias)
         self.conv3 = conv(3, n_feat, kernel_size, bias=bias)
@@ -100,18 +103,8 @@ def pad_and_add(x, y):
         x_pads[0] = (-diff) // 2
         x_pads[1] = (-diff) - (-diff) // 2
 
-    x = F.pad(
-        input=x,
-        pad=x_pads,
-        mode='constant',
-        value=0,
-    )
-    y = F.pad(
-        input=y,
-        pad=y_pads,
-        mode='constant',
-        value=0,
-    )
+    x = F.pad(input=x, pad=x_pads, mode='constant', value=0)
+    y = F.pad(input=y, pad=y_pads, mode='constant', value=0)
     return x + y
 
 
@@ -119,7 +112,7 @@ class Encoder(nn.Module):
 
     def __init__(self, n_feat, kernel_size, reduction, act, bias,
                  scale_unetfeats, csff):
-        super(Encoder, self).__init__()
+        super().__init__()
 
         self.encoder_level1 = [
             CAB(n_feat, kernel_size, reduction, bias=bias, act=act)
@@ -202,7 +195,7 @@ class Decoder(nn.Module):
 
     def __init__(self, n_feat, kernel_size, reduction, act, bias,
                  scale_unetfeats):
-        super(Decoder, self).__init__()
+        super().__init__()
 
         self.decoder_level1 = [
             CAB(n_feat, kernel_size, reduction, bias=bias, act=act)
@@ -258,7 +251,8 @@ class Decoder(nn.Module):
 class DownSample(nn.Module):
 
     def __init__(self, in_channels, s_factor):
-        super(DownSample, self).__init__()
+        super().__init__()
+
         self.down = nn.Sequential(
             nn.Upsample(scale_factor=0.5, mode='bilinear',
                         align_corners=False),
@@ -277,7 +271,8 @@ class DownSample(nn.Module):
 class UpSample(nn.Module):
 
     def __init__(self, in_channels, s_factor):
-        super(UpSample, self).__init__()
+        super().__init__()
+
         self.up = nn.Sequential(
             nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),
             nn.Conv2d(in_channels + s_factor,
@@ -295,7 +290,8 @@ class UpSample(nn.Module):
 class SkipUpSample(nn.Module):
 
     def __init__(self, in_channels, s_factor):
-        super(SkipUpSample, self).__init__()
+        super().__init__()
+
         self.up = nn.Sequential(
             nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),
             nn.Conv2d(in_channels + s_factor,
@@ -314,7 +310,8 @@ class SkipUpSample(nn.Module):
 class ORB(nn.Module):
 
     def __init__(self, n_feat, kernel_size, reduction, act, bias, num_cab):
-        super(ORB, self).__init__()
+        super().__init__()
+
         modules_body = []
         modules_body = [
             CAB(n_feat, kernel_size, reduction, bias=bias, act=act)
@@ -333,7 +330,7 @@ class ORSNet(nn.Module):
 
     def __init__(self, n_feat, scale_orsnetfeats, kernel_size, reduction, act,
                  bias, scale_unetfeats, num_cab):
-        super(ORSNet, self).__init__()
+        super().__init__()
 
         self.orb1 = ORB(n_feat + scale_orsnetfeats, kernel_size, reduction,
                         act, bias, num_cab)
@@ -407,7 +404,7 @@ class MPRNet(BaseNet):
                  kernel_size=3,
                  reduction=4,
                  bias=False):
-        super(MPRNet, self).__init__()
+        super().__init__()
 
         act = nn.PReLU()
         self.shallow_feat1 = nn.Sequential(

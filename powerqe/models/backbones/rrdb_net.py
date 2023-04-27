@@ -18,8 +18,8 @@ class RRDBNetQE(RRDBNet):
                      revise_keys=[(r'^module\.', '')]):
         """Init weights for models.
 
-        Accept revise_keys for restorer ESRGANQE. Default value is equal to
-        that of load_checkpoint.
+        Accept `revise_keys` for restorer `ESRGANQE`. Default value is equal to
+        that of `load_checkpoint`.
         """
         if isinstance(pretrained, str):
             logger = get_root_logger()
@@ -38,5 +38,5 @@ class RRDBNetQE(RRDBNet):
             ]:
                 default_init_weights(m, 0.1)
         else:
-            raise TypeError('"pretrained" must be a str or None.'
-                            f' But received {type(pretrained)}.')
+            raise TypeError('`pretrained` must be a string or `None`;'
+                            f' received `{type(pretrained)}`.')

@@ -9,14 +9,11 @@ from .base import BaseNet
 class DCAD(BaseNet):
     """DCAD network structure.
 
-    Paper: https://ieeexplore.ieee.org/document/7923714
-
     Args:
-        in_channels (int): Channel number of inputs.
-        out_channels (int): Channel number of outputs.
-        mid_channels (int): Channel number of intermediate features.
-            Default: 64.
-        num_blocks (int): Block number in the trunk network. Default: 8.
+    - `in_channels` (int): Channel number of inputs.
+    - `out_channels` (int): Channel number of outputs.
+    - `mid_channels` (int): Channel number of intermediate features.
+    - `num_blocks` (int): Block number in the trunk network.
     """
 
     def __init__(self,
@@ -24,7 +21,6 @@ class DCAD(BaseNet):
                  out_channels=3,
                  mid_channels=64,
                  num_blocks=8):
-
         super().__init__()
 
         layers = []
@@ -42,7 +38,7 @@ class DCAD(BaseNet):
         # output conv
         layers += [
             nn.ReLU(inplace=False),
-            nn.Conv2d(mid_channels, out_channels, 3, padding=1),
+            nn.Conv2d(mid_channels, out_channels, 3, padding=1)
         ]
 
         self.layers = nn.Sequential(*layers)
@@ -51,9 +47,10 @@ class DCAD(BaseNet):
         """Forward function.
 
         Args:
-            x (Tensor): Input tensor with shape (n, c, h, w).
+        - `x` (Tensor): Input tensor with the shape of (N, C, H, W).
 
         Returns:
-            Tensor: Forward results.
+        - `out` (Tensor)
         """
-        return self.layers(x) + x
+        out = self.layers(x) + x
+        return out

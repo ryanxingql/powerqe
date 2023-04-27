@@ -11,12 +11,14 @@ from ..registry import PIPELINES
 class Compose(MMEditCompose):
     """Compose a data pipeline with a sequence of transforms.
 
-    Difference to MMEditCompose:
-    1. Use the PIPELINES in powerqe.
+    Difference to `MMEditCompose`:
+    - Use the `PIPELINES` in powerqe.
     """
 
     def __init__(self, transforms):
-        assert isinstance(transforms, Sequence)
+        if not isinstance(transforms, Sequence):
+            raise TypeError(
+                '`transforms` should be an instance of `Sequence`.')
         self.transforms = []
         for transform in transforms:
             if isinstance(transform, dict):
@@ -25,5 +27,5 @@ class Compose(MMEditCompose):
             elif callable(transform):
                 self.transforms.append(transform)
             else:
-                raise TypeError(f'"transform" must be callable or a dict,'
-                                f' but got {type(transform)}')
+                raise TypeError('`transform` should be callable or a dict;'
+                                f' received `{type(transform)}`.')

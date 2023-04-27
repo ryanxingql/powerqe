@@ -151,11 +151,19 @@ class _NonLocalBlockND(nn.Module):
                  mode='embedded_gaussian',
                  sub_sample=True,
                  bn_layer=True):
-        super(_NonLocalBlockND, self).__init__()
-        assert dimension in [1, 2, 3]
-        assert mode in [
+        super().__init__()
+
+        supported_dims = [1, 2, 3]
+        if dimension not in supported_dims:
+            raise ValueError(f'Dimension should be in {supported_dims};'
+                             f' received `{dimension}`.')
+
+        supported_modes = [
             'embedded_gaussian', 'gaussian', 'dot_product', 'concatenation'
         ]
+        if mode not in supported_modes:
+            raise NotImplementedError(f'Mode should be in {supported_modes};'
+                                      f' received `{mode}`.')
 
         # print('Dimension: %d, mode: %s' % (dimension, mode))
 
@@ -357,19 +365,19 @@ class NONLocalBlock2D(_NonLocalBlockND):
                  mode='embedded_gaussian',
                  sub_sample=True,
                  bn_layer=True):
-        super(NONLocalBlock2D, self).__init__(in_channels,
-                                              inter_channels=inter_channels,
-                                              dimension=2,
-                                              mode=mode,
-                                              sub_sample=sub_sample,
-                                              bn_layer=bn_layer)
+        super().__init__(in_channels,
+                         inter_channels=inter_channels,
+                         dimension=2,
+                         mode=mode,
+                         sub_sample=sub_sample,
+                         bn_layer=bn_layer)
 
 
 # second-order Channel attention (SOCA)
 class SOCA(nn.Module):
 
     def __init__(self, channel, reduction=8):
-        super(SOCA, self).__init__()
+        super().__init__()
 
         # feature channel downscale and upscale --> channel weight
         self.conv_du = nn.Sequential(
@@ -381,7 +389,7 @@ class SOCA(nn.Module):
         )
 
     def forward(self, x):
-        batch_size, C, h, w = x.shape  # x: NxCxHxW
+        batch_size, C, h, w = x.shape  # (N, C, H, W)
         h1 = 1000
         w1 = 1000
         if h < h1 and w < w1:
@@ -418,10 +426,10 @@ class Nonlocal_CA(nn.Module):
             self,
             in_feat=64,
             inter_feat=32,
-            #  reduction=8,
+            # reduction=8,
             sub_sample=False,
             bn_layer=True):
-        super(Nonlocal_CA, self).__init__()
+        super().__init__()
 
         # nonlocal module
         self.non_local = (NONLocalBlock2D(in_channels=in_feat,
@@ -467,7 +475,7 @@ class RB(nn.Module):
                  act=nn.ReLU(inplace=True),
                  res_scale=1,
                  dilation=2):
-        super(RB, self).__init__()
+        super().__init__()
 
         self.conv_first = nn.Sequential(
             conv(n_feat, n_feat, kernel_size, bias=bias), act,
@@ -487,8 +495,8 @@ class LSRAG(nn.Module):
 
     def __init__(self, conv, n_feat, kernel_size, reduction, act, res_scale,
                  n_resblocks):
-        super(LSRAG, self).__init__()
-        #
+        super().__init__()
+
         self.rcab = nn.ModuleList([
             RB(conv,
                n_feat,
@@ -525,7 +533,7 @@ def default_conv(in_channels, out_channels, kernel_size, bias=True):
 class MeanShift(nn.Conv2d):
 
     def __init__(self, rgb_range, rgb_mean, rgb_std, sign=-1):
-        super(MeanShift, self).__init__(3, 3, kernel_size=1)
+        super().__init__(3, 3, kernel_size=1)
         std = torch.Tensor(rgb_std)
         self.weight.data = torch.eye(3).view(3, 3, 1, 1)
         self.weight.data.div_(std.view(3, 1, 1, 1))
@@ -557,7 +565,7 @@ class Upsampler(nn.Sequential):
         else:
             raise NotImplementedError
 
-        super(Upsampler, self).__init__(*m)
+        super().__init__(*m)
 
 
 @BACKBONES.register_module()
@@ -573,7 +581,7 @@ class SAN(BaseNet):
                  rgb_range=1,
                  n_colors=3,
                  res_scale=1):
-        super(SAN, self).__init__()
+        super().__init__()
 
         conv = default_conv
         act = nn.ReLU(inplace=True)

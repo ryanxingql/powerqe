@@ -13,23 +13,22 @@ from .registry import DATASETS
 class PairedSameSizeVimeo90KTripletDataset(BaseVFIDataset):
     """Paired Vimeo-90K triplet dataset. GT and LQ are with the same size.
 
-    Difference to the VFIVimeo90KDataset in mmedit:
-    1. Load GT.
-    2. Support different ext between GT and LQ by filename_tmpl.
-    3. Use the Compose in powerqe.
+    Difference to the `VFIVimeo90KDataset` in mmedit:
+    - Load GT.
+    - Support different extensions between GT and LQ by `filename_tmpl`.
+    - Use the `Compose` in powerqe.
 
-    Similar to the SRVimeo90KDataset in mmedit.
+    Similar to the `SRVimeo90KDataset` in mmedit.
 
     New args:
-        gt_folder: for GT im2.
-        filename_tmpl (str): Template for each filename of LQ.
-            Default: '{}.png'.
-        edge_padding (bool): if True, record three sub-sequences in
-            annotations. if False, only one three-frame sequence is recorded.
-            Default: False.
-        center_gt (bool): if True, only the center frame is recorded in GT.
-            Note that gt_path is always a list.
-            Default: False.
+    - `gt_folder`: GT folder.
+    - `filename_tmpl` (str): Template for each filename of LQ.
+    Default: `{}.png`.
+    - `edge_padding` (bool): If `True`, record three sub-sequences in
+    annotations. If `False`, only one three-frame sequence is recorded.
+    Default: `False`.
+    - `center_gt` (bool): If `True`, only the center frame is recorded in GT.
+    Note that `gt_path` is always a list. Default: `False`.
     """
 
     def __init__(self,
@@ -59,8 +58,8 @@ class PairedSameSizeVimeo90KTripletDataset(BaseVFIDataset):
     def __getitem__(self, idx):
         """Get a sample.
 
-        Difference to that of BaseVFIDataset:
-        1. Add results['scale'] = 1 for PairedRandomCrop.
+        Difference to that of `BaseVFIDataset`:
+        - Set `results['scale']` to `1` for `PairedRandomCrop`.
         """
         results = copy.deepcopy(self.data_infos[idx])
         results['folder'] = self.folder
@@ -71,9 +70,10 @@ class PairedSameSizeVimeo90KTripletDataset(BaseVFIDataset):
     def load_annotations(self):
         """Load annotations and record samples.
 
-        Difference to that of VFIVimeo90KDataset:
-        1. Load GT.
-        2. Support different ext between GT and LQ by filename_tmpl.
+        Difference to that of `VFIVimeo90KDataset`:
+        - Load GT.
+        - Support different extensions between GT and LQ
+        by `self.filename_tmpl`.
         """
         # get keys
         with open(self.ann_file, 'r') as f:
@@ -142,10 +142,11 @@ class PairedSameSizeVimeo90KTripletKeyFrameDataset(
         PairedSameSizeVimeo90KTripletDataset):
     """Paired Vimeo-90K triplet dataset. GT and LQ are with the same size.
 
-    Difference to PairedSameSizeVimeo90KTripletDataset:
-    1. Use high-quality key frames instead of neighboring frames.
+    Difference to `PairedSameSizeVimeo90KTripletDataset`:
+    - Use high-quality key frames instead of neighboring frames.
 
-    New args: qp_info (dict). See PowerQE doc.
+    New args:
+    - `qp_info` (dict): See doc.
     """
 
     def __init__(self,
@@ -187,8 +188,8 @@ class PairedSameSizeVimeo90KTripletKeyFrameDataset(
     def load_annotations(self):
         """Load annotations and record samples.
 
-        Difference to that of Vimeo90KTripletCenterGTDataset:
-        1. Record high-quality frames instead of neighboring frames.
+        Difference to that of `Vimeo90KTripletCenterGTDataset`:
+        - Record high-quality frames instead of neighboring frames.
         """
         # get keys
         with open(self.ann_file, 'r') as f:
@@ -216,11 +217,7 @@ class PairedSameSizeVimeo90KTripletKeyFrameDataset(
             ]
             gt_path = osp.join(self.gt_folder, key, 'im1.png')
             data_infos.append(
-                dict(
-                    lq_path=lq_path,
-                    gt_path=gt_path,
-                    key=key + '/im1',
-                ))
+                dict(lq_path=lq_path, gt_path=gt_path, key=key + '/im1'))
 
             # GT: im2
             lq_path = [
@@ -230,11 +227,7 @@ class PairedSameSizeVimeo90KTripletKeyFrameDataset(
             ]
             gt_path = osp.join(self.gt_folder, key, 'im2.png')
             data_infos.append(
-                dict(
-                    lq_path=lq_path,
-                    gt_path=gt_path,
-                    key=key + '/im2',
-                ))
+                dict(lq_path=lq_path, gt_path=gt_path, key=key + '/im2'))
 
             # GT: im3
             lq_path = [
@@ -244,10 +237,6 @@ class PairedSameSizeVimeo90KTripletKeyFrameDataset(
             ]
             gt_path = osp.join(self.gt_folder, key, 'im3.png')
             data_infos.append(
-                dict(
-                    lq_path=lq_path,
-                    gt_path=gt_path,
-                    key=key + '/im3',
-                ))
+                dict(lq_path=lq_path, gt_path=gt_path, key=key + '/im3'))
 
         return data_infos
