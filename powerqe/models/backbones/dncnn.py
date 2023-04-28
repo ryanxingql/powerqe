@@ -9,6 +9,11 @@ from .base import BaseNet
 class DnCNN(BaseNet):
     """DnCNN network structure.
 
+    Momentum for `nn.BatchNorm2d` is 0.9 in
+    "https://github.com/cszn/KAIR/blob
+    /7e51c16c6f55ff94b59c218c2af8e6b49fe0668b/models/basicblock.py#L69",
+    but is 0.1 default in PyTorch.
+
     Args:
     - `io_channels` (int): I/O channel number.
     - `mid_channels` (int): Channel number of intermediate features.
@@ -33,17 +38,12 @@ class DnCNN(BaseNet):
             layers.append(nn.ReLU(inplace=True))
             if if_bn:
                 layers += [
-                    # if used before BN, unnecessary bias is turned off
+                    # bias is unnecessary and off due to the following BN
                     nn.Conv2d(mid_channels,
                               mid_channels,
                               3,
                               padding=1,
                               bias=False),
-                    # momentum=0.9 in
-                    # https://github.com/cszn/KAIR/blob/
-                    # 7e51c16c6f55ff94b59c218c2af8e6b49fe0668b/
-                    # models/basicblock.py#L69
-                    # but the default momentum=0.1 in PyTorch
                     nn.BatchNorm2d(num_features=mid_channels,
                                    momentum=0.9,
                                    eps=1e-04,

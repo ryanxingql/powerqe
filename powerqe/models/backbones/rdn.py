@@ -13,8 +13,8 @@ from .base import BaseNet
 class Interpolate(nn.Module):
     """Interpolation.
 
-    https://discuss.pytorch.org/t
-    /using-nn-function-interpolate-inside-nn-sequential/23588/2
+    Ref: "https://discuss.pytorch.org/t
+    /using-nn-function-interpolate-inside-nn-sequential/23588/2"
     """
 
     def __init__(self, scale_factor, mode):

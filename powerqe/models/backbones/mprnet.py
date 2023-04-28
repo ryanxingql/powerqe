@@ -1,4 +1,4 @@
-# https://github.com/swz30/MPRNet/blob/main/Deblurring/MPRNet.py
+# Ref: "https://github.com/swz30/MPRNet/blob/main/Deblurring/MPRNet.py"
 # Modified by RyanXingQL @2022
 import torch
 import torch.nn as nn

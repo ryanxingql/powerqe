@@ -15,7 +15,7 @@ class MFQEv2(BaseNet):
     Note: We use a pre-trained SpyNet instead of the MC subnet in the paper.
     This way, we can train our model without the MC loss.
 
-    Ref: https://github.com/ryanxingql/mfqev2.0/blob/master/net_MFCNN.py
+    Ref: "https://github.com/ryanxingql/mfqev2.0/blob/master/net_MFCNN.py"
 
     Args:
     - `io_channels` (int): I/O channel number.

@@ -13,8 +13,8 @@ from .base import BaseNet
 class ECA(nn.Module):
     """Efficient Channel Attention.
 
-    https://github.com/BangguWu/ECANet/blob
-    /3adf7a99f829ffa2e94a0de1de8a362614d66958/models/eca_module.py#L5
+    Ref: "https://github.com/BangguWu/ECANet/blob
+    /3adf7a99f829ffa2e94a0de1de8a362614d66958/models/eca_module.py#L5"
     """
 
     def __init__(self, k_size=3):

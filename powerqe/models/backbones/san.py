@@ -1,4 +1,4 @@
-# https://github.com/daitao/SAN/blob/master/TestCode/code/model/san.py
+# Ref: "https://github.com/daitao/SAN/blob/master/TestCode/code/model/san.py"
 # Modified by RyanXingQL @2022
 #
 # Part of this code:
