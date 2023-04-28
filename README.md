@@ -34,9 +34,9 @@ git clone --depth 1 --recurse-submodules --shallow-submodules\
 
 Create environment:
 
-- environment.yml
+- "environment.yml"
 - MMEditing (PyTorch + MMCV + MMEdit v0.x)
-- requirements.txt
+- "requirements.txt"
 
 Please refer to the [document](docs/v3.md#create-environment) for detailed installation.
 
