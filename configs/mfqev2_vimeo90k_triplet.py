@@ -1,14 +1,10 @@
-from .script import generate_exp_name
+exp_name = 'mfqev2_vimeo90k_triplet'
 
 params = dict(batchsize=32,
               ngpus=2,
               patchsize=256,
               kiters=600,
               nchannels=[3, 32])
-exp_name = generate_exp_name('mfqev2_vimeo90k_triplet', params)
-assert params['batchsize'] % params['ngpus'] == 0, (
-    'Samples in a batch should better be evenly'
-    ' distributed among all GPUs.')
 
 model = dict(
     type='BasicRestorerVQE',
@@ -35,7 +31,9 @@ train_pipeline = [
          channel_order='rgb',
          backend='pillow'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
-    dict(type='PairedRandomCrop', gt_patch_size=params['patchsize']),
+    dict(type='PairedRandomCropQE',
+         patch_size=params['patchsize'],
+         keys=['lq', 'gt']),
     dict(type='FramesToTensor', keys=['lq', 'gt']),
     dict(type='Collect',
          keys=['lq', 'gt'],
@@ -59,6 +57,9 @@ test_pipeline = [
          meta_keys=['lq_path', 'gt_path', 'key'])
 ]
 
+assert params['batchsize'] % params['ngpus'] == 0, (
+    'Samples in a batch should better be evenly'
+    ' distributed among all GPUs.')
 dataset_type = 'PairedSameSizeVimeo90KTripletDatasetWithQP'
 dataset_gt_dir = 'data/vimeo_triplet'
 dataset_lq_dir = 'data/vimeo_triplet_lq'

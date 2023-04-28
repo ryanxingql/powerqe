@@ -180,8 +180,7 @@ class PairedSameSizeVimeo90KTripletKeyFrameDataset(
                          test_mode=test_mode,
                          filename_tmpl=filename_tmpl)
 
-    @staticmethod
-    def cal_qps(qp_info, nfrms=3):
+    def cal_qps(self, qp_info, nfrms=3):
         # POC 0
         qps = [qp_info['qp'] + qp_info['intra_qp_offset']]
 

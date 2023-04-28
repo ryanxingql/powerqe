@@ -1,4 +1,4 @@
-from .script import generate_exp_name
+exp_name = 'esrgan_div2k_stage2'
 
 params = dict(batchsize=16,
               ngpus=2,
@@ -8,10 +8,6 @@ params = dict(batchsize=16,
               nblocks=23,
               growthfactor=32,
               klrsteps=[50, 100, 200, 300])
-exp_name = generate_exp_name('esrgan_div2k_stage2', params)
-assert params['batchsize'] % params['ngpus'] == 0, (
-    'Samples in a batch should better be evenly'
-    ' distributed among all GPUs.')
 
 stage1_ckpt = (
     'work_dirs/'
@@ -63,7 +59,9 @@ train_pipeline = [
          mean=[0, 0, 0],
          std=[1, 1, 1],
          to_rgb=True),
-    dict(type='PairedRandomCrop', gt_patch_size=params['patchsize']),
+    dict(type='PairedRandomCropQE',
+         patch_size=params['patchsize'],
+         keys=['lq', 'gt']),
     dict(type='Flip',
          keys=['lq', 'gt'],
          flip_ratio=0.5,
@@ -92,6 +90,9 @@ test_pipeline = [
     dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path'])
 ]
 
+assert params['batchsize'] % params['ngpus'] == 0, (
+    'Samples in a batch should better be evenly'
+    ' distributed among all GPUs.')
 batchsize_gpu = params['batchsize'] // params['ngpus']
 data = dict(workers_per_gpu=batchsize_gpu,
             train_dataloader=dict(samples_per_gpu=batchsize_gpu,

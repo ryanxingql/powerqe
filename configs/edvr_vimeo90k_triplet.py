@@ -1,7 +1,10 @@
-# Inherited from mmediting/configs/restorers/edvr/
-# edvrm_wotsa_x4_g8_600k_reds.py to avoid pre-training of tsa
-# Decrease patch size from 256 to 128 to save memory.
-from .script import generate_exp_name
+"""Inherited from mmediting/configs/restorers/edvr/
+edvrm_wotsa_x4_g8_600k_reds.py to avoid the pre-training of TSA.
+
+Decrease patch size from 256 to 128 to save memory.
+"""
+
+exp_name = 'edvr_vimeo90k_triplet'
 
 params = dict(batchsize=32,
               ngpus=2,
@@ -12,10 +15,6 @@ params = dict(batchsize=32,
               radius=1,
               ngroups=8,
               klrperiods=[150, 150, 150, 150])
-exp_name = generate_exp_name('edvr_vimeo90k_triplet', params)
-assert params['batchsize'] % params['ngpus'] == 0, (
-    'Samples in a batch should better be evenly'
-    ' distributed among all GPUs.')
 
 model = dict(
     type='BasicRestorerVQE',
@@ -49,7 +48,9 @@ train_pipeline = [
          mean=[0, 0, 0],
          std=[1, 1, 1],
          to_rgb=True),
-    dict(type='PairedRandomCrop', gt_patch_size=params['patchsize']),
+    dict(type='PairedRandomCropQE',
+         patch_size=params['patchsize'],
+         keys=['lq', 'gt']),
     dict(type='Flip',
          keys=['lq', 'gt'],
          flip_ratio=0.5,
@@ -82,10 +83,12 @@ test_pipeline = [
     )
 ]
 
+assert params['batchsize'] % params['ngpus'] == 0, (
+    'Samples in a batch should better be evenly'
+    ' distributed among all GPUs.')
 dataset_type = 'PairedSameSizeVimeo90KTripletDataset'
 dataset_gt_dir = 'data/vimeo_triplet'
 dataset_lq_dir = 'data/vimeo_triplet_lq'
-
 batchsize_gpu = params['batchsize'] // params['ngpus']
 data = dict(workers_per_gpu=batchsize_gpu,
             train_dataloader=dict(samples_per_gpu=batchsize_gpu,

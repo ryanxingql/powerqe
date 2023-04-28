@@ -1,4 +1,4 @@
-from .script import generate_exp_name
+exp_name = 'san_div2k'
 
 params = dict(batchsize=16,
               ngpus=1,
@@ -10,10 +10,6 @@ params = dict(batchsize=16,
               ngroups=20,
               kernelsize=3,
               resscale=1)
-exp_name = generate_exp_name('san_div2k', params)
-assert params['batchsize'] % params['ngpus'] == 0, (
-    'Samples in a batch should better be evenly'
-    ' distributed among all GPUs.')
 
 model = dict(type='BasicRestorerQE',
              generator=dict(type='SAN',
@@ -34,8 +30,7 @@ train_cfg = None
 test_cfg = dict(
     metrics=['PSNR', 'SSIM'],
     crop_border=1,
-    unfolding=dict(patchsize=params['patchsize'],
-                   splits=16)  # to save memory for testing
+    unfolding=dict(patchsize=params['patchsize'], splits=16)  # to save memory
 )
 
 train_pipeline = [
@@ -50,7 +45,9 @@ train_pipeline = [
          flag='color',
          channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
-    dict(type='PairedRandomCrop', gt_patch_size=params['patchsize']),
+    dict(type='PairedRandomCropQE',
+         patch_size=params['patchsize'],
+         keys=['lq', 'gt']),
     dict(type='Flip',
          keys=['lq', 'gt'],
          flip_ratio=0.5,
@@ -72,7 +69,9 @@ valid_pipeline = [
          flag='color',
          channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
-    dict(type='PairedCenterCrop', gt_patch_size=params['patchsize']),
+    dict(type='PairedCenterCrop',
+         patch_size=params['patchsize'],
+         keys=['lq', 'gt']),
     dict(type='ImageToTensor', keys=['lq', 'gt']),
     dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path'])
 ]
@@ -92,6 +91,9 @@ test_pipeline = [
     dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path'])
 ]
 
+assert params['batchsize'] % params['ngpus'] == 0, (
+    'Samples in a batch should better be evenly'
+    ' distributed among all GPUs.')
 batchsize_gpu = params['batchsize'] // params['ngpus']
 data = dict(workers_per_gpu=batchsize_gpu,
             train_dataloader=dict(samples_per_gpu=batchsize_gpu,

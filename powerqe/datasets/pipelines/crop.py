@@ -1,75 +1,93 @@
-# RyanXingQL @2022
+# RyanXingQL @2022 - 2023
+import numpy as np
+
 from ..registry import PIPELINES
 
 
 @PIPELINES.register_module()
-class PairedCenterCrop:
-    """Paired center crop.
+class PairedRandomCropQE:
+    """Paired random crop for quality enhancement.
 
-    It crops a pair of LQ and GT images with corresponding locations.
-    It also supports accepting LQ list and GT list.
-
-    Required keys are `scale`, `lq`, and `gt`.
-    Added or modified keys are `lq` and `gt`.
+    Differences to `PairedRandomCrop` in mmedit:
+    - Support user-defined keys, e.g., `lq` and `gt`.
+    - Scaling is not allowed.
 
     Args:
-    - `gt_patch_size` (int): Patch size for cropping GT.
+    - `patch_size` (int): Patch size.
+    - `keys` (Sequence[str]): Images to be transformed.
     """
 
-    def __init__(self, gt_patch_size):
-        self.gt_patch_size = gt_patch_size
+    def __init__(self, patch_size, keys):
+        self.patch_size = patch_size
+        self.keys = keys
+
+    def choose_coordinates(self, h, w):
+        top = np.random.randint(h - self.patch_size + 1)
+        left = np.random.randint(w - self.patch_size + 1)
+        return top, left
 
     def __call__(self, results):
-        """Call.
+        """Call function.
 
         Args:
-        - `results` (dict): A dict containing the necessary information and
-        data for augmentation.
+        - `results` (dict[list | array]): Each value is a image (list) with
+        the shape of (H, W, C).
 
         Returns:
-        - dict: Cropped LQ and GT.
+        - dict: Cropped images. The shape is the same to the input.
         """
-        scale = results['scale']
-        lq_patch_size = self.gt_patch_size // scale
+        is_list_flags = dict()
+        check_flag = False
+        for key in self.keys:
+            # turn each results[key] into a list
+            if isinstance(results[key], list):
+                is_list_flags[key] = True
+            else:
+                is_list_flags[key] = False
+                results[key] = [results[key]]
 
-        lq_is_list = isinstance(results['lq'], list)
-        if not lq_is_list:
-            results['lq'] = [results['lq']]
-        gt_is_list = isinstance(results['gt'], list)
-        if not gt_is_list:
-            results['gt'] = [results['gt']]
+            # check shapes
+            h_curr, w_curr = results[key][0].shape[:2]
+            if not check_flag:
+                h, w = h_curr, w_curr
+                if h < self.patch_size or w < self.patch_size:
+                    raise ValueError(
+                        f'The image size (`{h}`, `{w}`) is smaller than the'
+                        ' patch size'
+                        f' (`{self.patch_size}`, `{self.patch_size}`).')
+                check_flag = True
+            else:
+                if (h_curr != h) or (w_curr != w):
+                    raise ValueError('Sizes of all keys should be the same.')
 
-        h_lq, w_lq, _ = results['lq'][0].shape
-        h_gt, w_gt, _ = results['gt'][0].shape
+        # randomly choose top and left coordinates for patching
+        top, left = self.choose_coordinates(h, w)
 
-        if (h_gt != h_lq * scale) or (w_gt != w_lq * scale):
-            raise ValueError(f'The GT size (`{h_gt}`, `{w_gt}`) should be'
-                             f' `{scale}` times'
-                             f' the LQ size (`{h_lq}`, `{w_lq}`).')
-        if (h_lq < lq_patch_size) or (w_lq < lq_patch_size):
-            raise ValueError(
-                f'The LQ size (`{h_lq}`, `{w_lq}`) is smaller than the'
-                f' patch size (`{lq_patch_size}`, `{lq_patch_size}`).')
+        for key in self.keys:
+            # crop
+            results[key] = [
+                v[top:top + self.patch_size, left:left + self.patch_size, ...]
+                for v in results[key]
+            ]
 
-        # center cropping offsets for lq
-        top = (h_lq - lq_patch_size) // 2
-        left = (w_lq - lq_patch_size) // 2
+            # revert if not a list
+            if not is_list_flags[key]:
+                results[key] = results[key][0]
 
-        # crop lq patch
-        results['lq'] = [
-            v[top:top + lq_patch_size, left:left + lq_patch_size, ...]
-            for v in results['lq']
-        ]
-
-        # crop corresponding gt patch
-        top_gt, left_gt = int(top * scale), int(left * scale)
-        results['gt'] = [
-            v[top_gt:top_gt + self.gt_patch_size,
-              left_gt:left_gt + self.gt_patch_size, ...] for v in results['gt']
-        ]
-
-        if not lq_is_list:
-            results['lq'] = results['lq'][0]
-        if not gt_is_list:
-            results['gt'] = results['gt'][0]
         return results
+
+
+@PIPELINES.register_module()
+class PairedCenterCrop(PairedRandomCropQE):
+    """Paired center crop for quality enhancement.
+
+    Useful for testing.
+
+    Differences to `PairedRandomCropQE`:
+    - Center cropping instead of random cropping.
+    """
+
+    def choose_coordinates(self, h, w):
+        top = (h - self.patch_size) // 2
+        left = (w - self.patch_size) // 2
+        return top, left

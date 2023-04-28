@@ -23,7 +23,7 @@ train_pipeline = [
         flag='color',
         channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
-    # dict(type='PairedRandomCrop', gt_patch_size=params['patchsize']),
+    # no cropping
     dict(type='Flip',
          keys=['lq', 'gt'],
          flip_ratio=0.5,
