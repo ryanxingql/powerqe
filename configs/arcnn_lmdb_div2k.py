@@ -5,7 +5,6 @@ train_gt_folder = 'data/div2k/train/gt_patches.lmdb'
 valid_lq_folder = 'data/div2k/valid/lq.lmdb'
 valid_gt_folder = 'data/div2k/valid/gt.lmdb'
 
-# dataset settings
 train_pipeline = [
     dict(
         type='LoadImageFromFile',
@@ -31,8 +30,8 @@ train_pipeline = [
          direction='horizontal'),
     dict(type='Flip', keys=['lq', 'gt'], flip_ratio=0.5, direction='vertical'),
     dict(type='RandomTransposeHW', keys=['lq', 'gt'], transpose_ratio=0.5),
-    dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path']),
-    dict(type='ImageToTensor', keys=['lq', 'gt'])
+    dict(type='ImageToTensor', keys=['lq', 'gt']),
+    dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path'])
 ]
 test_pipeline = [
     dict(
@@ -52,8 +51,8 @@ test_pipeline = [
         flag='color',
         channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
-    dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path']),
-    dict(type='ImageToTensor', keys=['lq', 'gt'])
+    dict(type='ImageToTensor', keys=['lq', 'gt']),
+    dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path'])
 ]
 
 data = dict(train=dict(dataset=dict(_delete_=True,

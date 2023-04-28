@@ -16,8 +16,8 @@ class PairedSameSizeImageDataset(SRFolderDataset):
     - Support different extensions between GT and LQ. See `load_annotations`.
 
     Args:
-    - `lq_folder` (str | `Path` object): Path to a lq folder.
-    - `gt_folder` (str | `Path` object): Path to a gt folder.
+    - `lq_folder` (str | :obj:`Path`): LQ folder.
+    - `gt_folder` (str | :obj:`Path`): GT folder.
     - `pipeline` (List[dict | callable]): A sequence of data transformations.
     - `test_mode` (bool): Store `True` when building test dataset.
     Default: `False`.

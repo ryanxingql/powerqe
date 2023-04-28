@@ -14,16 +14,23 @@ class PairedSameSizeVimeo90KTripletDataset(BaseVFIDataset):
     """Paired Vimeo-90K triplet dataset. GT and LQ are with the same size.
 
     Differences to the `VFIVimeo90KDataset` in mmedit:
-    - Load GT.
+    - Load GT. See `load_annotations`.
     - Support different extensions between GT and LQ by `filename_tmpl`.
+    See `load_annotations`.
     - Use the `Compose` in powerqe.
+    - Set `results['scale']` to `1` for `PairedRandomCrop`. See `__getitem__`.
 
     Similar to the `SRVimeo90KDataset` in mmedit.
 
-    New args:
-    - `gt_folder`: GT folder.
+    Args:
+    - `folder` (str | :obj:`Path`): LQ folder.
+    - `gt_folder` (str | :obj:`Path`): GT folder.
+    - `ann_file` (str | :obj:`Path`): Path to the annotation file.
+    - `pipeline` (list[dict | callable]): A sequence of data transformations.
     - `filename_tmpl` (str): Template for each filename of LQ.
     Default: `{}.png`.
+    - `test_mode` (bool): Store `True` when building test dataset.
+    Default: `False`.
     - `edge_padding` (bool): If `True`, record three sub-sequences in
     annotations. If `False`, only one three-frame sequence is recorded.
     Default: `False`.
@@ -56,11 +63,6 @@ class PairedSameSizeVimeo90KTripletDataset(BaseVFIDataset):
         self.pipeline = Compose(pipeline)
 
     def __getitem__(self, idx):
-        """Get a sample.
-
-        Differences to that of `BaseVFIDataset`:
-        - Set `results['scale']` to `1` for `PairedRandomCrop`.
-        """
         results = copy.deepcopy(self.data_infos[idx])
         results['folder'] = self.folder
         results['ann_file'] = self.ann_file
@@ -68,13 +70,6 @@ class PairedSameSizeVimeo90KTripletDataset(BaseVFIDataset):
         return self.pipeline(results)
 
     def load_annotations(self):
-        """Load annotations and record samples.
-
-        Differences to that of `VFIVimeo90KDataset`:
-        - Load GT.
-        - Support different extensions between GT and LQ
-        by `self.filename_tmpl`.
-        """
         # get keys
         with open(self.ann_file, 'r') as f:
             keys = f.read().split('\n')
@@ -144,8 +139,22 @@ class PairedSameSizeVimeo90KTripletKeyFrameDataset(
 
     Differences to `PairedSameSizeVimeo90KTripletDataset`:
     - Use high-quality key frames instead of neighboring frames.
+    See `load_annotations`.
 
-    New args:
+    Args:
+    - `folder` (str | :obj:`Path`): LQ folder.
+    - `gt_folder` (str | :obj:`Path`): GT folder.
+    - `ann_file` (str | :obj:`Path`): Path to the annotation file.
+    - `pipeline` (list[dict | callable]): A sequence of data transformations.
+    - `filename_tmpl` (str): Template for each filename of LQ.
+    Default: `{}.png`.
+    - `test_mode` (bool): Store `True` when building test dataset.
+    Default: `False`.
+    - `edge_padding` (bool): If `True`, record three sub-sequences in
+    annotations. If `False`, only one three-frame sequence is recorded.
+    Default: `False`.
+    - `center_gt` (bool): If `True`, only the center frame is recorded in GT.
+    Note that `gt_path` is always a list. Default: `False`.
     - `qp_info` (dict): See doc.
     """
 
@@ -186,11 +195,6 @@ class PairedSameSizeVimeo90KTripletKeyFrameDataset(
         return qps
 
     def load_annotations(self):
-        """Load annotations and record samples.
-
-        Differences to that of `Vimeo90KTripletCenterGTDataset`:
-        - Record high-quality frames instead of neighboring frames.
-        """
         # get keys
         with open(self.ann_file, 'r') as f:
             keys = f.read().split('\n')

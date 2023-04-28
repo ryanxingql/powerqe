@@ -12,6 +12,19 @@ from ..registry import BACKBONES
 class RRDBNetQE(RRDBNet):
     """See RRDBNet."""
 
+    def __init__(self,
+                 io_channels,
+                 mid_channels=64,
+                 num_blocks=23,
+                 growth_channels=32,
+                 upscale_factor=4):
+        super().__init__(in_channels=io_channels,
+                         out_channels=io_channels,
+                         mid_channels=mid_channels,
+                         num_blocks=num_blocks,
+                         growth_channels=growth_channels,
+                         upscale_factor=upscale_factor)
+
     def init_weights(self,
                      pretrained=None,
                      strict=True,

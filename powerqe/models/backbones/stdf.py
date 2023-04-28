@@ -151,8 +151,7 @@ class STDFNet(BaseNet):
     Ref: https://github.com/ryanxingql/stdf-pytorch
 
     Args:
-    - `in_channels` (int): Channel number of inputs.
-    - `out_channels` (int): Channel number of outputs.
+    - `io_channels` (int): I/O channel number.
     - `radius`: Frames number before the center frame.
     - `nf_stdf` (int): Channel number of intermediate features of STDF module.
     - `nb_stdf` (int): Block number of STDF module.
@@ -162,8 +161,7 @@ class STDFNet(BaseNet):
     """
 
     def __init__(self,
-                 in_channels=3,
-                 out_channels=3,
+                 io_channels=3,
                  radius=3,
                  nf_stdf=32,
                  nb_stdf=3,
@@ -177,7 +175,7 @@ class STDFNet(BaseNet):
         self.nf_qe = nf_qe
         self.nb_qe = nb_qe
 
-        self.stdf = STDF(in_nc=in_channels * (radius * 2 + 1),
+        self.stdf = STDF(in_nc=io_channels * (radius * 2 + 1),
                          out_nc=nf_stdf_out,
                          nf=nf_stdf,
                          nb=nb_stdf,
@@ -185,7 +183,7 @@ class STDFNet(BaseNet):
         self.qe_net = QENet(in_nc=nf_stdf_out,
                             nf=nf_qe,
                             nb=nb_qe,
-                            out_nc=out_channels)
+                            out_nc=io_channels)
 
     def forward(self, x):
         """Forward.
@@ -194,7 +192,7 @@ class STDFNet(BaseNet):
         - `x` (Tensor): Input tensor with the shape of (N, T, C, H, W).
 
         Returns:
-        - `out` (Tensor): Out center frame with the shape of (N, C, H, W).
+        - Tensor: Out center frame with the shape of (N, C, H, W).
         """
         out = self.stdf(x)
         out = self.qe_net(out)

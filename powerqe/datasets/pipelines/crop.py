@@ -27,8 +27,7 @@ class PairedCenterCrop:
         data for augmentation.
 
         Returns:
-        - `results` (dict): A dict containing the processed data and
-        information.
+        - dict: Cropped LQ and GT.
         """
         scale = results['scale']
         lq_patch_size = self.gt_patch_size // scale

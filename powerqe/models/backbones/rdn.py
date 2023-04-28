@@ -39,15 +39,20 @@ class RDNQE(BaseNet):
     Differences to the `RDN` in mmedit:
     - Support rescaling before/after enhancement.
 
-    New args:
+    Args:
     - `rescale` (int): Rescaling factor.
+    - `io_channels` (int): I/O channel number.
+    - `mid_channels` (int): Channel number of intermediate features.
+    - `num_blocks` (int): Block number in the trunk network. Default: 16.
+    - `upscale_factor` (int): Upsampling factor. Support 2^n and 3.
+    - `num_layer` (int): Layer number in the Residual Dense Block.
+    - `channel_growth` (int): Channels growth in each layer of RDB.
     """
 
     def __init__(
             self,
             rescale,
-            in_channels,
-            out_channels,
+            io_channels,
             mid_channels=64,
             num_blocks=8,
             # upscale_factor=4,
@@ -72,7 +77,7 @@ class RDNQE(BaseNet):
                                          mode='bicubic')
 
         # shallow feature extraction
-        self.sfe1 = nn.Conv2d(in_channels,
+        self.sfe1 = nn.Conv2d(io_channels,
                               mid_channels,
                               kernel_size=3,
                               padding=3 // 2)
@@ -113,7 +118,7 @@ class RDNQE(BaseNet):
             self.upscale = nn.Sequential(*self.upscale)
 
         self.output = nn.Conv2d(self.mid_channels,
-                                out_channels,
+                                io_channels,
                                 kernel_size=3,
                                 padding=3 // 2)
 
@@ -124,7 +129,7 @@ class RDNQE(BaseNet):
         - `x` (Tensor): Input tensor with the shape of (N, C, H, W).
 
         Returns:
-        - `x` (Tensor)
+        - Tensor
         """
         x = self.downscale(x)
 

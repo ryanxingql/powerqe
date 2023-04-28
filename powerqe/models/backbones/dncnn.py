@@ -10,16 +10,14 @@ class DnCNN(BaseNet):
     """DnCNN network structure.
 
     Args:
-    - `in_channels` (int): Channel number of inputs.
-    - `out_channels` (int): Channel number of outputs.
+    - `io_channels` (int): I/O channel number.
     - `mid_channels` (int): Channel number of intermediate features.
     - `num_blocks` (int): Block number in the trunk network.
     - `if_bn` (bool): If use BN layer. Default: `False`.
     """
 
     def __init__(self,
-                 in_channels=3,
-                 out_channels=3,
+                 io_channels=3,
                  mid_channels=64,
                  num_blocks=15,
                  if_bn=False):
@@ -28,7 +26,7 @@ class DnCNN(BaseNet):
         layers = []
 
         # input conv
-        layers.append(nn.Conv2d(in_channels, mid_channels, 3, padding=1))
+        layers.append(nn.Conv2d(io_channels, mid_channels, 3, padding=1))
 
         # body
         for _ in range(num_blocks):
@@ -58,7 +56,7 @@ class DnCNN(BaseNet):
         # output conv
         layers += [
             nn.ReLU(inplace=True),
-            nn.Conv2d(mid_channels, out_channels, 3, padding=1)
+            nn.Conv2d(mid_channels, io_channels, 3, padding=1)
         ]
 
         self.layers = nn.Sequential(*layers)
@@ -70,7 +68,6 @@ class DnCNN(BaseNet):
         - `x` (Tensor): Input tensor with the shape of (N, C, H, W).
 
         Returns:
-        - `out` (Tensor)
+        - Tensor
         """
-        out = self.layers(x) + x
-        return out
+        return self.layers(x) + x

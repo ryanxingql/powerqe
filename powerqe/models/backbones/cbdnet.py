@@ -12,7 +12,7 @@ class CBDNet(BaseNet):
     """CBDNet network structure.
 
     Args:
-    - `in_channels` (int): Channel number of the input.
+    - `io_channels` (int): I/O channel number.
     - `estimate_channels` (int): Channel number of the features in the
     estimation module.
     - `nlevel_denoise` (int): Level number of UNet for denoising.
@@ -31,7 +31,7 @@ class CBDNet(BaseNet):
     """
 
     def __init__(self,
-                 in_channels=3,
+                 io_channels=3,
                  estimate_channels=32,
                  nlevel_denoise=3,
                  nf_base_denoise=64,
@@ -44,7 +44,7 @@ class CBDNet(BaseNet):
         super().__init__()
 
         estimate_list = nn.ModuleList([
-            nn.Conv2d(in_channels=in_channels,
+            nn.Conv2d(in_channels=io_channels,
                       out_channels=estimate_channels,
                       kernel_size=3,
                       padding=3 // 2),
@@ -59,13 +59,13 @@ class CBDNet(BaseNet):
                 nn.ReLU(inplace=True)
             ])
         estimate_list += nn.ModuleList([
-            nn.Conv2d(estimate_channels, in_channels, 3, padding=3 // 2),
+            nn.Conv2d(estimate_channels, io_channels, 3, padding=3 // 2),
             nn.ReLU(inplace=True)
         ])
         self.estimate = nn.Sequential(*estimate_list)
 
-        self.denoise = UNet(nf_in=in_channels * 2,
-                            nf_out=in_channels,
+        self.denoise = UNet(nf_in=io_channels * 2,
+                            nf_out=io_channels,
                             nlevel=nlevel_denoise,
                             nf_base=nf_base_denoise,
                             nf_gr=nf_gr_denoise,
@@ -83,9 +83,9 @@ class CBDNet(BaseNet):
         - `x` (Tensor): Input tensor with the shape of (N, C, H, W).
 
         Returns:
-        - `x` (Tensor)
+        - Tensor
         """
         estimated_noise_map = self.estimate(x)
         res = self.denoise(torch.cat([x, estimated_noise_map], dim=1))
-        x = res + x
-        return x
+        out = res + x
+        return out

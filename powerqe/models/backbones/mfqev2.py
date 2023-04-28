@@ -18,35 +18,30 @@ class MFQEv2(BaseNet):
     Ref: https://github.com/ryanxingql/mfqev2.0/blob/master/net_MFCNN.py
 
     Args:
-    - `in_channels` (int): Channel number of inputs.
-    - `out_channels` (int): Channel number of outputs.
+    - `io_channels` (int): I/O channel number.
     - `nf` (int): Channel number of intermediate features.
     """
 
-    def __init__(self,
-                 in_channels=3,
-                 out_channels=3,
-                 nf=32,
-                 spynet_pretrained=None):
+    def __init__(self, io_channels=3, nf=32, spynet_pretrained=None):
         super().__init__()
 
         # for frame alignment
         self.spynet = SPyNet(pretrained=spynet_pretrained)
 
         self.ks3_conv_list = nn.ModuleList([
-            nn.Conv2d(in_channels=in_channels,
+            nn.Conv2d(in_channels=io_channels,
                       out_channels=nf,
                       kernel_size=3,
                       padding=3 // 2) for _ in range(3)
         ])
         self.ks5_conv_list = nn.ModuleList([
-            nn.Conv2d(in_channels=in_channels,
+            nn.Conv2d(in_channels=io_channels,
                       out_channels=nf,
                       kernel_size=5,
                       padding=5 // 2) for _ in range(3)
         ])
         self.ks7_conv_list = nn.ModuleList([
-            nn.Conv2d(in_channels=in_channels,
+            nn.Conv2d(in_channels=io_channels,
                       out_channels=nf,
                       kernel_size=7,
                       padding=7 // 2) for _ in range(3)
@@ -84,7 +79,7 @@ class MFQEv2(BaseNet):
                           padding=3 // 2), nn.PReLU(),
                 nn.BatchNorm2d(num_features=nf)),  # c14
             nn.Conv2d(in_channels=nf,
-                      out_channels=out_channels,
+                      out_channels=io_channels,
                       kernel_size=3,
                       padding=3 // 2)  # c15
         ])
@@ -101,7 +96,7 @@ class MFQEv2(BaseNet):
         - `x` (Tensor): Input tensor with the shape of (N, T=3, C, H, W).
 
         Returns:
-        - `out` (Tensor): Output center frame with the shape of (N, C, H, W).
+        - Tensor: Output center frame with the shape of (N, C, H, W).
         """
         # alignment
         center_frm = x[:, 1, ...]  # n c=3 h w

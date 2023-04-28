@@ -124,13 +124,12 @@ class GaussianSmoothing(nn.Module):
         - `x` (Tensor): Input to apply gaussian filter on.
 
         Returns:
-        - `filtered` (Tensor): Filtered output.
+        - Tensor: Filtered output.
         """
-        filtered = self.conv(x,
-                             weight=self.weight,
-                             groups=self.groups,
-                             padding=self.padding)
-        return filtered
+        return self.conv(x,
+                         weight=self.weight,
+                         groups=self.groups,
+                         padding=self.padding)
 
 
 class IQAM:
@@ -476,14 +475,13 @@ class Up(nn.Module):
 class RBQE(BaseNet):
 
     def __init__(self,
-                 nf_in=3,
+                 nf_io=3,
                  nf_base=32,
                  nlevel=5,
                  down_method='strideconv',
                  up_method='transpose2d',
                  if_separable=False,
                  if_eca=True,
-                 nf_out=3,
                  if_only_last_output=True,
                  comp_type='hevc'):
         super().__init__()
@@ -494,13 +492,13 @@ class RBQE(BaseNet):
         # input conv
         if if_separable:
             self.in_conv_seq = nn.Sequential(
-                SeparableConv2d(nf_in=nf_in, nf_out=nf_base),
+                SeparableConv2d(nf_in=nf_io, nf_out=nf_base),
                 nn.ReLU(inplace=True),
                 SeparableConv2d(nf_in=nf_base, nf_out=nf_base),
             )
         else:
             self.in_conv_seq = nn.Sequential(
-                nn.Conv2d(in_channels=nf_in,
+                nn.Conv2d(in_channels=nf_io,
                           out_channels=nf_base,
                           kernel_size=3,
                           padding=3 // 2), nn.ReLU(inplace=True),
@@ -539,24 +537,24 @@ class RBQE(BaseNet):
         for _ in range(repeat_times):
             if if_separable and if_eca:
                 self.out_layers.append(
-                    nn.Sequential(
-                        ECA(k_size=3),
-                        SeparableConv2d(nf_in=nf_base, nf_out=nf_out)))
+                    nn.Sequential(ECA(k_size=3),
+                                  SeparableConv2d(nf_in=nf_base,
+                                                  nf_out=nf_io)))
             elif if_separable and (not if_eca):
                 self.out_layers.append(
-                    SeparableConv2d(nf_in=nf_base, nf_out=nf_out))
+                    SeparableConv2d(nf_in=nf_base, nf_out=nf_io))
             elif (not if_separable) and if_eca:
                 self.out_layers.append(
                     nn.Sequential(
                         ECA(k_size=3),
                         nn.Conv2d(in_channels=nf_base,
-                                  out_channels=nf_out,
+                                  out_channels=nf_io,
                                   kernel_size=3,
                                   padding=3 // 2)))
             else:
                 self.out_layers.append(
                     nn.Conv2d(in_channels=nf_base,
-                              out_channels=nf_out,
+                              out_channels=nf_io,
                               kernel_size=3,
                               padding=3 // 2))
 

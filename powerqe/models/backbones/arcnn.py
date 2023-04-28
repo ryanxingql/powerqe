@@ -10,14 +10,13 @@ class ARCNN(BaseNet):
     """AR-CNN network structure.
 
     Args:
-    - `in_channels` (int): Channel number of inputs.
+    - `io_channels` (int): I/O channel number.
     - `mid_channels_1` (int): Channel number of the first intermediate
     features.
     - `mid_channels_2` (int): Channel number of the second intermediate
     features.
     - `mid_channels_3` (int): Channel number of the third intermediate
     features.
-    - `out_channels` (int): Channel number of outputs.
     - `in_kernel_size` (int): Kernel size of the first convolution.
     - `mid_kernel_size` (int): Kernel size of the first intermediate
     convolution.
@@ -27,11 +26,10 @@ class ARCNN(BaseNet):
     """
 
     def __init__(self,
-                 in_channels=3,
+                 io_channels=3,
                  mid_channels_1=64,
                  mid_channels_2=32,
                  mid_channels_3=16,
-                 out_channels=3,
                  in_kernel_size=9,
                  mid_kernel_size_1=7,
                  mid_kernel_size_2=1,
@@ -39,7 +37,7 @@ class ARCNN(BaseNet):
         super().__init__()
 
         self.layers = nn.Sequential(
-            nn.Conv2d(in_channels,
+            nn.Conv2d(io_channels,
                       mid_channels_1,
                       in_kernel_size,
                       padding=in_kernel_size // 2), nn.ReLU(inplace=False),
@@ -52,7 +50,7 @@ class ARCNN(BaseNet):
                       mid_kernel_size_2,
                       padding=mid_kernel_size_2 // 2), nn.ReLU(inplace=False),
             nn.Conv2d(mid_channels_3,
-                      out_channels,
+                      io_channels,
                       out_kernel_size,
                       padding=out_kernel_size // 2))
 
@@ -63,7 +61,6 @@ class ARCNN(BaseNet):
         - `x` (Tensor): Input tensor with the shape of (N, C, H, W).
 
         Returns:
-        - `out` (Tensor)
+        - Tensor
         """
-        out = self.layers(x) + x
-        return out
+        return self.layers(x) + x

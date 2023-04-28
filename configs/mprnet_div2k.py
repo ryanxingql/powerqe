@@ -1,17 +1,19 @@
 from .script import generate_exp_name
 
-params = dict(batchsize=16, ngpus=1, patchsize=128, kiters=300, nchannels=96)
+params = dict(batchsize=16,
+              ngpus=1,
+              patchsize=128,
+              kiters=300,
+              nchannels=[3, 96])
 exp_name = generate_exp_name('mprnet_div2k', params)
-
 assert params['batchsize'] % params['ngpus'] == 0, (
     'Samples in a batch should better be evenly'
     ' distributed among all GPUs.')
 
 model = dict(type='BasicRestorerQE',
              generator=dict(type='MPRNet',
-                            in_c=3,
-                            out_c=3,
-                            n_feat=params['nchannels']),
+                            io_c=params['nchannels'][0],
+                            n_feat=params['nchannels'][1]),
              pixel_loss=dict(type='CharbonnierLoss',
                              loss_weight=1.0,
                              reduction='mean'))
@@ -43,8 +45,8 @@ train_pipeline = [
          direction='horizontal'),
     dict(type='Flip', keys=['lq', 'gt'], flip_ratio=0.5, direction='vertical'),
     dict(type='RandomTransposeHW', keys=['lq', 'gt'], transpose_ratio=0.5),
-    dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path']),
-    dict(type='ImageToTensor', keys=['lq', 'gt'])
+    dict(type='ImageToTensor', keys=['lq', 'gt']),
+    dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path'])
 ]
 valid_pipeline = [
     dict(type='LoadImageFromFile',
@@ -59,8 +61,8 @@ valid_pipeline = [
          channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
     # dict(type='PairedCenterCrop', gt_patch_size=params['patchsize']),
-    dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path']),
-    dict(type='ImageToTensor', keys=['lq', 'gt'])
+    dict(type='ImageToTensor', keys=['lq', 'gt']),
+    dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path'])
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile',
@@ -74,8 +76,8 @@ test_pipeline = [
          flag='color',
          channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
-    dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path']),
-    dict(type='ImageToTensor', keys=['lq', 'gt'])
+    dict(type='ImageToTensor', keys=['lq', 'gt']),
+    dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path'])
 ]
 
 batchsize_gpu = params['batchsize'] // params['ngpus']

@@ -61,8 +61,7 @@ class UNet(BaseNet):
     """U-Net for enhancement."""
 
     def __init__(self,
-                 nf_in,
-                 nf_out,
+                 nf_io,
                  nlevel,
                  nf_base,
                  nf_max=1024,
@@ -92,12 +91,8 @@ class UNet(BaseNet):
         self.reduce = reduce
         self.residual = residual
 
-        if residual and (nf_in != nf_out):
-            raise ValueError('I/O channel numbers should be equal;'
-                             f' received `{nf_in}` and `{nf_out}`.')
-
         self.inc = nn.Sequential(
-            nn.Conv2d(in_channels=nf_in,
+            nn.Conv2d(in_channels=nf_io,
                       out_channels=nf_base,
                       kernel_size=3,
                       padding=1), nn.ReLU(inplace=True))
@@ -179,7 +174,7 @@ class UNet(BaseNet):
             setattr(self, f'dec_{idx_level}', nn.Sequential(*module_lst))
 
         self.outc = nn.Conv2d(in_channels=nf_base,
-                              out_channels=nf_out,
+                              out_channels=nf_io,
                               kernel_size=3,
                               padding=1)
 

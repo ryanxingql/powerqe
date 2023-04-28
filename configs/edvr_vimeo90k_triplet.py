@@ -7,38 +7,33 @@ params = dict(batchsize=32,
               ngpus=2,
               patchsize=128,
               kiters=600,
-              nchannels=64,
+              nchannels=[3, 64],
               nblocks=[5, 10],
               radius=1,
+              ngroups=8,
               klrperiods=[150, 150, 150, 150])
-
 exp_name = generate_exp_name('edvr_vimeo90k_triplet', params)
-
 assert params['batchsize'] % params['ngpus'] == 0, (
     'Samples in a batch should better be evenly'
     ' distributed among all GPUs.')
 
-# model settings
 model = dict(
     type='BasicRestorerVQE',
     generator=dict(
         type='EDVRNetQE',
-        in_channels=3,
-        out_channels=3,
-        mid_channels=params['nchannels'],
+        io_channels=params['nchannels'][0],
+        mid_channels=params['nchannels'][1],
         num_frames=2 * params['radius'] + 1,
-        deform_groups=8,
+        deform_groups=params['ngroups'],
         num_blocks_extraction=params['nblocks'][0],
         num_blocks_reconstruction=params['nblocks'][1],
         center_frame_idx=1,  # invalid when TSA is off
         with_tsa=False),
     pixel_loss=dict(type='CharbonnierLoss', loss_weight=1.0, reduction='sum'))
 
-# model training and testing settings
 train_cfg = None
 test_cfg = dict(metrics=['PSNR', 'SSIM'], crop_border=1)
 
-# dataset settings
 train_pipeline = [
     dict(type='LoadImageFromFileList',
          io_backend='disk',
@@ -128,10 +123,8 @@ data = dict(workers_per_gpu=batchsize_gpu,
                       edge_padding=True,
                       center_gt=True))
 
-# optimizer
 optimizers = dict(generator=dict(type='Adam', lr=4e-4, betas=(0.9, 0.999)))
 
-# learning policy
 total_iters = params['kiters'] * 1000
 lr_config = dict(policy='CosineRestart',
                  by_epoch=False,
@@ -148,7 +141,6 @@ log_config = dict(interval=100,
                   ])
 visual_config = None
 
-# runtime settings
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
 work_dir = f'work_dirs/{exp_name}'

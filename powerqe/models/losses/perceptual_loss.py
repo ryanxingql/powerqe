@@ -7,13 +7,13 @@ from ..registry import LOSSES
 
 @LOSSES.register_module()
 class PerceptualLossGray(PerceptualLoss):
+    """Perceptual loss for gray-scale images.
+
+    Differences to `PerceptualLoss`:
+    - Input `x` is a gray-scale image.
+    """
 
     def forward(self, x, gt):
-        """Forward.
-
-        Differences to that of `PerceptualLoss`:
-        - Input `x` is a gray-scale image.
-        """
         # gray -> color
         # diff 1/1
         x = x.repeat(1, 3, 1, 1)
@@ -56,10 +56,10 @@ class PerceptualLossGray(PerceptualLoss):
         """Calculate Gram matrix.
 
         Args:
-        - `x` (Tensor): Tensor with shape of (N, C, H, W).
+        - `x` (Tensor): Tensor with the shape of (N, C, H, W).
 
         Returns:
-        - `gram` (Tensor): Gram matrix.
+        - Tensor: Gram matrix.
         """
         (n, c, h, w) = x.size()
         features = x.view(n, c, w * h)

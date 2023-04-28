@@ -4,12 +4,13 @@ params = dict(batchsize=16,
               ngpus=1,
               patchsize=48,
               kiters=300,
-              nchannels=64,
+              nchannels=[3, 64],
               reduction=16,
               nblocks=10,
-              ngroups=20)
+              ngroups=20,
+              kernelsize=3,
+              resscale=1)
 exp_name = generate_exp_name('san_div2k', params)
-
 assert params['batchsize'] % params['ngpus'] == 0, (
     'Samples in a batch should better be evenly'
     ' distributed among all GPUs.')
@@ -18,13 +19,13 @@ model = dict(type='BasicRestorerQE',
              generator=dict(type='SAN',
                             n_resgroups=params['ngroups'],
                             n_resblocks=params['nblocks'],
-                            n_feats=params['nchannels'],
-                            kernel_size=3,
+                            n_feats=params['nchannels'][1],
+                            kernel_size=params['kernelsize'],
                             reduction=params['reduction'],
                             scale=1,
                             rgb_range=1,
-                            n_colors=3,
-                            res_scale=1),
+                            n_colors=params['nchannels'][0],
+                            res_scale=params['resscale']),
              pixel_loss=dict(type='CharbonnierLoss',
                              loss_weight=1.0,
                              reduction='mean'))

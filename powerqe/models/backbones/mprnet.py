@@ -395,8 +395,7 @@ class MPRNet(BaseNet):
     """MPRNet for enhancement."""
 
     def __init__(self,
-                 in_c=3,
-                 out_c=3,
+                 io_c=3,
                  n_feat=96,
                  scale_unetfeats=48,
                  scale_orsnetfeats=32,
@@ -408,13 +407,13 @@ class MPRNet(BaseNet):
 
         act = nn.PReLU()
         self.shallow_feat1 = nn.Sequential(
-            conv(in_c, n_feat, kernel_size, bias=bias),
+            conv(io_c, n_feat, kernel_size, bias=bias),
             CAB(n_feat, kernel_size, reduction, bias=bias, act=act))
         self.shallow_feat2 = nn.Sequential(
-            conv(in_c, n_feat, kernel_size, bias=bias),
+            conv(io_c, n_feat, kernel_size, bias=bias),
             CAB(n_feat, kernel_size, reduction, bias=bias, act=act))
         self.shallow_feat3 = nn.Sequential(
-            conv(in_c, n_feat, kernel_size, bias=bias),
+            conv(io_c, n_feat, kernel_size, bias=bias),
             CAB(n_feat, kernel_size, reduction, bias=bias, act=act))
 
         # Cross Stage Feature Fusion (CSFF)
@@ -451,7 +450,7 @@ class MPRNet(BaseNet):
                              kernel_size,
                              bias=bias)
         self.tail = conv(n_feat + scale_orsnetfeats,
-                         out_c,
+                         io_c,
                          kernel_size,
                          bias=bias)
 

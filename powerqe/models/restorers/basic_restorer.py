@@ -113,7 +113,7 @@ class BasicRestorerQE(BasicRestorer):
         Default: `None`.
 
         Returns:
-        - dict[str, dict]: A dict with a single key-value pair.
+        - dict[dict]: A dict with a single key-value pair.
         The key is `eval_result`; the value is a dict of evaluation results.
         """
         if self.test_cfg is None:
@@ -208,13 +208,20 @@ class BasicRestorerVQE(BasicRestorer):
     Differences to `BasicRestorer`:
     - Support LQ vs. GT testing.
     - Support sequence LQ. GT corresponds to the center LQ.
+    - Support saving LQ and GT. See `forward_test`.
     """
 
     def evaluate(self, output, gt, lq):
         """Evaluation.
 
-        New args:
-        - `lq` (Tensor): LQ tensor with shape of (N, T, C, H, W).
+        Args:
+        - `metrics` (list): List of evaluation metrics.
+        - `output` (Tensor): Output images with the shape of (N=1, T, C, H, W).
+        - `gt` (Tensor): GT images with the shape of (N=1, T, C, H, W).
+        - `lq` (Tensor): LQ images with the shape of (N=1, T, C, H, W).
+
+        Returns:
+        - dict: Evaluation results.
         """
         crop_border = self.test_cfg.crop_border
 
@@ -240,11 +247,6 @@ class BasicRestorerVQE(BasicRestorer):
                      save_image=False,
                      save_path=None,
                      iteration=None):
-        """Test forward.
-
-        Differences to that of `BasicRestorer`:
-        - Save LQ, output, and GT.
-        """
         t = lq.shape[1]
         assert t % 2 == 1
 
@@ -303,10 +305,15 @@ class BasicRestorerVQESequence(BasicRestorer):
 
     Differences to `BasicRestorer`:
     - Support LQ vs. GT testing.
-    - Support sequence LQ and sequence/center GT.
-    - Support parameter fix for some iters.
+    - Support sequence LQ and sequence/center GT. See `forward_test`.
+    - Support parameter fix for some iters. See `train_step`.
 
-    New args:
+    Args:
+    - `generator` (dict): Config for the generator structure.
+    - `pixel_loss` (dict): Config for pixel-wise loss.
+    - `train_cfg` (dict): Config for training. Default: `None`.
+    - `test_cfg` (dict): Config for testing. Default: `None`.
+    - `pretrained` (str): Path for pretrained model. Default: `None`.
     - `center_gt` (bool): Only the center GT is provided and evaluated.
     Default: `False`.
     - `save_gt_lq` (bool): Save GT and LQ besides output images.
@@ -340,11 +347,6 @@ class BasicRestorerVQESequence(BasicRestorer):
         self.register_buffer('step_counter', torch.zeros(1))
 
     def train_step(self, data_batch, optimizer):
-        """Training step.
-
-        Differences to that of `BasicRestorer`:
-        - Support parameter fix for some iters.
-        """
         # parameter fix
         if self.step_counter < self.fix_iter:
             if not self.is_weight_fixed:
@@ -376,8 +378,14 @@ class BasicRestorerVQESequence(BasicRestorer):
     def evaluate(self, output, gt, lq):
         """Evaluation.
 
-        New args:
-        - `lq` (Tensor): LQ tensor with the shape of (N, T, C, H, W).
+        Args:
+        - `metrics` (list): List of evaluation metrics.
+        - `output` (Tensor): Output images with the shape of (N=1, T, C, H, W).
+        - `gt` (Tensor): GT images with the shape of (N=1, T, C, H, W).
+        - `lq` (Tensor): LQ images with the shape of (N=1, T, C, H, W).
+
+        Returns:
+        - dict: Evaluation results.
         """
         crop_border = self.test_cfg.crop_border
 
@@ -407,12 +415,6 @@ class BasicRestorerVQESequence(BasicRestorer):
                      save_image=False,
                      save_path=None,
                      iteration=None):
-        """Test forward.
-
-        Differences to that of `BasicRestorer`:
-        - Save LQ, output, and GT.
-        - Save sequences. Key: sequence name.
-        """
         if self.test_cfg is not None and 'unfolding' in self.test_cfg:
             raise NotImplementedError(
                 'Unfolding is not supported yet for video tensor.')

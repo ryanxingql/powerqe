@@ -8,14 +8,11 @@ params = dict(batchsize=8,
               kiters=600,
               nchannels=64,
               nblocks=7)
-
 exp_name = generate_exp_name('basicvsr_plus_plus_vimeo90k_triplet', params)
-
 assert params['batchsize'] % params['ngpus'] == 0, (
     'Samples in a batch should better be evenly'
     ' distributed among all GPUs.')
 
-# model settings
 model = dict(
     type='BasicRestorerVQESequence',
     generator=dict(
@@ -27,11 +24,9 @@ model = dict(
         'basicvsr/spynet_20210409-c6c1bd09.pth'),
     pixel_loss=dict(type='CharbonnierLoss', loss_weight=1.0, reduction='mean'))
 
-# model training and testing settings
 train_cfg = dict(fix_iter=5000, fix_module=['edvr', 'spynet'])
 test_cfg = dict(metrics=['PSNR', 'SSIM'], crop_border=1)
 
-# dataset settings
 train_pipeline = [
     dict(type='LoadImageFromFileList',
          io_backend='disk',
@@ -71,7 +66,6 @@ test_pipeline = [
 dataset_type = 'PairedSameSizeVimeo90KTripletDataset'
 dataset_gt_dir = 'data/vimeo_triplet'
 dataset_lq_dir = 'data/vimeo_triplet_lq'
-
 batchsize_gpu = params['batchsize'] // params['ngpus']
 data = dict(workers_per_gpu=batchsize_gpu,
             train_dataloader=dict(samples_per_gpu=batchsize_gpu,
@@ -109,7 +103,6 @@ data = dict(workers_per_gpu=batchsize_gpu,
                       edge_padding=False,
                       center_gt=False))
 
-# optimizer
 optimizers = dict(
     generator=dict(type='Adam',
                    lr=1e-4,
@@ -117,7 +110,6 @@ optimizers = dict(
                    paramwise_cfg=dict(
                        custom_keys={'spynet': dict(lr_mult=0.25)})))
 
-# learning policy
 total_iters = params['kiters'] * 1000
 lr_config = dict(policy='CosineRestart',
                  by_epoch=False,
@@ -134,7 +126,6 @@ log_config = dict(interval=100,
                   ])
 visual_config = None
 
-# runtime settings
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
 work_dir = f'work_dirs/{exp_name}'

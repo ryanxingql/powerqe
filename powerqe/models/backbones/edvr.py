@@ -8,11 +8,15 @@ from ..registry import BACKBONES
 
 @BACKBONES.register_module()
 class EDVRNetQE(EDVRNet):
-    """EDVRNet for quality enhancement."""
+    """EDVRNet for quality enhancement.
+
+    Differences to `EDVRNet`:
+    - Comment all upsamplings since the input is with high resolution.
+    See `forward`.
+    """
 
     def __init__(self,
-                 in_channels,
-                 out_channels,
+                 io_channels,
                  mid_channels=64,
                  num_frames=5,
                  deform_groups=8,
@@ -20,8 +24,8 @@ class EDVRNetQE(EDVRNet):
                  num_blocks_reconstruction=10,
                  center_frame_idx=2,
                  with_tsa=True):
-        super().__init__(in_channels=in_channels,
-                         out_channels=out_channels,
+        super().__init__(in_channels=io_channels,
+                         out_channels=io_channels,
                          mid_channels=mid_channels,
                          num_frames=num_frames,
                          deform_groups=deform_groups,
@@ -36,11 +40,6 @@ class EDVRNetQE(EDVRNet):
         delattr(self, 'img_upsample')
 
     def forward(self, x):
-        """Forward function.
-
-        Differences to that of `EDVRNet`:
-        - Comment all upsamplings since the input is with high resolution.
-        """
         n, t, c, h, w = x.size()
         if h % 4 != 0 or w % 4 != 0:
             raise ValueError(
