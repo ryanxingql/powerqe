@@ -14,6 +14,7 @@ class PairedSameSizeImageDataset(SRFolderDataset):
     Differences to `SRFolderDataset`:
     - `scale` is set to `1`.
     - Support different extensions between GT and LQ. See `load_annotations`.
+    - Use the `Compose` in powerqe.
 
     Args:
     - `lq_folder` (str | :obj:`Path`): LQ folder.
@@ -56,7 +57,8 @@ class PairedSameSizeImageDataset(SRFolderDataset):
         if len(gt_paths) != len(lq_paths):
             raise ValueError(
                 'GT and LQ folders should have the same number of images;'
-                f' received `{len(gt_paths)}` vs. `{len(lq_paths)}`.')
+                f' found `{len(gt_paths)}` and `{len(lq_paths)}` images,'
+                ' respectively.')
 
         data_infos = []
         for gt_path in gt_paths:
