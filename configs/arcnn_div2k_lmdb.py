@@ -6,22 +6,16 @@ valid_lq_folder = 'data/div2k/valid/lq.lmdb'
 valid_gt_folder = 'data/div2k/valid/gt.lmdb'
 
 train_pipeline = [
-    dict(
-        type='LoadImageFromFile',
-        # io_backend='disk',
-        io_backend='lmdb',
-        db_path=train_lq_folder,
-        key='lq',
-        flag='color',
-        channel_order='rgb'),
-    dict(
-        type='LoadImageFromFile',
-        # io_backend='disk',
-        io_backend='lmdb',
-        db_path=train_gt_folder,
-        key='gt',
-        flag='color',
-        channel_order='rgb'),
+    dict(type='LoadImageFromFile',
+         io_backend='lmdb',
+         db_path=train_lq_folder,
+         key='lq',
+         channel_order='rgb'),
+    dict(type='LoadImageFromFile',
+         io_backend='lmdb',
+         db_path=train_gt_folder,
+         key='gt',
+         channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
     # no cropping
     dict(type='Flip',
@@ -34,22 +28,16 @@ train_pipeline = [
     dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path'])
 ]
 test_pipeline = [
-    dict(
-        type='LoadImageFromFile',
-        # io_backend='disk',
-        io_backend='lmdb',
-        db_path=valid_lq_folder,
-        key='lq',
-        flag='color',
-        channel_order='rgb'),
-    dict(
-        type='LoadImageFromFile',
-        # io_backend='disk',
-        io_backend='lmdb',
-        db_path=valid_gt_folder,
-        key='gt',
-        flag='color',
-        channel_order='rgb'),
+    dict(type='LoadImageFromFile',
+         io_backend='lmdb',
+         db_path=valid_lq_folder,
+         key='lq',
+         channel_order='rgb'),
+    dict(type='LoadImageFromFile',
+         io_backend='lmdb',
+         db_path=valid_gt_folder,
+         key='gt',
+         channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
     dict(type='ImageToTensor', keys=['lq', 'gt']),
     dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path'])

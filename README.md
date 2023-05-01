@@ -121,3 +121,5 @@ conda activate powerqe &&\
 Optional options:
 
 - `--save-path <save-folder>`: To save output images.
+
+Please refer to the [document](docs/v3.md) for more information.

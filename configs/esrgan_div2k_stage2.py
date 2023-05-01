@@ -1,14 +1,5 @@
 exp_name = 'esrgan_div2k_stage2'
 
-params = dict(batchsize=16,
-              ngpus=2,
-              patchsize=128,
-              kiters=400,
-              nchannels=[3, 64],
-              nblocks=23,
-              growthfactor=32,
-              klrsteps=[50, 100, 200, 300])
-
 stage1_ckpt = (
     'work_dirs/'
     'esrgan_div2k_stage1_batchsize_16_ngpus_2'
@@ -17,10 +8,10 @@ stage1_ckpt = (
 model = dict(
     type='ESRGANQE',
     generator=dict(type='RRDBNetQE',
-                   io_channels=params['nchannels'][0],
-                   mid_channels=params['nchannels'][1],
-                   num_blocks=params['nblocks'],
-                   growth_channels=params['growthfactor'],
+                   io_channels=3,
+                   mid_channels=64,
+                   num_blocks=23,
+                   growth_channels=32,
                    upscale_factor=1),
     discriminator=dict(type='ModifiedVGG', in_channels=3, mid_channels=64),
     pixel_loss=dict(type='L1Loss', loss_weight=1e-2, reduction='mean'),
@@ -45,23 +36,17 @@ train_cfg = None
 test_cfg = dict(metrics=['PSNR', 'SSIM'], crop_border=1)
 
 train_pipeline = [
-    dict(type='LoadImageFromFile',
+    dict(type='LoadImageFromFileMultiKeys',
          io_backend='disk',
-         key='lq',
-         flag='unchanged'),
-    dict(type='LoadImageFromFile',
-         io_backend='disk',
-         key='gt',
-         flag='unchanged'),
+         keys=['lq', 'gt'],
+         channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
     dict(type='Normalize',
          keys=['lq', 'gt'],
          mean=[0, 0, 0],
          std=[1, 1, 1],
          to_rgb=True),
-    dict(type='PairedRandomCropQE',
-         patch_size=params['patchsize'],
-         keys=['lq', 'gt']),
+    dict(type='PairedRandomCropQE', patch_size=128, keys=['lq', 'gt']),
     dict(type='Flip',
          keys=['lq', 'gt'],
          flip_ratio=0.5,
@@ -72,14 +57,10 @@ train_pipeline = [
     dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path'])
 ]
 test_pipeline = [
-    dict(type='LoadImageFromFile',
+    dict(type='LoadImageFromFileMultiKeys',
          io_backend='disk',
-         key='lq',
-         flag='unchanged'),
-    dict(type='LoadImageFromFile',
-         io_backend='disk',
-         key='gt',
-         flag='unchanged'),
+         keys=['lq', 'gt'],
+         channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
     dict(type='Normalize',
          keys=['lq', 'gt'],
@@ -90,10 +71,11 @@ test_pipeline = [
     dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path'])
 ]
 
-assert params['batchsize'] % params['ngpus'] == 0, (
-    'Samples in a batch should better be evenly'
-    ' distributed among all GPUs.')
-batchsize_gpu = params['batchsize'] // params['ngpus']
+batchsize = 16
+ngpus = 2
+assert batchsize % ngpus == 0, ('Samples in a batch should better be evenly'
+                                ' distributed among all GPUs.')
+batchsize_gpu = batchsize // ngpus
 data = dict(workers_per_gpu=batchsize_gpu,
             train_dataloader=dict(samples_per_gpu=batchsize_gpu,
                                   drop_last=True),
@@ -123,10 +105,10 @@ data = dict(workers_per_gpu=batchsize_gpu,
 optimizers = dict(generator=dict(type='Adam', lr=1e-4, betas=(0.9, 0.999)),
                   discriminator=dict(type='Adam', lr=1e-4, betas=(0.9, 0.999)))
 
-total_iters = params['kiters'] * 1000
+total_iters = 400 * 1000
 lr_config = dict(policy='Step',
                  by_epoch=False,
-                 step=[s * 1000 for s in params['klrsteps']],
+                 step=[s * 1000 for s in [50, 100, 200, 300]],
                  gamma=0.5)
 
 checkpoint_config = dict(interval=5000, save_optimizer=True, by_epoch=False)

@@ -3,19 +3,12 @@ basicvsr_plusplus_c64n7_8x1_600k_reds4."""
 
 exp_name = 'basicvsr_plus_plus_vimeo90k_triplet'
 
-params = dict(batchsize=8,
-              ngpus=2,
-              patchsize=256,
-              kiters=600,
-              nchannels=64,
-              nblocks=7)
-
 model = dict(
     type='BasicRestorerVQESequence',
     generator=dict(
         type='BasicVSRPlusPlus',
-        mid_channels=params['nchannels'],
-        num_blocks=params['nblocks'],
+        mid_channels=64,
+        num_blocks=7,
         is_low_res_input=False,
         spynet_pretrained='https://download.openmmlab.com/mmediting/restorers/'
         'basicvsr/spynet_20210409-c6c1bd09.pth'),
@@ -25,18 +18,12 @@ train_cfg = dict(fix_iter=5000, fix_module=['edvr', 'spynet'])
 test_cfg = dict(metrics=['PSNR', 'SSIM'], crop_border=1)
 
 train_pipeline = [
-    dict(type='LoadImageFromFileList',
+    dict(type='LoadImageFromFileListMultiKeys',
          io_backend='disk',
-         key='lq',
-         flag='unchanged'),
-    dict(type='LoadImageFromFileList',
-         io_backend='disk',
-         key='gt',
-         flag='unchanged'),
+         keys=['lq', 'gt'],
+         channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
-    dict(type='PairedRandomCropQE',
-         patch_size=params['patchsize'],
-         keys=['lq', 'gt']),
+    dict(type='PairedRandomCropQE', patch_size=256, keys=['lq', 'gt']),
     dict(type='Flip',
          keys=['lq', 'gt'],
          flip_ratio=0.5,
@@ -44,17 +31,15 @@ train_pipeline = [
     dict(type='Flip', keys=['lq', 'gt'], flip_ratio=0.5, direction='vertical'),
     dict(type='RandomTransposeHW', keys=['lq', 'gt'], transpose_ratio=0.5),
     dict(type='FramesToTensor', keys=['lq', 'gt']),
-    dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path'])
+    dict(type='Collect',
+         keys=['lq', 'gt'],
+         mmeta_keys=['lq_path', 'gt_path', 'key'])
 ]
 test_pipeline = [
-    dict(type='LoadImageFromFileList',
+    dict(type='LoadImageFromFileListMultiKeys',
          io_backend='disk',
-         key='lq',
-         flag='unchanged'),
-    dict(type='LoadImageFromFileList',
-         io_backend='disk',
-         key='gt',
-         flag='unchanged'),
+         keys=['lq', 'gt'],
+         channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
     dict(type='FramesToTensor', keys=['lq', 'gt']),
     dict(type='Collect',
@@ -62,13 +47,14 @@ test_pipeline = [
          meta_keys=['lq_path', 'gt_path', 'key'])
 ]
 
-assert params['batchsize'] % params['ngpus'] == 0, (
-    'Samples in a batch should better be evenly'
-    ' distributed among all GPUs.')
-dataset_type = 'PairedSameSizeVimeo90KTripletDataset'
-dataset_gt_dir = 'data/vimeo_triplet'
-dataset_lq_dir = 'data/vimeo_triplet_lq'
-batchsize_gpu = params['batchsize'] // params['ngpus']
+batchsize = 8
+ngpus = 2
+assert batchsize % ngpus == 0, ('Samples in a batch should better be evenly'
+                                ' distributed among all GPUs.')
+dataset_type = 'PairedSameSizeVideoDataset'
+dataset_gt_root = 'data/vimeo_triplet'
+dataset_lq_folder = 'data/vimeo_triplet_lq'
+batchsize_gpu = batchsize // ngpus
 data = dict(workers_per_gpu=batchsize_gpu,
             train_dataloader=dict(samples_per_gpu=batchsize_gpu,
                                   drop_last=True),
@@ -78,30 +64,33 @@ data = dict(workers_per_gpu=batchsize_gpu,
                        times=1000,
                        dataset=dict(
                            type=dataset_type,
-                           folder=f'{dataset_lq_dir}',
-                           gt_folder=f'{dataset_gt_dir}/sequences',
-                           ann_file=f'{dataset_gt_dir}/tri_trainlist.txt',
+                           lq_folder=f'{dataset_lq_folder}',
+                           gt_folder=f'{dataset_gt_root}/sequences',
+                           ann_file=f'{dataset_gt_root}/tri_trainlist.txt',
                            pipeline=train_pipeline,
                            test_mode=False,
                            filename_tmpl='{}.png',
+                           samp_len=-1,
                            edge_padding=False,
                            center_gt=False)),
             val=dict(type=dataset_type,
-                     folder=f'{dataset_lq_dir}',
-                     gt_folder=f'{dataset_gt_dir}/sequences',
-                     ann_file=f'{dataset_gt_dir}/tri_validlist.txt',
+                     folder=f'{dataset_lq_folder}',
+                     gt_folder=f'{dataset_gt_root}/sequences',
+                     ann_file=f'{dataset_gt_root}/tri_validlist.txt',
                      pipeline=test_pipeline,
                      test_mode=True,
                      filename_tmpl='{}.png',
+                     samp_len=-1,
                      edge_padding=False,
                      center_gt=False),
             test=dict(type=dataset_type,
-                      folder=f'{dataset_lq_dir}',
-                      gt_folder=f'{dataset_gt_dir}/sequences',
-                      ann_file=f'{dataset_gt_dir}/tri_testlist.txt',
+                      folder=f'{dataset_lq_folder}',
+                      gt_folder=f'{dataset_gt_root}/sequences',
+                      ann_file=f'{dataset_gt_root}/tri_testlist.txt',
                       pipeline=test_pipeline,
                       test_mode=True,
                       filename_tmpl='{}.png',
+                      samp_len=-1,
                       edge_padding=False,
                       center_gt=False))
 
@@ -112,7 +101,7 @@ optimizers = dict(
                    paramwise_cfg=dict(
                        custom_keys={'spynet': dict(lr_mult=0.25)})))
 
-total_iters = params['kiters'] * 1000
+total_iters = 600 * 1000
 lr_config = dict(policy='CosineRestart',
                  by_epoch=False,
                  periods=[total_iters],

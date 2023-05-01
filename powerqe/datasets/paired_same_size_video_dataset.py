@@ -202,5 +202,6 @@ class PairedSameSizeVideoDataset(PairedSameSizeImageDataset):
                     for idx in lq_idxs
                 ]
                 data_infos.append(
-                    dict(gt_path=samp_gt_paths, lq_path=samp_lq_paths))
+                    dict(gt_path=samp_gt_paths, lq_path=samp_lq_paths,
+                         key=key))
         return data_infos

@@ -13,41 +13,34 @@ params = dict(batchsize=16,
 
 model = dict(type='BasicRestorerQE',
              generator=dict(type='SAN',
-                            n_resgroups=params['ngroups'],
-                            n_resblocks=params['nblocks'],
-                            n_feats=params['nchannels'][1],
-                            kernel_size=params['kernelsize'],
-                            reduction=params['reduction'],
+                            n_resgroups=20,
+                            n_resblocks=10,
+                            n_feats=64,
+                            kernel_size=3,
+                            reduction=16,
                             scale=1,
                             rgb_range=1,
-                            n_colors=params['nchannels'][0],
-                            res_scale=params['resscale']),
+                            n_colors=3,
+                            res_scale=1),
              pixel_loss=dict(type='CharbonnierLoss',
                              loss_weight=1.0,
                              reduction='mean'))
 
+patchsize = 48
 train_cfg = None
 test_cfg = dict(
     metrics=['PSNR', 'SSIM'],
     crop_border=1,
-    unfolding=dict(patchsize=params['patchsize'], splits=16)  # to save memory
+    unfolding=dict(patchsize=patchsize, splits=16)  # to save memory
 )
 
 train_pipeline = [
-    dict(type='LoadImageFromFile',
+    dict(type='LoadImageFromFileMultiKeys',
          io_backend='disk',
-         key='lq',
-         flag='color',
-         channel_order='rgb'),
-    dict(type='LoadImageFromFile',
-         io_backend='disk',
-         key='gt',
-         flag='color',
+         keys=['lq', 'gt'],
          channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
-    dict(type='PairedRandomCropQE',
-         patch_size=params['patchsize'],
-         keys=['lq', 'gt']),
+    dict(type='PairedRandomCropQE', patch_size=patchsize, keys=['lq', 'gt']),
     dict(type='Flip',
          keys=['lq', 'gt'],
          flip_ratio=0.5,
@@ -58,43 +51,30 @@ train_pipeline = [
     dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path'])
 ]
 valid_pipeline = [
-    dict(type='LoadImageFromFile',
+    dict(type='LoadImageFromFileMultiKeys',
          io_backend='disk',
-         key='lq',
-         flag='color',
-         channel_order='rgb'),
-    dict(type='LoadImageFromFile',
-         io_backend='disk',
-         key='gt',
-         flag='color',
+         keys=['lq', 'gt'],
          channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
-    dict(type='PairedCenterCrop',
-         patch_size=params['patchsize'],
-         keys=['lq', 'gt']),
+    dict(type='PairedCenterCrop', patch_size=patchsize, keys=['lq', 'gt']),
     dict(type='ImageToTensor', keys=['lq', 'gt']),
     dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path'])
 ]
 test_pipeline = [
-    dict(type='LoadImageFromFile',
+    dict(type='LoadImageFromFileMultiKeys',
          io_backend='disk',
-         key='lq',
-         flag='color',
-         channel_order='rgb'),
-    dict(type='LoadImageFromFile',
-         io_backend='disk',
-         key='gt',
-         flag='color',
+         keys=['lq', 'gt'],
          channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
     dict(type='ImageToTensor', keys=['lq', 'gt']),
     dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path'])
 ]
 
-assert params['batchsize'] % params['ngpus'] == 0, (
-    'Samples in a batch should better be evenly'
-    ' distributed among all GPUs.')
-batchsize_gpu = params['batchsize'] // params['ngpus']
+batchsize = 16
+ngpus = 1
+assert batchsize % ngpus == 0, ('Samples in a batch should better be evenly'
+                                ' distributed among all GPUs.')
+batchsize_gpu = batchsize // ngpus
 data = dict(workers_per_gpu=batchsize_gpu,
             train_dataloader=dict(samples_per_gpu=batchsize_gpu,
                                   drop_last=True),
@@ -122,7 +102,7 @@ data = dict(workers_per_gpu=batchsize_gpu,
                       test_mode=True))
 
 optimizers = dict(generator=dict(type='Adam', lr=2e-4, betas=(0.9, 0.999)))
-total_iters = params['kiters'] * 1000
+total_iters = 300 * 1000
 lr_config = dict(policy='CosineRestart',
                  by_epoch=False,
                  periods=[total_iters],
