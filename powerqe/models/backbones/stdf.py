@@ -148,10 +148,10 @@ class QENet(nn.Module):
 class STDFNet(BaseNet):
     """STDF network structure.
 
-    Ref: https://github.com/ryanxingql/stdf-pytorch
+    Ref: "https://github.com/ryanxingql/stdf-pytorch"
 
     Args:
-    - `io_channels` (int): I/O channel number.
+    - `io_channels` (int): Number of I/O channels.
     - `radius`: Frames number before the center frame.
     - `nf_stdf` (int): Channel number of intermediate features of STDF module.
     - `nb_stdf` (int): Block number of STDF module.

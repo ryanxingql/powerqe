@@ -16,7 +16,7 @@ class PairedSameSizeVimeo90KTripletDataset(BaseVFIDataset):
     Differences to the `VFIVimeo90KDataset` in mmedit:
     - Load GT. See `load_annotations`.
     - Support different extensions between GT and LQ by `filename_tmpl`.
-    See `load_annotations`.
+      See `load_annotations`.
     - Use the `Compose` in powerqe.
     - Set `results['scale']` to `1` for `PairedRandomCrop`. See `__getitem__`.
 
@@ -27,15 +27,16 @@ class PairedSameSizeVimeo90KTripletDataset(BaseVFIDataset):
     - `gt_folder` (str | :obj:`Path`): GT folder.
     - `ann_file` (str | :obj:`Path`): Path to the annotation file.
     - `pipeline` (list[dict | callable]): A sequence of data transformations.
-    - `filename_tmpl` (str): Template for each filename of LQ.
-    Default: `{}.png`.
     - `test_mode` (bool): Store `True` when building test dataset.
-    Default: `False`.
+      Default: `False`.
+    - `filename_tmpl` (str): Template for each filename of LQ.
+      Default: `{}.png`.
     - `edge_padding` (bool): If `True`, record three sub-sequences in
-    annotations. If `False`, only one three-frame sequence is recorded.
-    Default: `False`.
+      annotations. If `False`, only one three-frame sequence is recorded.
+      Default: `False`.
     - `center_gt` (bool): If `True`, only the center frame is recorded in GT.
-    Note that `gt_path` is always a list. Default: `False`.
+      Note that `gt_path` is always a list.
+      Default: `False`.
     """
 
     def __init__(self,
@@ -58,8 +59,8 @@ class PairedSameSizeVimeo90KTripletDataset(BaseVFIDataset):
         # __init__ of BaseVFIDataset does not have this step
         self.data_infos = self.load_annotations()
 
-        # BaseDataset cannot accept the new pipeline outside MMEdit
-        # we have to create pipeline manually
+        # BaseDataset cannot accept the new pipeline outside MMEdit;
+        # We have to create pipeline manually.
         self.pipeline = Compose(pipeline)
 
     def __getitem__(self, idx):
@@ -139,23 +140,18 @@ class PairedSameSizeVimeo90KTripletKeyFrameDataset(
 
     Differences to `PairedSameSizeVimeo90KTripletDataset`:
     - Use high-quality key frames instead of neighboring frames.
-    See `load_annotations`.
+      See `load_annotations`.
 
     Args:
     - `folder` (str | :obj:`Path`): LQ folder.
     - `gt_folder` (str | :obj:`Path`): GT folder.
     - `ann_file` (str | :obj:`Path`): Path to the annotation file.
     - `pipeline` (list[dict | callable]): A sequence of data transformations.
-    - `filename_tmpl` (str): Template for each filename of LQ.
-    Default: `{}.png`.
     - `test_mode` (bool): Store `True` when building test dataset.
-    Default: `False`.
-    - `edge_padding` (bool): If `True`, record three sub-sequences in
-    annotations. If `False`, only one three-frame sequence is recorded.
-    Default: `False`.
-    - `center_gt` (bool): If `True`, only the center frame is recorded in GT.
-    Note that `gt_path` is always a list. Default: `False`.
-    - `qp_info` (dict): See doc.
+      Default: `False`.
+    - `filename_tmpl` (str): Template for each filename of LQ.
+      Default: `{}.png`.
+    - `qp_info` (dict): See the document for explanation and default value.
     """
 
     def __init__(self,

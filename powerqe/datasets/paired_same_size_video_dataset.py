@@ -74,19 +74,22 @@ class PairedSameSizeVideoDataset(PairedSameSizeImageDataset):
     - `gt_folder` (str | :obj:`Path`): GT folder.
     - `lq_folder` (str | :obj:`Path`): LQ folder.
     - `ann_file` (str | :obj:`Path`): Path to the annotation file.
-    Each line records a sequence path relative to the GT/LQ folder.
+      Each line records a sequence path relative to the GT/LQ folder.
     - `pipeline` (List[dict | callable]): A list of data transformations.
     - `test_mode` (bool): Store `True` when building test dataset.
-    Default: `False`.
-    - `filename_tmpl` (str): Template for LQ filename. Default: `{}.png`.
-    - `samp_len` (int): Sample length. The default value `-1` corresponds to
-    the sequence length.
+      Default: `False`.
+    - `filename_tmpl` (str): Template for LQ filename.
+      Default: `{}.png`.
+    - `samp_len` (int): Sample length.
+      The default value `-1` corresponds to the sequence length.
+      Default: `-1`.
     - `edge_padding` (bool): Set `True` to obtain more samples.
-    Value `False` is recommended for training and `True` for testing.
-    Default `False`.
+      Value `False` is recommended for training and `True` for testing.
+      Default `False`.
     - `center_gt` (bool): If `True`, only the center frame is recorded in GT.
-    The `samp_len` is required to be odd.
-    Note that `gt_path` is always a list. Default: `False`.
+      The `samp_len` is required to be odd.
+      Note that `gt_path` is always a list.
+      Default: `False`.
     """
 
     def __init__(self,
@@ -99,8 +102,8 @@ class PairedSameSizeVideoDataset(PairedSameSizeImageDataset):
                  samp_len=-1,
                  edge_padding=False,
                  center_gt=False):
-        # must be defined before `super().__init__(...)`
-        # for `load_annotations` in `super().__init__(...)`
+        # Must be defined before `super().__init__(...)`
+        # for `load_annotations` in `super().__init__(...)`.
         self.ann_file = ann_file
         self.samp_len = samp_len
         self.edge_padding = edge_padding
@@ -122,7 +125,7 @@ class PairedSameSizeVideoDataset(PairedSameSizeImageDataset):
 
         Returns:
         - list[dict]: Each dict records the information for a sub-sequence to
-        serve as a sample in training or testing.
+          serve as a sample in training or testing.
         """
         # get keys
         with open(self.ann_file, 'r') as f:

@@ -25,11 +25,14 @@ class BasicRestorerQE(BasicRestorer):
     Args:
     - `generator` (dict): Config for the generator structure.
     - `pixel_loss` (dict): Config for pixel-wise loss.
-    - `train_cfg` (dict): Config for training. Default: `None`.
-    - `test_cfg` (dict): Config for testing. Default: `None`.
-    - `pretrained` (str): Path for pretrained model. Default: `None`.
+    - `train_cfg` (dict): Config for training.
+      Default: `None`.
+    - `test_cfg` (dict): Config for testing.
+      Default: `None`.
+    - `pretrained` (str): Path for pretrained model.
+      Default: `None`.
     - `save_gt_lq` (bool): Save GT and LQ besides output images.
-    Default: `True`.
+      Default: `True`.
     """
     supported_metrics = {'PSNR': psnr, 'SSIM': ssim}
 
@@ -105,16 +108,19 @@ class BasicRestorerQE(BasicRestorer):
         Args:
         - `lq` (Tensor): LQ image with the shape of (N=1, C, H, W).
         - `gt` (Tensor): GT image with the shape of (N=1, C, H, W).
-        Default: `None`.
-        - `meta` (list): Meta information of samples. Default: `None`.
-        - `save_image` (bool): Whether to save image. Default: `False`.
-        - `save_path` (str): Path to save image. Default: `None`.
+          Default: `None`.
+        - `meta` (list): Meta information of samples.
+          Default: `None`.
+        - `save_image` (bool): Whether to save image.
+          Default: `False`.
+        - `save_path` (str): Path to save image.
+          Default: `None`.
         - `iteration` (int): Iteration for the saving image name.
-        Default: `None`.
+          Default: `None`.
 
         Returns:
         - dict[dict]: A dict with a single key-value pair.
-        The key is `eval_result`; the value is a dict of evaluation results.
+          The key is `eval_result`; the value is a dict of evaluation results.
         """
         if self.test_cfg is None:
             raise ValueError(
@@ -209,6 +215,16 @@ class BasicRestorerVQE(BasicRestorer):
     - Support LQ vs. GT testing.
     - Support sequence LQ. GT corresponds to the center LQ.
     - Support saving LQ and GT. See `forward_test`.
+
+    Args:
+    - `generator` (dict): Config for the generator structure.
+    - `pixel_loss` (dict): Config for pixel-wise loss.
+    - `train_cfg` (dict): Config for training.
+      Default: `None`.
+    - `test_cfg` (dict): Config for testing.
+      Default: `None`.
+    - `pretrained` (str): Path for pretrained model.
+      Default: `None`.
     """
 
     def evaluate(self, output, gt, lq):
@@ -311,13 +327,16 @@ class BasicRestorerVQESequence(BasicRestorer):
     Args:
     - `generator` (dict): Config for the generator structure.
     - `pixel_loss` (dict): Config for pixel-wise loss.
-    - `train_cfg` (dict): Config for training. Default: `None`.
-    - `test_cfg` (dict): Config for testing. Default: `None`.
-    - `pretrained` (str): Path for pretrained model. Default: `None`.
+    - `train_cfg` (dict): Config for training.
+      Default: `None`.
+    - `test_cfg` (dict): Config for testing.
+      Default: `None`.
+    - `pretrained` (str): Path for pretrained model.
+      Default: `None`.
     - `center_gt` (bool): Only the center GT is provided and evaluated.
-    Default: `False`.
+      Default: `False`.
     - `save_gt_lq` (bool): Save GT and LQ besides output images.
-    Default: `True`.
+      Default: `True`.
     """
 
     def __init__(self,

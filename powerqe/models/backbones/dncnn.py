@@ -15,10 +15,11 @@ class DnCNN(BaseNet):
     but is 0.1 default in PyTorch.
 
     Args:
-    - `io_channels` (int): I/O channel number.
+    - `io_channels` (int): Number of I/O channels.
     - `mid_channels` (int): Channel number of intermediate features.
     - `num_blocks` (int): Block number in the trunk network.
-    - `if_bn` (bool): If use BN layer. Default: `False`.
+    - `if_bn` (bool): If use BN layer.
+      Default: `False`.
     """
 
     def __init__(self,

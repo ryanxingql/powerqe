@@ -10,18 +10,18 @@ class ARCNN(BaseNet):
     """AR-CNN network structure.
 
     Args:
-    - `io_channels` (int): I/O channel number.
+    - `io_channels` (int): Number of I/O channels.
     - `mid_channels_1` (int): Channel number of the first intermediate
-    features.
+      features.
     - `mid_channels_2` (int): Channel number of the second intermediate
-    features.
+      features.
     - `mid_channels_3` (int): Channel number of the third intermediate
-    features.
+      features.
     - `in_kernel_size` (int): Kernel size of the first convolution.
     - `mid_kernel_size` (int): Kernel size of the first intermediate
-    convolution.
+      convolution.
     - `mid_kernel_size` (int): Kernel size of the second intermediate
-    convolution.
+      convolution.
     - `out_kernel_size` (int): Kernel size of the last convolution.
     """
 

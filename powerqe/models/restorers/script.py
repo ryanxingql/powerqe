@@ -13,12 +13,12 @@ def pad_img(img, sz_mul):
     Args:
     - `img` (Tensor): Image with the shape of (N, C, H, W).
     - `sz_mul` (int): Height and width of the padded image should be divisible
-    by this factor.
+      by this factor.
 
     Returns:
     - Tensor: Padded image with the shape of (N, C, H, W).
     - Tuple: Padding information recorded as
-    (left, right, top, bottom).
+      (left, right, top, bottom).
     """
     h, w = img.shape[2:]
     if (h < sz_mul) or (w < sz_mul):
@@ -35,21 +35,21 @@ def pad_img(img, sz_mul):
 def unfold_img(img, patch_sz):
     """Image unfolding.
 
-    https://pytorch.org/docs/stable/generated/torch.Tensor.unfold.html
+    Ref: "https://pytorch.org/docs/stable/generated/torch.Tensor.unfold.html"
 
     Args:
     - `img` (Tensor): Image with the shape of (N, C, H, W).
     - `patch_sz` (int): Unfolding patch size.
 
     Returns:
-    - Tensor: Unfolded patches with the shape of
-    (B*N1*N2, C, PS, PS), where N1 is the patch number for H;
-    N2 is the patch number for W;
-    PS is the patch size.
-    - Tuple: Information for folding recording
-    (B, N1, N2, C, PS, PS), where N1 is the patch number for H;
-    N2 is the patch number for W;
-    PS is the patch size.
+    - Tensor: Unfolded patches with the shape of (B*N1*N2, C, PS, PS),
+      where N1 is the patch number for H;
+      N2 is the patch number for W;
+      PS is the patch size.
+    - Tuple: Information for folding recording (B, N1, N2, C, PS, PS),
+      where N1 is the patch number for H;
+      N2 is the patch number for W;
+      PS is the patch size.
     """
     patches = img.unfold(2, patch_sz, patch_sz).unfold(3, patch_sz, patch_sz)
     # unfold h: b c num_patch_h w patch_sz
@@ -68,13 +68,13 @@ def combine_patches(patches, unfold_shape):
 
     Args:
     - `patches` (Tensor): Patches with the shape of (B*N1*N2 C PS PS),
-    where N1 is the patch number for H;
-    N2 is the patch number for W;
-    PS is the patch size.
+      where N1 is the patch number for H;
+      N2 is the patch number for W;
+      PS is the patch size.
     - `unfold_shape` (Tuple): Information for folding recording
-    (B, N1, N2, C, PS, PS), where N1 is the patch number for H;
-    N2 is the patch number for W;
-    PS is the patch size.
+      (B, N1, N2, C, PS, PS), where N1 is the patch number for H;
+      N2 is the patch number for W;
+      PS is the patch size.
 
     Returns:
     - Tensor: Image with the shape of (N, C, H, W).
@@ -98,7 +98,7 @@ def crop_img(img, pad_info):
     Args:
     - `img` (Tensor): Image with the shape of (N, C, H, W).
     - `pad_info` (Tuple): Padding information recorded as
-    (left, right, top, bottom).
+      (left, right, top, bottom).
 
     Returns:
     - Tensor: Cropped image.

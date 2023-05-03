@@ -18,7 +18,7 @@ class MFQEv2(BaseNet):
     Ref: "https://github.com/ryanxingql/mfqev2.0/blob/master/net_MFCNN.py"
 
     Args:
-    - `io_channels` (int): I/O channel number.
+    - `io_channels` (int): Number of I/O channels.
     - `nf` (int): Channel number of intermediate features.
     """
 

@@ -15,10 +15,10 @@ class BaseNet(nn.Module):
 
         Args:
         - `pretrained` (str): Path for pretrained weights.
-        If given `None`, pretrained weights will not be loaded.
-        Default: `None`.
+          If given `None`, pretrained weights will not be loaded.
+          Default: `None`.
         - `strict` (bool): Whether strictly load the pretrained model.
-        Default: `True`.
+          Default: `True`.
         """
         if isinstance(pretrained, str):
             logger = get_root_logger()

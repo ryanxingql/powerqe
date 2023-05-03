@@ -11,7 +11,8 @@ def build(cfg, registry, default_args=None):
     Args:
     - `cfg` (dict): Configuration for building modules.
     - `registry` (obj): Registry object.
-    - `default_args` (dict, optional): Default arguments. Default: `None`.
+    - `default_args` (dict, optional): Default arguments.
+      Default: `None`.
     """
     if isinstance(cfg, list):
         modules = [
@@ -54,7 +55,9 @@ def build_model(cfg, train_cfg=None, test_cfg=None):
 
     Args:
     - `cfg` (dict): Configuration for building model.
-    - `train_cfg` (dict): Training configuration. Default: `None`.
-    - `test_cfg` (dict): Testing configuration. Default: `None`.
+    - `train_cfg` (dict): Training configuration.
+      Default: `None`.
+    - `test_cfg` (dict): Testing configuration.
+      Default: `None`.
     """
     return build(cfg, MODELS, dict(train_cfg=train_cfg, test_cfg=test_cfg))

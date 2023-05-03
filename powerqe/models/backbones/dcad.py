@@ -10,7 +10,7 @@ class DCAD(BaseNet):
     """DCAD network structure.
 
     Args:
-    - `io_channels` (int): I/O channel number.
+    - `io_channels` (int): Number of I/O channels.
     - `mid_channels` (int): Channel number of intermediate features.
     - `num_blocks` (int): Block number in the trunk network.
     """

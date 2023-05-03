@@ -13,6 +13,10 @@ class Compose(MMEditCompose):
 
     Differences to `MMEditCompose`:
     - Use the `PIPELINES` in powerqe.
+
+    Args:
+    - `transforms` (list[dict | callable]): Either config dicts of transforms
+      or transform objects.
     """
 
     def __init__(self, transforms):

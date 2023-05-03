@@ -58,7 +58,6 @@ class Up(nn.Module):
 
 @BACKBONES.register_module()
 class UNet(BaseNet):
-    """U-Net for enhancement."""
 
     def __init__(self,
                  nf_io,

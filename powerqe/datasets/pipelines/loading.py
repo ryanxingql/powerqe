@@ -13,24 +13,24 @@ class LoadImageFromFileMultiKeys:
 
     Args:
     - `io_backend` (str): io backend where images are stored.
-    Default: `disk`.
+      Default: `disk`.
     - `keys` (list[str]): Keys in results to find corresponding path.
-    Default: `['gt', 'lq']`.
+      Default: `['gt', 'lq']`.
     - `flag` (str): Loading flag for images.
-    Default: `color`.
+      Default: `color`.
     - `channel_order` (str): Order of channel, candidates are `bgr` and `rgb`.
-    Default: `bgr`.
+      Default: `bgr`.
     - `convert_to` (str | `None`): The color space of the output image.
-    If `None`, no conversion is conducted.
-    Default: `None`.
+      If `None`, no conversion is conducted.
+      Default: `None`.
     - `save_original_img` (bool): If `True`, maintain a copy of the image in
-    `results` dict with name of `f'ori_{key}'`.
-    Default: `False`.
+      `results` dict with name of `f'ori_{key}'`.
+      Default: `False`.
     - `use_cache` (bool): If `True`, load all images at once.
-    Default: `False`.
-    - `backend` (str): The image loading backend type. Options are `cv2`,
-    `pillow`, and `turbojpeg`.
-    Default: `None`.
+      Default: `False`.
+    - `backend` (str): The image loading backend type.
+      Options are `cv2`, `pillow`, and `turbojpeg`.
+      Default: `None`.
     - `kwargs` (dict): Args for file client.
     """
 
@@ -64,7 +64,7 @@ class LoadImageFromFileMultiKeys:
 
         Args:
         - `results` (dict): A dict containing the necessary information and
-        data for augmentation.
+          data for augmentation.
 
         Returns:
         - `dict`: A dict containing the processed data and information.
@@ -82,29 +82,29 @@ class LoadImageFromFileListMultiKeys():
     Difference to the `LoadImageFromFileList` in mmedit:
     - Accept multiple keys.
 
-    It accepts a list of path and read each frame from each path. A list
-    of frames will be returned.
+    It accepts a list of path and read each frame from each path.
+    A list of frames will be returned.
 
     Args:
     - `io_backend` (str): io backend where images are stored.
-    Default: `disk`.
+      Default: `disk`.
     - `keys` (list[str]): Keys in results to find corresponding path.
-    Default: `['gt', 'lq']`.
+      Default: `['gt', 'lq']`.
     - `flag` (str): Loading flag for images.
-    Default: `color`.
+      Default: `color`.
     - `channel_order` (str): Order of channel, candidates are `bgr` and `rgb`.
-    Default: `bgr`.
+      Default: `bgr`.
     - `convert_to` (str | `None`): The color space of the output image.
-    If `None`, no conversion is conducted.
-    Default: `None`.
+      If `None`, no conversion is conducted.
+      Default: `None`.
     - `save_original_img` (bool): If `True`, maintain a copy of the image in
-    `results` dict with name of `f'ori_{key}'`.
-    Default: `False`.
+      `results` dict with name of `f'ori_{key}'`.
+      Default: `False`.
     - `use_cache` (bool): If `True`, load all images at once.
-    Default: `False`.
-    - `backend` (str): The image loading backend type. Options are `cv2`,
-    `pillow`, and `turbojpeg`.
-    Default: `None`.
+      Default: `False`.
+    - `backend` (str): The image loading backend type.
+      Options are `cv2`, `pillow`, and `turbojpeg`.
+      Default: `None`.
     - `kwargs` (dict): Args for file client.
     """
 
@@ -138,7 +138,7 @@ class LoadImageFromFileListMultiKeys():
 
         Args:
         - `results` (dict): A dict containing the necessary information and
-        data for augmentation.
+          data for augmentation.
 
         Returns:
         - `dict`: A dict containing the processed data and information.

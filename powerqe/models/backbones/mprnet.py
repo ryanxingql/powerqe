@@ -392,7 +392,6 @@ class ORSNet(nn.Module):
 
 @BACKBONES.register_module()
 class MPRNet(BaseNet):
-    """MPRNet for enhancement."""
 
     def __init__(self,
                  io_c=3,

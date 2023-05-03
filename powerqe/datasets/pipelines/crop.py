@@ -31,7 +31,7 @@ class PairedRandomCropQE:
 
         Args:
         - `results` (dict[list | array]): Each value is a image (list) with
-        the shape of (H, W, C).
+          the shape of (H, W, C).
 
         Returns:
         - dict: Cropped images. The shape is the same to the input.
@@ -81,10 +81,12 @@ class PairedRandomCropQE:
 class PairedCenterCrop(PairedRandomCropQE):
     """Paired center crop for quality enhancement.
 
-    Useful for testing.
-
     Differences to `PairedRandomCropQE`:
     - Center cropping instead of random cropping.
+
+    Args:
+    - `patch_size` (int): Patch size.
+    - `keys` (Sequence[str]): Images to be transformed.
     """
 
     def choose_coordinates(self, h, w):

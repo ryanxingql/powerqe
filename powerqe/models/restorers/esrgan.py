@@ -10,6 +10,32 @@ from .basic_restorer import BasicRestorerQE
 
 @MODELS.register_module()
 class ESRGANQE(BasicRestorerQE):
+    """ESRGAN restorer for quality enhancement.
+
+    Args:
+    - `generator` (dict): Config for the generator.
+    - `discriminator` (dict): Config for the discriminator.
+      Default: `None`.
+    - `gan_loss` (dict): Config for the GAN loss.
+      Note that the loss weight in GAN loss is only for the generator.
+    - `pixel_loss` (dict): Config for the pixel loss.
+      Default: `None`.
+    - `perceptual_loss` (dict): Config for the perceptual loss.
+      Default: `None`.
+    - `train_cfg` (dict): Config for training.
+      Default: `None`.
+      You may change the training of GAN by setting:
+      - `disc_steps`: how many discriminator updates after one generate
+        update;
+      - `disc_init_steps`: how many discriminator updates at the start of
+        the training.
+
+      These two keys are useful when training with WGAN.
+    - `test_cfg` (dict): Config for testing.
+      Default: `None`.
+    - `pretrained` (str): Path for pretrained model.
+      Default: `None`.
+    """
 
     def __init__(self,
                  generator,
@@ -20,7 +46,6 @@ class ESRGANQE(BasicRestorerQE):
                  train_cfg=None,
                  test_cfg=None,
                  pretrained=None):
-        """Similar to that of `SRGAN` in mmedit."""
         super().__init__(
             generator=generator,
             pixel_loss=pixel_loss,
@@ -51,6 +76,10 @@ class ESRGANQE(BasicRestorerQE):
         """Init the generator weights using the generator's method.
 
         Therefore `r'^generator.'` must be removed.
+
+        Args:
+        - `pretrained` (str, optional): Path for pretrained weights.
+          If given `None`, pretrained weights will not be loaded.
         """
         self.generator.init_weights(pretrained=pretrained,
                                     revise_keys=[(r'^generator\.', ''),
@@ -59,7 +88,15 @@ class ESRGANQE(BasicRestorerQE):
         #     self.discriminator.init_weights(pretrained=pretrained)
 
     def train_step(self, data_batch, optimizer):
-        """The same to that of `ESRGAN` in mmedit."""
+        """Train step.
+
+        Args:
+        - `data_batch` (dict): A batch of data.
+        - `optimizer` (obj): Optimizer.
+
+        Returns:
+        - dict: Returned output.
+        """
         # data
         lq = data_batch['lq']
         gt = data_batch['gt']

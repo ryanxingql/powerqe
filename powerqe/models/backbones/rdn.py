@@ -11,11 +11,8 @@ from .base import BaseNet
 
 
 class Interpolate(nn.Module):
-    """Interpolation.
-
-    Ref: "https://discuss.pytorch.org/t
-    /using-nn-function-interpolate-inside-nn-sequential/23588/2"
-    """
+    # Ref: "https://discuss.pytorch.org/t
+    # /using-nn-function-interpolate-inside-nn-sequential/23588/2"
 
     def __init__(self, scale_factor, mode):
         super().__init__()
@@ -41,9 +38,9 @@ class RDNQE(BaseNet):
 
     Args:
     - `rescale` (int): Rescaling factor.
-    - `io_channels` (int): I/O channel number.
+    - `io_channels` (int): Number of I/O channels.
     - `mid_channels` (int): Channel number of intermediate features.
-    - `num_blocks` (int): Block number in the trunk network. Default: 16.
+    - `num_blocks` (int): Block number in the trunk network.
     - `upscale_factor` (int): Upsampling factor. Support 2^n and 3.
     - `num_layer` (int): Layer number in the Residual Dense Block.
     - `channel_growth` (int): Channels growth in each layer of RDB.

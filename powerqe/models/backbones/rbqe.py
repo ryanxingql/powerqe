@@ -15,6 +15,9 @@ class ECA(nn.Module):
 
     Ref: "https://github.com/BangguWu/ECANet/blob
     /3adf7a99f829ffa2e94a0de1de8a362614d66958/models/eca_module.py#L5"
+
+    Args:
+    - `k_size`: kernel size.
     """
 
     def __init__(self, k_size=3):
@@ -70,7 +73,7 @@ class GaussianSmoothing(nn.Module):
 
     Args:
     - `channels` (int, sequence): Number of channels of the input tensors.
-    Output will have this number of channels as well.
+      Output will have this number of channels as well.
     - `kernel_size` (int, sequence): Size of the gaussian kernel.
     - `sigma` (float, sequence): Standard deviation of the gaussian kernel.
     - `dim` (int, optional): The number of dimensions of the data.
@@ -304,10 +307,7 @@ class IQAM:
 
 
 class Down(nn.Module):
-    """Downsampling.
-
-    Downsample for one time, e.g., from C2,1 to C3,2.
-    """
+    # downsample for one time, e.g., from C2,1 to C3,2
 
     def __init__(self, nf_in, nf_out, method, if_separable, if_eca):
         super().__init__()
@@ -379,10 +379,7 @@ class Down(nn.Module):
 
 
 class Up(nn.Module):
-    """Upsampling.
-
-    Upsample for one time, e.g., from C3,1 and C2,1 to C2,2.
-    """
+    # upsample for one time, e.g., from C3,1 and C2,1 to C2,2
 
     def __init__(self, nf_in_s, nf_in, nf_out, method, if_separable, if_eca):
         super().__init__()
@@ -566,11 +563,13 @@ class RBQE(BaseNet):
     def forward(self, x, idx_out=None):
         """Forward.
 
-        `idx_out`:
-        - `-2`: Judge by IQAM.
-        - `-1`: Output all images from all outputs for training.
-        - `0` | `1` | ... | `self.nlevel-1`: Output from the assigned exit.
-        - `None`.
+        Args:
+        - `x` (Tensor): Image with the shape of (B=1, C, H, W).
+        - `idx_out` (int):
+          - `-2`: Determined by IQAM.
+          - `-1`: Output all images from all outputs for training.
+          - `0` | `1` | ... | `self.nlevel-1`: Output from the assigned exit.
+          - `None`: Output from the last exit.
         """
         if self.if_only_last_output:
             if idx_out is not None:

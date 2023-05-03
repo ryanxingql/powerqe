@@ -21,8 +21,9 @@ class PairedSameSizeImageDataset(SRFolderDataset):
     - `gt_folder` (str | :obj:`Path`): GT folder.
     - `pipeline` (List[dict | callable]): A sequence of data transformations.
     - `test_mode` (bool): Store `True` when building test dataset.
-    Default: `False`.
-    - `filename_tmpl` (str): Template for LQ filename. Default: `{}.png`.
+      Default: `False`.
+    - `filename_tmpl` (str): Template for LQ filename.
+      Default: `{}.png`.
     """
 
     def __init__(self,
@@ -31,8 +32,8 @@ class PairedSameSizeImageDataset(SRFolderDataset):
                  pipeline,
                  test_mode=False,
                  filename_tmpl='{}.png'):
-        # `BaseDataset` cannot accept any pipelines outside mmedit
-        # pass `[]` into `__init__`
+        # `BaseDataset` cannot accept any pipelines outside mmedit;
+        # Pass `[]` into `__init__`.
         super().__init__(lq_folder=lq_folder,
                          gt_folder=gt_folder,
                          pipeline=[],
