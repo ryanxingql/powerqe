@@ -18,13 +18,17 @@ BPGDEC_PATH="/opt/homebrew/bin/bpgdec"
 
 Finally run the Bash script.
 
-## Run the training script without GPU
+## Debug
+
+Edit `configs/debug.py`.
+
+Then run:
 
 ```bash
 conda activate powerqe &&\
   PYTHONPATH=./\
   python tools/train.py\
-  configs/<config>.py
+  configs/debug.py
 ```
 
 With `PYTHONPATH=./`, the `powerqe` dataset can be found as a module by Python.
