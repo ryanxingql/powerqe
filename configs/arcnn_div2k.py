@@ -74,7 +74,7 @@ data = dict(workers_per_gpu=batchsize_gpu,
 
 optimizers = dict(generator=dict(type='Adam', lr=1e-4, betas=(0.9, 0.999)))
 
-total_iters = 1000 * 1000
+total_iters = 500 * 1000
 lr_config = dict(policy='CosineRestart',
                  by_epoch=False,
                  periods=[total_iters],

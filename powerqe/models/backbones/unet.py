@@ -60,7 +60,8 @@ class Up(nn.Module):
 class UNet(BaseNet):
 
     def __init__(self,
-                 nf_io,
+                 nf_in,
+                 nf_out,
                  nlevel,
                  nf_base,
                  nf_max=1024,
@@ -74,11 +75,17 @@ class UNet(BaseNet):
                  residual=True):
         super().__init__()
 
-        supported_up_methods = ['avepool2d', 'strideconv']
+        supported_up_methods = ['upsample', 'transpose2d']
         if up not in supported_up_methods:
             raise NotImplementedError(
                 f'Upsampling method should be in `{supported_up_methods}`;'
                 f' received `{up}`.')
+
+        supported_down_methods = ['avepool2d', 'strideconv']
+        if down not in supported_down_methods:
+            raise NotImplementedError(
+                f'Downsampling method should be in `{supported_down_methods}`;'
+                f' received `{down}`.')
 
         supported_reduce_methods = ['add', 'concat']
         if reduce not in supported_reduce_methods:
@@ -86,12 +93,16 @@ class UNet(BaseNet):
                 f'Reduce method should be in `{supported_reduce_methods}`;'
                 f' received `{reduce}`.')
 
+        if residual and (nf_in != nf_out):
+            raise ValueError('The input channel number should be equal to the'
+                             ' output channel number.')
+
         self.nlevel = nlevel
         self.reduce = reduce
         self.residual = residual
 
         self.inc = nn.Sequential(
-            nn.Conv2d(in_channels=nf_io,
+            nn.Conv2d(in_channels=nf_in,
                       out_channels=nf_base,
                       kernel_size=3,
                       padding=1), nn.ReLU(inplace=True))
@@ -173,7 +184,7 @@ class UNet(BaseNet):
             setattr(self, f'dec_{idx_level}', nn.Sequential(*module_lst))
 
         self.outc = nn.Conv2d(in_channels=nf_base,
-                              out_channels=nf_io,
+                              out_channels=nf_out,
                               kernel_size=3,
                               padding=1)
 

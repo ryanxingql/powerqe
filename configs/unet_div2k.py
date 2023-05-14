@@ -16,7 +16,8 @@ params = dict(batchsize=32,
 
 model = dict(type='BasicRestorerQE',
              generator=dict(type='UNet',
-                            nf_io=3,
+                            nf_in=3,
+                            nf_out=3,
                             nlevel=3,
                             nf_base=64,
                             nf_gr=2,
@@ -92,7 +93,7 @@ data = dict(workers_per_gpu=batchsize_gpu,
 
 optimizers = dict(generator=dict(type='Adam', lr=1e-4, betas=(0.9, 0.999)))
 
-total_iters = 1000 * 1000
+total_iters = 500 * 1000
 lr_config = dict(policy='CosineRestart',
                  by_epoch=False,
                  periods=[total_iters],

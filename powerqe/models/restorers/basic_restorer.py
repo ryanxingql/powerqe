@@ -50,7 +50,6 @@ class BasicRestorerQE(BasicRestorer):
                          pretrained=pretrained)
 
         self.save_gt_lq = save_gt_lq
-        self.eval_lq = True  # flag for evaluating LQ vs. GT only once
 
     def evaluate(self, metrics, output, gt, lq):
         """Evaluation.
@@ -68,8 +67,7 @@ class BasicRestorerQE(BasicRestorer):
 
         output = tensor2img(output)
         gt = tensor2img(gt)
-        if self.eval_lq:
-            lq = tensor2img(lq)
+        lq = tensor2img(lq)
 
         eval_result = dict()
         for metric in metrics:
@@ -79,12 +77,8 @@ class BasicRestorerQE(BasicRestorer):
                     f' received `{metric}`.')
             eval_result[metric] = self.supported_metrics[metric](output, gt,
                                                                  crop_border)
-            if self.eval_lq:
-                eval_result[metric +
-                            '_baseline'] = self.supported_metrics[metric](
-                                lq, gt, crop_border)
-
-        self.eval_lq = False  # evaluate LQ vs. GT (baseline) only once
+            eval_result[metric + '_baseline'] = self.supported_metrics[metric](
+                lq, gt, crop_border)
 
         return eval_result
 
@@ -355,7 +349,6 @@ class BasicRestorerVQESequence(BasicRestorer):
 
         self.center_gt = center_gt
         self.save_gt_lq = save_gt_lq
-        self.eval_lq = True
 
         # fix pre-trained networks
         self.fix_iter = train_cfg.get('fix_iter', 0) if train_cfg else 0
@@ -422,8 +415,6 @@ class BasicRestorerVQESequence(BasicRestorer):
                                                                crop_border))
             eval_result[metric + '-output'] = np.mean(output_results)
             eval_result[metric + '-LQ'] = np.mean(lq_results)
-
-        self.eval_lq = False  # eval LQ vs. GT (baseline) only once
 
         return eval_result
 

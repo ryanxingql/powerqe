@@ -10,7 +10,7 @@ model = dict(
         down_method='strideconv',
         up_method='transpose2d',
         if_separable=False,
-        if_eca=True,
+        if_eca=False,
         if_only_last_output=True,  # non-blind
         comp_type='hevc'),
     pixel_loss=dict(type='L1Loss', loss_weight=1.0, reduction='mean'))
@@ -77,7 +77,7 @@ data = dict(workers_per_gpu=batchsize_gpu,
 
 optimizers = dict(generator=dict(type='Adam', lr=1e-4, betas=(0.9, 0.999)))
 
-total_iters = 1000 * 1000
+total_iters = 500 * 1000
 lr_config = dict(policy='CosineRestart',
                  by_epoch=False,
                  periods=[total_iters],

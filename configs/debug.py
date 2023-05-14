@@ -27,6 +27,6 @@ data = dict(workers_per_gpu=batchsize_gpu,
 # use small interval to early evaluation
 # remove gpu_collect when using cpu
 evaluation = dict(_delete_=True,
-                  interval=200,
+                  interval=110,
                   save_image=False,
                   gpu_collect=True)
