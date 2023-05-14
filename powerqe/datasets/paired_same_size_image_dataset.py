@@ -22,8 +22,8 @@ class PairedSameSizeImageDataset(SRFolderDataset):
     - `pipeline` (List[dict | callable]): A sequence of data transformations.
     - `test_mode` (bool): Store `True` when building test dataset.
       Default: `False`.
-    - `filename_tmpl` (str): Template for LQ filename.
-      Default: `{}.png`.
+    - `lq_ext` (str): Extension of LQ filenames.
+      Default: `.png`.
     """
 
     def __init__(self,
@@ -31,24 +31,24 @@ class PairedSameSizeImageDataset(SRFolderDataset):
                  gt_folder,
                  pipeline,
                  test_mode=False,
-                 filename_tmpl='{}.png'):
+                 lq_ext='.png'):
+        self.lq_ext = lq_ext
         # `BaseDataset` cannot accept any pipelines outside mmedit;
         # Pass `[]` into `__init__`.
         super().__init__(lq_folder=lq_folder,
                          gt_folder=gt_folder,
                          pipeline=[],
                          scale=1,
-                         test_mode=test_mode,
-                         filename_tmpl=filename_tmpl)
+                         test_mode=test_mode)
         self.pipeline = Compose(pipeline)
 
     def load_annotations(self):
         """Scan GT and LQ folders and record samples.
 
         The GT folder includes all images by default.
-        LQ images are matches by `self.filename_tmpl`.
+        LQ images are matches by `self.lq_ext`.
         LQ images can use a different image extension than GT images,
-        which is indicated in `self.filename_tmpl`.
+        which is indicated in `self.lq_ext`.
 
         Returns:
         - list[dict]: Sample information.
@@ -64,8 +64,7 @@ class PairedSameSizeImageDataset(SRFolderDataset):
         data_infos = []
         for gt_path in gt_paths:
             basename, _ = osp.splitext(osp.basename(gt_path))
-            lq_path = osp.join(self.lq_folder,
-                               f'{self.filename_tmpl.format(basename)}')
+            lq_path = osp.join(self.lq_folder, basename + self.lq_ext)
             if lq_path not in lq_paths:
                 raise FileNotFoundError(
                     f'Cannot find `{lq_path}` in `{self.lq_folder}`.')

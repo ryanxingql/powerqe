@@ -78,8 +78,8 @@ class PairedSameSizeVideoDataset(PairedSameSizeImageDataset):
     - `pipeline` (List[dict | callable]): A list of data transformations.
     - `test_mode` (bool): Store `True` when building test dataset.
       Default: `False`.
-    - `filename_tmpl` (str): Template for LQ filename.
-      Default: `{}.png`.
+    - `lq_ext` (str): Extension of LQ filenames.
+      Default: `.png`.
     - `samp_len` (int): Sample length.
       The default value `-1` corresponds to the sequence length.
       Default: `-1`.
@@ -98,7 +98,7 @@ class PairedSameSizeVideoDataset(PairedSameSizeImageDataset):
                  ann_file,
                  pipeline,
                  test_mode=False,
-                 filename_tmpl='{}.png',
+                 lq_ext='.png',
                  samp_len=-1,
                  edge_padding=False,
                  center_gt=False):
@@ -113,15 +113,37 @@ class PairedSameSizeVideoDataset(PairedSameSizeImageDataset):
                          gt_folder=gt_folder,
                          pipeline=pipeline,
                          test_mode=test_mode,
-                         filename_tmpl=filename_tmpl)
+                         lq_ext=lq_ext)
 
     def load_annotations(self):
         """Load sequences according to the annotation file.
 
         The GT sequence includes all frames by default.
-        LQ frames are matches by `self.filename_tmpl`.
+        LQ frames are matches by `self.lq_ext`.
         LQ frames can use a different image extension than GT frames,
-        which is indicated in `self.filename_tmpl`.
+        which is indicated in `self.lq_ext`.
+
+        Returned keys (example):
+
+        ```txt
+        001/0001/im4
+        001/0002/im4
+        ...
+        001/1000/im4
+        002/0001/im4
+        ...
+        100/1000/im4
+
+        or:
+
+        ```txt
+        001/0001/im1 (center frame is im1.png)
+        001/0001/im2 (center frame is im2.png)
+        ...
+        001/0001/im7
+        001/0002/im1
+        ...
+        ```
 
         Returns:
         - list[dict]: Each dict records the information for a sub-sequence to
@@ -150,11 +172,11 @@ class PairedSameSizeVideoDataset(PairedSameSizeImageDataset):
                     ' the same number of images;'
                     f' GT has `{len(gt_paths)}` images while'
                     f' LQ has `{len(lq_paths)}` images.')
+            gt_paths = sorted(gt_paths)  # NOTE: sorted
             gt_names = []
-            for gt_path in sorted(gt_paths):  # NOTE: sorted
+            for gt_path in gt_paths:
                 gt_name, _ = osp.splitext(osp.basename(gt_path))
-                lq_path = osp.join(lq_seq,
-                                   f'{self.filename_tmpl.format(gt_name)}')
+                lq_path = osp.join(lq_seq, gt_name + self.lq_ext)
                 if lq_path not in lq_paths:
                     raise FileNotFoundError(
                         f'Cannot find `{lq_path}` in `{lq_seq}`.')
@@ -200,11 +222,15 @@ class PairedSameSizeVideoDataset(PairedSameSizeImageDataset):
                     gt_idxs = lq_idxs
                 samp_gt_paths = [gt_paths[idx] for idx in gt_idxs]
                 samp_lq_paths = [
-                    osp.join(lq_seq,
-                             f'{self.filename_tmpl.format(gt_names[idx])}')
+                    osp.join(lq_seq, gt_names[idx] + self.lq_ext)
                     for idx in lq_idxs
                 ]
+
+                record_key = key
+                if len(center_idxs) != 1:
+                    record_key = key + os.sep + gt_names[center_idx]
                 data_infos.append(
-                    dict(gt_path=samp_gt_paths, lq_path=samp_lq_paths,
-                         key=key))
+                    dict(gt_path=samp_gt_paths,
+                         lq_path=samp_lq_paths,
+                         key=record_key))
         return data_infos
