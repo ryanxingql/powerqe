@@ -1,5 +1,6 @@
 exp_name = 'mfqev2_vimeo90k_triplet'
 
+center_gt = True
 model = dict(
     type='BasicRestorerVQE',
     generator=dict(
@@ -8,7 +9,8 @@ model = dict(
         nf=32,
         spynet_pretrained='https://download.openmmlab.com/mmediting/restorers/'
         'basicvsr/spynet_20210409-c6c1bd09.pth'),
-    pixel_loss=dict(type='CharbonnierLoss', loss_weight=1.0, reduction='mean'))
+    pixel_loss=dict(type='CharbonnierLoss', loss_weight=1.0, reduction='mean'),
+    center_gt=center_gt)
 
 train_cfg = dict(fix_iter=5000, fix_module=['spynet'])
 test_cfg = dict(metrics=['PSNR', 'SSIM'], crop_border=1)
@@ -67,7 +69,7 @@ data = dict(workers_per_gpu=batchsize_gpu,
                            test_mode=False,
                            lq_ext='.png',
                            edge_padding=True,
-                           center_gt=True)),
+                           center_gt=center_gt)),
             val=dict(type=dataset_type,
                      qp_info=qp_info,
                      folder=f'{dataset_lq_dir}',
@@ -77,7 +79,7 @@ data = dict(workers_per_gpu=batchsize_gpu,
                      test_mode=True,
                      lq_ext='.png',
                      edge_padding=True,
-                     center_gt=True),
+                     center_gt=center_gt),
             test=dict(type=dataset_type,
                       qp_info=qp_info,
                       folder=f'{dataset_lq_dir}',
@@ -87,7 +89,7 @@ data = dict(workers_per_gpu=batchsize_gpu,
                       test_mode=True,
                       lq_ext='.png',
                       edge_padding=True,
-                      center_gt=True))
+                      center_gt=center_gt))
 
 optimizers = dict(generator=dict(type='Adam', lr=1e-4, betas=(0.9, 0.999)))
 

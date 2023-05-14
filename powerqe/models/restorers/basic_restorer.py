@@ -273,26 +273,28 @@ class BasicRestorerVQE(BasicRestorer):
 
         return outputs
 
-    def evaluate(self, output, gt, lq):
+    def evaluate(self, metrics, output, gt, lq):
         """Evaluation.
 
         Args:
         - `metrics` (list): List of evaluation metrics.
-        - `output` (Tensor): Output images with the shape of (N=1, T, C, H, W).
-        - `gt` (Tensor): GT image/images with the shape of (N=1, T, C, H, W).
-        - `lq` (Tensor): LQ images with the shape of (N=1, T, C, H, W).
+        - `output` (Tensor): Output images with the shape of (T!=1, C, H, W)
+          or (C, H, W).
+        - `gt` (Tensor): GT images with the shape of (T!=1, C, H, W)
+          or (C, H, W).
+        - `lq` (Tensor): LQ images with the shape of (T, C, H, W).
 
         Returns:
         - dict: Evaluation results.
         """
-        T = output.shape[1]
+        T = lq.shape[1]
         if self.center_gt and (T % 2 == 0):
             raise ValueError('Number of output frames should be odd.')
 
         crop_border = self.test_cfg.get('crop_border', 0)
 
         eval_result = dict()
-        for metric in self.test_cfg.metrics:
+        for metric in metrics:
             if metric not in self.supported_metrics:
                 raise ValueError(
                     f'Supported metrics include `{self.supported_metrics}`;'
@@ -304,9 +306,13 @@ class BasicRestorerVQE(BasicRestorer):
                 if self.center_gt and (it != (T // 2)):
                     continue
 
-                output_it = tensor2img(output[:, it])
-                gt_it = tensor2img(gt[:, it])
-                lq_it = tensor2img(lq[:, it])
+                if self.center_gt:
+                    gt_it = tensor2img(gt)
+                    output_it = tensor2img(output)
+                else:
+                    gt_it = tensor2img(gt[it])
+                    output_it = tensor2img(output[it])
+                lq_it = tensor2img(lq[it])
 
                 results.append(self.supported_metrics[metric](output_it, gt_it,
                                                               crop_border))
@@ -330,8 +336,9 @@ class BasicRestorerVQE(BasicRestorer):
         `key`.
 
         Args:
-        - `lq` (Tensor): LQ images with the shape of (N=1, T, C, H, W).
-        - `gt` (Tensor): GT images with the shape of (N=1, T, C, H, W).
+        - `lq` (Tensor): LQ images with the shape of (N=1, T, C, H, W)
+        - `gt` (Tensor): GT images with the shape of (N=1, T!=1, C, H, W)
+          or (N=1, C, H, W).
           Default: `None`.
         - `meta` (list): Meta information of samples.
           Default: `None`.
@@ -367,6 +374,10 @@ class BasicRestorerVQE(BasicRestorer):
         # inference
         output = self.generator(lq)
 
+        lq = lq.squeeze(0)  # (T, C, H, W)
+        gt = gt.squeeze(0)  # (T, C, H, W) or (C, H, W)
+        output = output.squeeze(0)  # (T, C, H, W) or (C, H, W)
+
         # save images
         if save_image:
             if len(meta) != 1:
@@ -378,6 +389,7 @@ class BasicRestorerVQE(BasicRestorer):
             for it in range(T):
                 if self.center_gt and (it != (T // 2)):
                     continue
+
                 if isinstance(iteration,
                               numbers.Number):  # val during training
                     if not save_gt_lq:
@@ -408,10 +420,16 @@ class BasicRestorerVQE(BasicRestorer):
                     raise TypeError('`iteration` should be a number or `None`;'
                                     f' received `{type(iteration)}`.')
 
-                mmcv.imwrite(tensor2img(output[:, it]), save_path_output)
+                if self.center_gt:
+                    mmcv.imwrite(tensor2img(output), save_path_output)
+                else:
+                    mmcv.imwrite(tensor2img(output[it]), save_path_output)
                 if save_gt_lq:
-                    mmcv.imwrite(tensor2img(lq[:, it]), save_path_lq)
-                    mmcv.imwrite(tensor2img(gt[:, it]), save_path_gt)
+                    mmcv.imwrite(tensor2img(lq[it]), save_path_lq)
+                    if self.center_gt:
+                        mmcv.imwrite(tensor2img(gt), save_path_gt)
+                    else:
+                        mmcv.imwrite(tensor2img(gt[it]), save_path_gt)
 
         # evaluation
         if 'metrics' not in self.test_cfg:

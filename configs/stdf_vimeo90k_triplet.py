@@ -1,5 +1,6 @@
 exp_name = 'stdf_vimeo90k_triplet'
 
+center_gt = True
 model = dict(type='BasicRestorerVQE',
              generator=dict(
                  type='STDFNet',
@@ -13,7 +14,8 @@ model = dict(type='BasicRestorerVQE',
              ),
              pixel_loss=dict(type='CharbonnierLoss',
                              loss_weight=1.0,
-                             reduction='mean'))
+                             reduction='mean'),
+             center_gt=center_gt)
 
 train_cfg = None
 test_cfg = dict(metrics=['PSNR', 'SSIM'], crop_border=1)
@@ -70,7 +72,7 @@ data = dict(workers_per_gpu=batchsize_gpu,
                            lq_ext='.png',
                            samp_len=-1,
                            edge_padding=True,
-                           center_gt=True)),
+                           center_gt=center_gt)),
             val=dict(type=dataset_type,
                      lq_folder=f'{dataset_lq_folder}',
                      gt_folder=f'{dataset_gt_root}/sequences',
@@ -80,7 +82,7 @@ data = dict(workers_per_gpu=batchsize_gpu,
                      lq_ext='.png',
                      samp_len=-1,
                      edge_padding=True,
-                     center_gt=True),
+                     center_gt=center_gt),
             test=dict(type=dataset_type,
                       lq_folder=f'{dataset_lq_folder}',
                       gt_folder=f'{dataset_gt_root}/sequences',
@@ -90,7 +92,7 @@ data = dict(workers_per_gpu=batchsize_gpu,
                       lq_ext='.png',
                       samp_len=-1,
                       edge_padding=True,
-                      center_gt=True))
+                      center_gt=center_gt))
 
 optimizers = dict(generator=dict(type='Adam', lr=1e-4, betas=(0.9, 0.999)))
 

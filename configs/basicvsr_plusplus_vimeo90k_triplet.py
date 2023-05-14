@@ -3,6 +3,7 @@ basicvsr_plusplus_c64n7_8x1_600k_reds4."""
 
 exp_name = 'basicvsr_plus_plus_vimeo90k_triplet'
 
+center_gt = False
 model = dict(
     type='BasicRestorerVQESequence',
     generator=dict(
@@ -12,7 +13,8 @@ model = dict(
         is_low_res_input=False,
         spynet_pretrained='https://download.openmmlab.com/mmediting/restorers/'
         'basicvsr/spynet_20210409-c6c1bd09.pth'),
-    pixel_loss=dict(type='CharbonnierLoss', loss_weight=1.0, reduction='mean'))
+    pixel_loss=dict(type='CharbonnierLoss', loss_weight=1.0, reduction='mean'),
+    center_gt=center_gt)
 
 train_cfg = dict(fix_iter=5000, fix_module=['edvr', 'spynet'])
 test_cfg = dict(metrics=['PSNR', 'SSIM'], crop_border=1)
@@ -72,7 +74,7 @@ data = dict(workers_per_gpu=batchsize_gpu,
                            lq_ext='.png',
                            samp_len=-1,
                            edge_padding=False,
-                           center_gt=False)),
+                           center_gt=center_gt)),
             val=dict(type=dataset_type,
                      folder=f'{dataset_lq_folder}',
                      gt_folder=f'{dataset_gt_root}/sequences',
@@ -82,7 +84,7 @@ data = dict(workers_per_gpu=batchsize_gpu,
                      lq_ext='.png',
                      samp_len=-1,
                      edge_padding=False,
-                     center_gt=False),
+                     center_gt=center_gt),
             test=dict(type=dataset_type,
                       folder=f'{dataset_lq_folder}',
                       gt_folder=f'{dataset_gt_root}/sequences',
@@ -92,7 +94,7 @@ data = dict(workers_per_gpu=batchsize_gpu,
                       lq_ext='.png',
                       samp_len=-1,
                       edge_padding=False,
-                      center_gt=False))
+                      center_gt=center_gt))
 
 optimizers = dict(
     generator=dict(type='Adam',

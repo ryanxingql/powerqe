@@ -2,7 +2,7 @@ _base_ = 'stdf_vimeo90k_triplet.py'
 
 # use center cropping to save memory
 test_pipeline = [
-    dict(type='LoadImageFromFileMultiKeys',
+    dict(type='LoadImageFromFileListMultiKeys',
          io_backend='disk',
          keys=['lq', 'gt'],
          channel_order='rgb'),
@@ -29,6 +29,6 @@ data = dict(workers_per_gpu=batchsize_gpu,
 # use small interval to early evaluation
 # remove gpu_collect when using cpu
 evaluation = dict(_delete_=True,
-                  interval=110,
+                  interval=10,
                   save_image=False,
                   gpu_collect=True)
