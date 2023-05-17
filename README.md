@@ -2,7 +2,7 @@
 
 This repository supports some quality enhancement approaches for compressed image/video based on PyTorch and MMEditing.
 
-Image methods:
+Image approaches:
 
 - [MPRNet @ CVPR'21](https://github.com/swz30/MPRNet): Multi-stage structure.
 - [RBQE @ ECCV'20](https://github.com/ryanxingql/rbqe): Multi-exit structure and early-exit mechanism. Non-blind model is implemented.
@@ -15,7 +15,7 @@ Image methods:
 - [U-Net @ MICCAI'15](https://arxiv.org/abs/1505.04597): Multi-scale structure. Originally for biomedical image processing.
 - [AR-CNN @ ICCV'15](https://arxiv.org/abs/1504.06993): Pioneer of CNN-based image compression artifacts reduction.
 
-Video methods:
+Video approaches:
 
 - [ProVQE @ CVPRW'22](https://github.com/ryanxingql/winner-ntire22-vqe): Key-frame propagation. NTIRE'22 winner. Only the first-stage model is implemented.
 - [BasicVSR++ @ CVPR'22](https://github.com/ckkelvinchan/BasicVSR_PlusPlus): Flow-guided deformable alignment. Originally for video super resolution. NTIRE'21 winner.
