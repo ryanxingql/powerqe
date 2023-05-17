@@ -5,7 +5,7 @@ exp_name = 'basicvsr_plus_plus_vimeo90k_triplet'
 
 center_gt = False
 model = dict(
-    type='BasicRestorerVQESequence',
+    type='BasicRestorerVQE',
     generator=dict(
         type='BasicVSRPlusPlus',
         mid_channels=64,
@@ -35,7 +35,7 @@ train_pipeline = [
     dict(type='FramesToTensor', keys=['lq', 'gt']),
     dict(type='Collect',
          keys=['lq', 'gt'],
-         mmeta_keys=['lq_path', 'gt_path', 'key'])
+         meta_keys=['lq_path', 'gt_path', 'key'])
 ]
 test_pipeline = [
     dict(type='LoadImageFromFileListMultiKeys',
@@ -50,7 +50,7 @@ test_pipeline = [
 ]
 
 batchsize = 8
-ngpus = 2
+ngpus = 1
 assert batchsize % ngpus == 0, ('Samples in a batch should better be evenly'
                                 ' distributed among all GPUs.')
 dataset_type = 'PairedSameSizeVideoDataset'
@@ -76,7 +76,7 @@ data = dict(workers_per_gpu=batchsize_gpu,
                            edge_padding=False,
                            center_gt=center_gt)),
             val=dict(type=dataset_type,
-                     folder=f'{dataset_lq_folder}',
+                     lq_folder=f'{dataset_lq_folder}',
                      gt_folder=f'{dataset_gt_root}/sequences',
                      ann_file=f'{dataset_gt_root}/tri_validlist.txt',
                      pipeline=test_pipeline,
@@ -86,7 +86,7 @@ data = dict(workers_per_gpu=batchsize_gpu,
                      edge_padding=False,
                      center_gt=center_gt),
             test=dict(type=dataset_type,
-                      folder=f'{dataset_lq_folder}',
+                      lq_folder=f'{dataset_lq_folder}',
                       gt_folder=f'{dataset_gt_root}/sequences',
                       ann_file=f'{dataset_gt_root}/tri_testlist.txt',
                       pipeline=test_pipeline,
