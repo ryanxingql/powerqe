@@ -390,32 +390,33 @@ class BasicRestorerVQE(BasicRestorer):
                 if self.center_gt and (it != (T // 2)):
                     continue
 
+                if self.center_gt:
+                    save_subpath = key + '.png'
+                else:
+                    save_subpath = osp.join(key, f'{it + 1}.png')
+
                 if isinstance(iteration,
                               numbers.Number):  # val during training
                     if not save_gt_lq:
                         save_path_output = osp.join(save_path,
-                                                    f'{iteration + 1}', key,
-                                                    f'{it + 1}.png')
+                                                    f'{iteration + 1}',
+                                                    save_subpath)
                     else:
                         save_path_output = osp.join(save_path,
                                                     f'{iteration + 1}',
-                                                    'output', key,
-                                                    f'{it + 1}.png')
+                                                    'output', save_subpath)
                         save_path_lq = osp.join(save_path, f'{iteration + 1}',
-                                                'lq', key, f'{it + 1}.png')
+                                                'lq', save_subpath)
                         save_path_gt = osp.join(save_path, f'{iteration + 1}',
-                                                'gt', key, f'{it + 1}.png')
+                                                'gt', save_subpath)
                 elif iteration is None:  # testing
                     if not save_gt_lq:
-                        save_path_output = osp.join(save_path, key,
-                                                    f'{it+1}.png')
+                        save_path_output = osp.join(save_path, save_subpath)
                     else:
-                        save_path_output = osp.join(save_path, key, 'output',
-                                                    f'{it+1}.png')
-                        save_path_lq = osp.join(save_path, key, 'lq',
-                                                f'{it+1}.png')
-                        save_path_gt = osp.join(save_path, key, 'gt',
-                                                f'{it+1}.png')
+                        save_path_output = osp.join(save_path, 'output',
+                                                    save_subpath)
+                        save_path_lq = osp.join(save_path, 'lq', save_subpath)
+                        save_path_gt = osp.join(save_path, 'gt', save_subpath)
                 else:
                     raise TypeError('`iteration` should be a number or `None`;'
                                     f' received `{type(iteration)}`.')
