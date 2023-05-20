@@ -67,8 +67,8 @@ test_pipeline = [
     )
 ]
 
-batchsize = 32
-ngpus = 2
+batchsize = 8
+ngpus = 1
 assert batchsize % ngpus == 0, ('Samples in a batch should better be evenly'
                                 ' distributed among all GPUs.')
 dataset_type = 'PairedSameSizeVideoDataset'

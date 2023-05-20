@@ -44,8 +44,8 @@ test_pipeline = [
          meta_keys=['lq_path', 'gt_path', 'key'])
 ]
 
-batchsize = 32
-ngpus = 4
+batchsize = 8
+ngpus = 1
 assert batchsize % ngpus == 0, ('Samples in a batch should better be evenly'
                                 ' distributed among all GPUs.')
 dataset_type = 'PairedSameSizeVideoDataset'
