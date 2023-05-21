@@ -43,22 +43,23 @@ test_pipeline = [
     dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path'])
 ]
 
+dataset_type = 'SRLmdbDataset'
 data = dict(train=dict(dataset=dict(_delete_=True,
-                                    type='SRLmdbDataset',
+                                    type=dataset_type,
                                     lq_folder=train_lq_folder,
                                     gt_folder=train_gt_folder,
                                     pipeline=train_pipeline,
                                     scale=1,
                                     test_mode=False)),
             val=dict(_delete_=True,
-                     type='SRLmdbDataset',
+                     type=dataset_type,
                      lq_folder=valid_lq_folder,
                      gt_folder=valid_gt_folder,
                      pipeline=test_pipeline,
                      scale=1,
                      test_mode=True),
             test=dict(_delete_=True,
-                      type='SRLmdbDataset',
+                      type=dataset_type,
                       lq_folder=valid_lq_folder,
                       gt_folder=valid_gt_folder,
                       pipeline=test_pipeline,
