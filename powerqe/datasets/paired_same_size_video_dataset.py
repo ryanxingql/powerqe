@@ -129,25 +129,26 @@ class PairedSameSizeVideoDataset(PairedSameSizeImageDataset):
         LQ frames can use a different image extension than GT frames,
         which is indicated in `self.lq_ext`.
 
-        Returned keys (example):
+        Returned keys (sequence ID; also for image saving):
+
+        (1) `center_gt` is `True`:
 
         ```txt
-        001/0001/im4
-        001/0002/im4
+        001/0001/im4  # im1 is the center-frame name of this sample
+        001/0001/im2  # im2 is the center-frame name of this sample
         ...
-        001/1000/im4
-        002/0001/im4
+        001/0001/im7  # im7 is the center-frame name of this sample
+        001/0002/im1  # im1 is the center-frame name of this sample
         ...
-        100/1000/im4
+        ```
 
-        or:
+        (2) `center_gt` is `False`:
 
         ```txt
-        001/0001/im1 (center frame is im1.png)
-        001/0001/im2 (center frame is im2.png)
+        001/0001/im1,im2,im3,im4,im5,im6,im7
+        001/0002/im1,im2,im3,im4,im5,im6,im7
         ...
-        001/0001/im7
-        001/0002/im1
+        001/1000/im1,im2,im3,im4,im5,im6,im7
         ...
         ```
 
@@ -230,9 +231,8 @@ class PairedSameSizeVideoDataset(PairedSameSizeImageDataset):
                     for idx in lq_idxs
                 ]
 
-                record_key = key
-                if len(center_idxs) != 1:
-                    record_key = key + os.sep + gt_names[center_idx]
+                record_key = key + os.sep + ','.join(
+                    [gt_names[idx] for idx in gt_idxs])
                 data_infos.append(
                     dict(gt_path=samp_gt_paths,
                          lq_path=samp_lq_paths,

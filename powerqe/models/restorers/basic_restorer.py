@@ -157,28 +157,28 @@ class BasicRestorerQE(BasicRestorer):
                                  ' extract the image name for image saving.')
             lq_path = meta[0]['lq_path']
             lq_name = osp.splitext(osp.basename(lq_path))[0]
+            save_subpath = lq_name + '.png'
 
             save_gt_lq = self.test_cfg.get('save_gt_lq', True)
             if isinstance(iteration, numbers.Number):  # val during training
                 if not save_gt_lq:
                     save_path_output = osp.join(save_path, f'{iteration + 1}',
-                                                f'{lq_name}.png')
+                                                save_subpath)
                 else:
                     save_path_output = osp.join(save_path, f'{iteration + 1}',
-                                                'output', f'{lq_name}.png')
+                                                'output', save_subpath)
                     save_path_lq = osp.join(save_path, f'{iteration + 1}',
-                                            'lq', f'{lq_name}.png')
+                                            'lq', save_subpath)
                     save_path_gt = osp.join(save_path, f'{iteration + 1}',
-                                            'gt', f'{lq_name}.png')
+                                            'gt', save_subpath)
             elif iteration is None:  # testing
                 if not save_gt_lq:
-                    save_path_output = osp.join(save_path, f'{lq_name}.png')
+                    save_path_output = osp.join(save_path, save_subpath)
                 else:
                     save_path_output = osp.join(save_path, 'output',
-                                                f'{lq_name}.png')
-                    save_path_lq = osp.join(save_path, 'lq', f'{lq_name}.png')
-                    save_path_gt = osp.join(save_path, 'gt', f'{lq_name}.png')
-
+                                                save_subpath)
+                    save_path_lq = osp.join(save_path, 'lq', save_subpath)
+                    save_path_gt = osp.join(save_path, 'gt', save_subpath)
             else:
                 raise TypeError('`iteration` should be a number or `None`;'
                                 f' received `{type(iteration)}`.')
@@ -369,7 +369,8 @@ class BasicRestorerVQE(BasicRestorer):
 
         T = lq.shape[1]
         if self.center_gt and (T % 2 == 0):
-            raise ValueError('Number of output frames should be odd.')
+            raise ValueError('Number of input frames should be odd'
+                             ' when `center_gt` is `True`.')
 
         # inference
         output = self.generator(lq)
@@ -383,17 +384,20 @@ class BasicRestorerVQE(BasicRestorer):
             if len(meta) != 1:
                 raise ValueError('Only one sample is allowed per batch to'
                                  ' extract the sequence name for saving.')
-            key = meta[0]['key']
+            key = meta[0]['key']  # sample id
+            if self.center_gt:
+                save_subpath = key + '.png'
+            else:
+                save_dir = '/'.join(key.split('/')[:-1])
+                save_names = key.split('/')[-1].split(',')
 
             save_gt_lq = self.test_cfg.get('save_gt_lq', True)
-            for it in range(T):
-                if self.center_gt and (it != (T // 2)):
-                    continue
-
-                if self.center_gt:
-                    save_subpath = key + '.png'
-                else:
-                    save_subpath = osp.join(key, f'{it + 1}.png')
+            for it in range(T):  # note: T is the input lq idx
+                if self.center_gt:  # save only the center frame
+                    if it != (T // 2):
+                        continue
+                else:  # save every output frame
+                    save_subpath = osp.join(save_dir, save_names[it] + '.png')
 
                 if isinstance(iteration,
                               numbers.Number):  # val during training
