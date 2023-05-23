@@ -2,6 +2,8 @@ _base_ = 'stdf_vimeo90k_triplet.py'
 
 exp_name = 'stdf_vimeo90k_septuplet'
 
+model = dict(generator=dict(radius=3))
+
 batchsize = 8
 ngpus = 2
 assert batchsize % ngpus == 0, ('Samples in a batch should better be evenly'
