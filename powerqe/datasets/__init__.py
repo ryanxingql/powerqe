@@ -2,7 +2,8 @@
 from .builder import build_dataset
 from .paired_same_size_image_dataset import PairedSameSizeImageDataset
 from .paired_same_size_video_dataset import (
-    PairedSameSizeVideoDataset, PairedSameSizeVideoKeyFramesDataset)
+    PairedSameSizeVideoDataset, PairedSameSizeVideoKeyAnnotationsDataset,
+    PairedSameSizeVideoKeyFramesDataset)
 from .registry import DATASETS, PIPELINES
 
 __all__ = [
@@ -12,4 +13,5 @@ __all__ = [
     'PairedSameSizeImageDataset',
     'PairedSameSizeVideoDataset',
     'PairedSameSizeVideoKeyFramesDataset',
+    'PairedSameSizeVideoKeyAnnotationsDataset',
 ]
