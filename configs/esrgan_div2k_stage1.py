@@ -1,6 +1,6 @@
 exp_name = 'esrgan_div2k_stage1'
 
-model = dict(type='BasicRestorerQE',
+model = dict(type='BasicQERestorer',
              generator=dict(type='RRDBNetQE',
                             io_channels=3,
                             mid_channels=64,
@@ -18,11 +18,7 @@ train_pipeline = [
          keys=['lq', 'gt'],
          channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
-    dict(type='Normalize',
-         keys=['lq', 'gt'],
-         mean=[0, 0, 0],
-         std=[1, 1, 1],
-         to_rgb=True),
+    dict(type='Normalize', keys=['lq', 'gt'], mean=[0, 0, 0], std=[1, 1, 1]),
     dict(type='PairedRandomCropQE', patch_size=128, keys=['lq', 'gt']),
     dict(type='Flip',
          keys=['lq', 'gt'],
@@ -39,11 +35,7 @@ test_pipeline = [
          keys=['lq', 'gt'],
          channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
-    dict(type='Normalize',
-         keys=['lq', 'gt'],
-         mean=[0, 0, 0],
-         std=[1, 1, 1],
-         to_rgb=True),
+    dict(type='Normalize', keys=['lq', 'gt'], mean=[0, 0, 0], std=[1, 1, 1]),
     dict(type='ImageToTensor', keys=['lq', 'gt']),
     dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path'])
 ]

@@ -44,7 +44,7 @@ class RRDBNetQE(RRDBNet):
                      revise_keys=[(r'^module\.', '')]):
         """Init weights for models.
 
-        Accept `revise_keys` for restorer `ESRGANQE`.
+        Accept `revise_keys` for restorer `ESRGANRestorer`.
         Default value is equal to that of `load_checkpoint`.
 
         Args:

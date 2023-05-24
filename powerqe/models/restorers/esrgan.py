@@ -5,11 +5,11 @@ from mmedit.models.common import set_requires_grad
 
 from ..builder import build_component, build_loss
 from ..registry import MODELS
-from .basic_restorer import BasicRestorerQE
+from .basic_restorer import BasicQERestorer
 
 
 @MODELS.register_module()
-class ESRGANQE(BasicRestorerQE):
+class ESRGANRestorer(BasicQERestorer):
     """ESRGAN restorer for quality enhancement.
 
     Args:

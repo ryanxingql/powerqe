@@ -11,7 +11,7 @@ params = dict(batchsize=16,
               kernelsize=3,
               resscale=1)
 
-model = dict(type='BasicRestorerQE',
+model = dict(type='BasicQERestorer',
              generator=dict(type='SAN',
                             n_resgroups=20,
                             n_resblocks=10,

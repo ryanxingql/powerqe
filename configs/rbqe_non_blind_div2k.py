@@ -1,7 +1,7 @@
 exp_name = 'rbqe_non_blind_div2k'
 
 model = dict(
-    type='BasicRestorerQE',
+    type='BasicQERestorer',
     generator=dict(
         type='RBQE',
         nf_io=3,

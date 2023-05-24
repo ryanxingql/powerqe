@@ -1,6 +1,6 @@
 exp_name = 'mprnet_div2k'
 
-model = dict(type='BasicRestorerQE',
+model = dict(type='BasicQERestorer',
              generator=dict(type='MPRNet', io_c=3, n_feat=96),
              pixel_loss=dict(type='CharbonnierLoss',
                              loss_weight=1.0,

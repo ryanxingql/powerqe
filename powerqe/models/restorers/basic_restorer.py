@@ -14,7 +14,7 @@ from .script import combine_patches, crop_img, pad_img, unfold_img
 
 
 @MODELS.register_module()
-class BasicRestorerQE(BasicRestorer):
+class BasicQERestorer(BasicRestorer):
     """Basic restorer for quality enhancement.
 
     Differences to `BasicRestorer`:
@@ -198,7 +198,7 @@ class BasicRestorerQE(BasicRestorer):
 
 
 @MODELS.register_module()
-class BasicRestorerVQE(BasicRestorer):
+class BasicVQERestorer(BasicRestorer):
     """Basic restorer for video quality enhancement.
 
     Differences to `BasicRestorer`:

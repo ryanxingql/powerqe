@@ -391,14 +391,12 @@ class PairedSameSizeVideoKeyFramesDataset(PairedSameSizeVideoDataset):
 
 
 @DATASETS.register_module()
-class PairedSameSizeVideoKeyAnnotationsDataset(
-        PairedSameSizeVideoKeyFramesDataset):
+class PairedSameSizeVideoKeyAnnotationsDataset(PairedSameSizeVideoDataset):
     """Paired video dataset with key-frame annotation. GT and LQ are with the
     same size.
 
     Differences to `PairedSameSizeVideoDataset`:
-    - Use high-quality key frames instead of neighboring frames.
-      See `load_annotations`.
+    - Return key-frame annotation.
 
     Suppose the video sequences are stored as:
 
@@ -482,39 +480,29 @@ class PairedSameSizeVideoKeyAnnotationsDataset(
       See the document for more details.
     """
 
-    def find_neighboring_frames(self, center_idx, nfrms_left, nfrms_right):
-        # check
-        if len(self.key_frames) != self.seq_len:
-            raise ValueError(
-                f'The sequence length (`{self.seq_len}`) should be equal to'
-                ' that of the key-frame annotation'
-                f' (`{len(self.key_frames)}`).')
-
-        key_idxs = [
-            idx for idx in range(len(self.key_frames)) if self.key_frames[idx]
-        ]
-
-        key_idxs_left = [idx for idx in key_idxs if idx < center_idx]
-        if len(key_idxs_left) == 0:  # if not found
-            key_idxs_left = [center_idx - 1] * nfrms_left  # use neighbor
-        elif len(key_idxs_left) < nfrms_left:
-            key_idxs_left = [key_idxs_left[0]] * (
-                nfrms_left - len(key_idxs_left)) + key_idxs_left
-        else:
-            key_idxs_left = key_idxs_left[-nfrms_left:]
-
-        key_idxs_right = [idx for idx in key_idxs if idx > center_idx]
-        if len(key_idxs_right) == 0:
-            key_idxs_right = [center_idx + 1] * nfrms_right
-        elif len(key_idxs_right) < nfrms_right:
-            key_idxs_right = key_idxs_right + [key_idxs_right[-1]] * (
-                nfrms_right - len(key_idxs_right))
-        else:
-            key_idxs_right = key_idxs_right[:nfrms_right]
-
-        idxs = key_idxs_left + [center_idx] + key_idxs_right
-        idxs = [max(min(x, self.seq_len - 1), 0) for x in idxs]  # clip
-        return idxs
+    def __init__(self,
+                 gt_folder,
+                 lq_folder,
+                 ann_file,
+                 pipeline,
+                 test_mode=False,
+                 lq_ext='.png',
+                 samp_len=-1,
+                 edge_padding=False,
+                 center_gt=False,
+                 key_frames=[1, 0, 1, 0, 1, 0, 1]):
+        # Must be defined before `super().__init__(...)`
+        # for `load_annotations` in `super().__init__(...)`.
+        self.key_frames = key_frames
+        super().__init__(gt_folder=gt_folder,
+                         lq_folder=lq_folder,
+                         ann_file=ann_file,
+                         pipeline=pipeline,
+                         test_mode=test_mode,
+                         lq_ext=lq_ext,
+                         samp_len=samp_len,
+                         edge_padding=edge_padding,
+                         center_gt=center_gt)
 
     def load_annotations(self):
         """Load sequences according to the annotation file.
@@ -628,8 +616,12 @@ class PairedSameSizeVideoKeyAnnotationsDataset(
 
                 record_key = key + os.sep + ','.join(
                     [gt_names[idx] for idx in gt_idxs])
+
+                key_frms = [self.key_frames[idx] for idx in lq_idxs]
+
                 data_infos.append(
                     dict(gt_path=samp_gt_paths,
                          lq_path=samp_lq_paths,
-                         key=record_key))
+                         key=record_key,
+                         key_frms=key_frms))
         return data_infos

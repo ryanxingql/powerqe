@@ -1,6 +1,6 @@
 exp_name = 'arcnn_div2k'
 
-model = dict(type='BasicRestorerQE',
+model = dict(type='BasicQERestorer',
              generator=dict(type='ARCNN',
                             io_channels=3,
                             mid_channels_1=64,

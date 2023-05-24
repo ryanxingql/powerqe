@@ -8,7 +8,7 @@ exp_name = 'edvr_vimeo90k_triplet'
 
 center_gt = True
 model = dict(
-    type='BasicRestorerVQE',
+    type='BasicVQERestorer',
     generator=dict(
         type='EDVRNetQE',
         io_channels=3,
@@ -31,11 +31,7 @@ train_pipeline = [
          keys=['lq', 'gt'],
          channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
-    dict(type='Normalize',
-         keys=['lq', 'gt'],
-         mean=[0, 0, 0],
-         std=[1, 1, 1],
-         to_rgb=True),
+    dict(type='Normalize', keys=['lq', 'gt'], mean=[0, 0, 0], std=[1, 1, 1]),
     dict(type='PairedRandomCropQE', patch_size=128, keys=['lq', 'gt']),
     dict(type='Flip',
          keys=['lq', 'gt'],
@@ -44,9 +40,7 @@ train_pipeline = [
     dict(type='Flip', keys=['lq', 'gt'], flip_ratio=0.5, direction='vertical'),
     dict(type='RandomTransposeHW', keys=['lq', 'gt'], transpose_ratio=0.5),
     dict(type='FramesToTensor', keys=['lq', 'gt']),
-    dict(type='Collect',
-         keys=['lq', 'gt'],
-         meta_keys=['lq_path', 'gt_path', 'key'])
+    dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path'])
 ]
 test_pipeline = [
     dict(type='LoadImageFromFileListMultiKeys',
@@ -54,11 +48,7 @@ test_pipeline = [
          keys=['lq', 'gt'],
          channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
-    dict(type='Normalize',
-         keys=['lq', 'gt'],
-         mean=[0, 0, 0],
-         std=[1, 1, 1],
-         to_rgb=True),
+    dict(type='Normalize', keys=['lq', 'gt'], mean=[0, 0, 0], std=[1, 1, 1]),
     dict(type='FramesToTensor', keys=['lq', 'gt']),
     dict(
         type='Collect',

@@ -1,7 +1,7 @@
 exp_name = 'rdn_div2k'
 
 rescale = 1
-model = dict(type='BasicRestorerQE',
+model = dict(type='BasicQERestorer',
              generator=dict(type='RDNQE',
                             rescale=rescale,
                             io_channels=3,

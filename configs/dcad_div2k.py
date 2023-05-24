@@ -1,6 +1,6 @@
 exp_name = 'dcad_div2k'
 
-model = dict(type='BasicRestorerQE',
+model = dict(type='BasicQERestorer',
              generator=dict(type='DCAD',
                             io_channels=3,
                             mid_channels=64,

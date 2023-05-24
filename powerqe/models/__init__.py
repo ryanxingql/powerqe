@@ -4,7 +4,8 @@ from .backbones import (ARCNN, DCAD, RBQE, RDNQE, SAN, CBDNet, DnCNN,
 from .builder import build_backbone, build_component, build_loss, build_model
 from .losses import PerceptualLossGray
 from .registry import BACKBONES, COMPONENTS, LOSSES, MODELS
-from .restorers import ESRGANQE, BasicRestorerQE, BasicRestorerVQE
+from .restorers import (BasicQERestorer, BasicVQERestorer, ESRGANRestorer,
+                        ProVQERestorer)
 
 __all__ = [
     'build_backbone',
@@ -28,8 +29,9 @@ __all__ = [
     'SAN',
     'STDFNet',
     'UNet',
-    'BasicRestorerQE',
-    'BasicRestorerVQE',
-    'ESRGANQE',
+    'BasicQERestorer',
+    'BasicVQERestorer',
+    'ESRGANRestorer',
+    'ProVQERestorer',
     'PerceptualLossGray',
 ]

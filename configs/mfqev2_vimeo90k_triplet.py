@@ -2,7 +2,7 @@ exp_name = 'mfqev2_vimeo90k_triplet'
 
 center_gt = True
 model = dict(
-    type='BasicRestorerVQE',
+    type='BasicVQERestorer',
     generator=dict(
         type='MFQEv2',
         io_channels=3,
@@ -29,9 +29,7 @@ train_pipeline = [
     dict(type='Flip', keys=['lq', 'gt'], flip_ratio=0.5, direction='vertical'),
     dict(type='RandomTransposeHW', keys=['lq', 'gt'], transpose_ratio=0.5),
     dict(type='FramesToTensor', keys=['lq', 'gt']),
-    dict(type='Collect',
-         keys=['lq', 'gt'],
-         meta_keys=['lq_path', 'gt_path', 'key'])
+    dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path'])
 ]
 test_pipeline = [
     dict(type='LoadImageFromFileListMultiKeys',

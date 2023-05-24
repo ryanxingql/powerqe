@@ -99,7 +99,7 @@ class RDNQE(BaseNet):
                       kernel_size=3,
                       padding=3 // 2))
 
-        # up-sampling
+        # upsampling
         if rescale == 1:
             self.upscale = nn.Identity()
         else:

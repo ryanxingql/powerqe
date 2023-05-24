@@ -1,6 +1,6 @@
 exp_name = 'cbdnet_div2k'
 
-model = dict(type='BasicRestorerQE',
+model = dict(type='BasicQERestorer',
              generator=dict(type='CBDNet',
                             io_channels=3,
                             estimate_channels=32,

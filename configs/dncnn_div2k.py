@@ -1,6 +1,6 @@
 exp_name = 'dncnn_div2k'
 
-model = dict(type='BasicRestorerQE',
+model = dict(type='BasicQERestorer',
              generator=dict(type='DnCNN',
                             io_channels=3,
                             mid_channels=64,

@@ -85,7 +85,7 @@ class STDF(nn.Module):
 
         # U-shape backbone for learning offsets
 
-        # feature extraction (with down-sampling)
+        # feature extraction (with downsampling)
         maps = [self.in_conv(x)]  # store feature maps for skip connections
         for i in range(1, self.nb):
             dw_conv = getattr(self, 'dw_conv{}'.format(i))
@@ -94,7 +94,7 @@ class STDF(nn.Module):
         # down x1 then up x1 at the bottom
         out = self.tr_conv(maps[-1])
 
-        # feature reconstruction (with up-sampling)
+        # feature reconstruction (with upsampling)
         for i in range(self.nb - 1, 0, -1):
             up_conv = getattr(self, 'up_conv{}'.format(i))
             out = up_conv(torch.cat([out, maps[i]], 1))  # skip connection

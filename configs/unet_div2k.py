@@ -14,7 +14,7 @@ params = dict(batchsize=32,
               reduce='concat',
               residual=True)
 
-model = dict(type='BasicRestorerQE',
+model = dict(type='BasicQERestorer',
              generator=dict(type='UNet',
                             nf_in=3,
                             nf_out=3,
