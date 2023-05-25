@@ -9,21 +9,9 @@ from tqdm import tqdm
 def parse_args():
     parser = argparse.ArgumentParser(
         description='Eval PSNR for DIV2K valid set.')
-    parser.add_argument(
-        '--gt',
-        type=str,
-        default='data/div2k/valid/gt',
-    )
-    parser.add_argument(
-        '--lq',
-        type=str,
-        default='data/div2k/valid/lq',
-    )
-    parser.add_argument(
-        '--out',
-        type=str,
-        default='data/div2k/valid/lq',
-    )
+    parser.add_argument('--gt', type=str, default='data/div2k/valid/gt')
+    parser.add_argument('--lq', type=str, default='data/div2k/valid/lq')
+    parser.add_argument('--out', type=str, default='data/div2k/valid/lq')
     args = parser.parse_args()
     return args
 
