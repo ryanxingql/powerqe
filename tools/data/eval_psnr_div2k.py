@@ -12,6 +12,7 @@ def parse_args():
     parser.add_argument('--gt', type=str, default='data/div2k/valid/gt')
     parser.add_argument('--lq', type=str, default='data/div2k/valid/lq')
     parser.add_argument('--out', type=str, default='data/div2k/valid/lq')
+    parser.add_argument('--crop-boarder', type=int, default=0)
     args = parser.parse_args()
     return args
 
@@ -22,6 +23,6 @@ for tar in [args.lq, args.out]:
     for idx in tqdm(range(100), ncols=0):
         src_img = cv2.imread(os.path.join(args.gt, f'{idx+801:04d}.png'))
         tar_img = cv2.imread(os.path.join(tar, f'{idx+801:04d}.png'))
-        psnr = cal_psnr(src_img, tar_img)
+        psnr = cal_psnr(src_img, tar_img, crop_border=args.crop_boarder)
         results.append(psnr)
     print(f'ave. PSNR: {sum(results) / len(results)}')

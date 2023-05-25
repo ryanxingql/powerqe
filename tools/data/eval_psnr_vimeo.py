@@ -18,6 +18,7 @@ def parse_args():
                         default='data/vimeo_septuplet/sequences')
     parser.add_argument('--lq', type=str, default='data/vimeo_septuplet_lq')
     parser.add_argument('--out', type=str, default='data/vimeo_septuplet_lq')
+    parser.add_argument('--crop-boarder', type=int, default=0)
     args = parser.parse_args()
     return args
 
@@ -50,7 +51,7 @@ for tar_dir in [args.lq, args.out]:
         for idx in range(nfrms):
             src_img = cv2.imread(os.path.join(src_seq_dir, f'im{idx+1}.png'))
             tar_img = cv2.imread(os.path.join(tar_seq_dir, f'im{idx+1}.png'))
-            psnr = cal_psnr(src_img, tar_img)
+            psnr = cal_psnr(src_img, tar_img, crop_border=args.crop_boarder)
             result_per_frame.append(psnr)
 
         if not result_per_frame_all_seqs:
@@ -65,4 +66,4 @@ for tar_dir in [args.lq, args.out]:
     ]
     print(f'{sum(result_per_frame_all_seqs) / nfrms:.4f}')
     for idx in range(nfrms):
-        print(f'idx {idx}: {result_per_frame_all_seqs[idx]:.4f}')
+        print(f'im{idx+1}: {result_per_frame_all_seqs[idx]:.4f}')
