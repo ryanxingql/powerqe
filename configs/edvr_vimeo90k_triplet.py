@@ -19,7 +19,7 @@ model = dict(
         num_blocks_reconstruction=10,
         center_frame_idx=1,  # invalid when TSA is off
         with_tsa=False),
-    pixel_loss=dict(type='CharbonnierLoss', loss_weight=1.0, reduction='sum'),
+    pixel_loss=dict(type='CharbonnierLoss', loss_weight=1.0, reduction='mean'),
     center_gt=center_gt)
 
 train_cfg = None
