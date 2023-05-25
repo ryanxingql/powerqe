@@ -23,7 +23,8 @@ model = dict(
     center_gt=center_gt)
 
 train_cfg = None
-test_cfg = dict(metrics=['PSNR', 'SSIM'], crop_border=1)
+norm_cfg = dict(mean=[0, 0, 0], std=[1, 1, 1])
+test_cfg = dict(metrics=['PSNR', 'SSIM'], crop_border=1, denormalize=norm_cfg)
 
 train_pipeline = [
     dict(type='LoadImageFromFileListMultiKeys',
@@ -31,7 +32,7 @@ train_pipeline = [
          keys=['lq', 'gt'],
          channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
-    dict(type='Normalize', keys=['lq', 'gt'], mean=[0, 0, 0], std=[1, 1, 1]),
+    dict(type='Normalize', keys=['lq', 'gt'], **norm_cfg),
     dict(type='PairedRandomCropQE', patch_size=128, keys=['lq', 'gt']),
     dict(type='Flip',
          keys=['lq', 'gt'],
@@ -48,7 +49,7 @@ test_pipeline = [
          keys=['lq', 'gt'],
          channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
-    dict(type='Normalize', keys=['lq', 'gt'], mean=[0, 0, 0], std=[1, 1, 1]),
+    dict(type='Normalize', keys=['lq', 'gt'], **norm_cfg),
     dict(type='FramesToTensor', keys=['lq', 'gt']),
     dict(
         type='Collect',

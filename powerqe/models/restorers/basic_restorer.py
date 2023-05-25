@@ -150,6 +150,16 @@ class BasicQERestorer(BasicRestorer):
         else:
             output = self.generator(lq)
 
+        # denormalize before image saving and evaluation
+        if 'denormalize' in self.test_cfg:
+            mean = torch.tensor(self.test_cfg['denormalize']['mean']).view(
+                1, -1, 1, 1)
+            std = torch.tensor(self.test_cfg['denormalize']['std']).view(
+                1, -1, 1, 1)
+            output = output * std + mean
+            lq = lq * std + mean
+            gt = gt * std + mean
+
         # save image
         if save_image:
             if len(meta) != 1:
@@ -375,9 +385,25 @@ class BasicVQERestorer(BasicRestorer):
         # inference
         output = self.generator(lq)
 
+        assert lq.shape[0] == 1
         lq = lq.squeeze(0)  # (T, C, H, W)
         gt = gt.squeeze(0)  # (T, C, H, W) or (C, H, W)
         output = output.squeeze(0)  # (T, C, H, W) or (C, H, W)
+
+        # denormalize before image saving and evaluation
+        if 'denormalize' in self.test_cfg:
+            mean = torch.tensor(self.test_cfg['denormalize']['mean']).view(
+                1, -1, 1, 1)
+            std = torch.tensor(self.test_cfg['denormalize']['std']).view(
+                1, -1, 1, 1)
+            lq = lq * std + mean
+            if gt.dim() == 3:
+                mean = torch.tensor(self.test_cfg['denormalize']['mean']).view(
+                    -1, 1, 1)
+                std = torch.tensor(self.test_cfg['denormalize']['std']).view(
+                    -1, 1, 1)
+            gt = gt * std + mean
+            output = output * std + mean
 
         # save images
         if save_image:
