@@ -152,10 +152,11 @@ class BasicQERestorer(BasicRestorer):
 
         # denormalize before image saving and evaluation
         if 'denormalize' in self.test_cfg:
+            device = output.device
             mean = torch.tensor(self.test_cfg['denormalize']['mean']).view(
-                1, -1, 1, 1)
+                1, -1, 1, 1).to(device)
             std = torch.tensor(self.test_cfg['denormalize']['std']).view(
-                1, -1, 1, 1)
+                1, -1, 1, 1).to(device)
             output = output * std + mean
             lq = lq * std + mean
             gt = gt * std + mean
@@ -392,16 +393,17 @@ class BasicVQERestorer(BasicRestorer):
 
         # denormalize before image saving and evaluation
         if 'denormalize' in self.test_cfg:
+            device = output.device
             mean = torch.tensor(self.test_cfg['denormalize']['mean']).view(
-                1, -1, 1, 1)
+                1, -1, 1, 1).to(device)
             std = torch.tensor(self.test_cfg['denormalize']['std']).view(
-                1, -1, 1, 1)
+                1, -1, 1, 1).to(device)
             lq = lq * std + mean
             if gt.dim() == 3:
                 mean = torch.tensor(self.test_cfg['denormalize']['mean']).view(
-                    -1, 1, 1)
+                    -1, 1, 1).to(device)
                 std = torch.tensor(self.test_cfg['denormalize']['std']).view(
-                    -1, 1, 1)
+                    -1, 1, 1).to(device)
             gt = gt * std + mean
             output = output * std + mean
 
