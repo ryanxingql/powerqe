@@ -298,7 +298,7 @@ class BasicVQERestorer(BasicRestorer):
         Returns:
         - dict: Evaluation results.
         """
-        T = lq.shape[1]
+        T = lq.shape[0]
         if self.center_gt and (T % 2 == 0):
             raise ValueError('Number of output frames should be odd.')
 

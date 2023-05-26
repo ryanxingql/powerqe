@@ -34,7 +34,7 @@ with open(args.anno, 'r') as f:
         # print(line)
         keys.append(line)
 
-for tar_dir in [args.lq, args.out]:
+for tar_dir, tar_name in zip([args.lq, args.out], ['lq', 'out']):
     nfrms_bk = -1
     result_per_frame_all_seqs = []
     for key in tqdm(keys, ncols=0):
@@ -64,6 +64,6 @@ for tar_dir in [args.lq, args.out]:
     result_per_frame_all_seqs = [
         r / len(keys) for r in result_per_frame_all_seqs
     ]
-    print(f'{sum(result_per_frame_all_seqs) / nfrms:.4f}')
+    print(tar_name + f': {sum(result_per_frame_all_seqs) / nfrms:.4f}')
     for idx in range(nfrms):
-        print(f'im{idx+1}: {result_per_frame_all_seqs[idx]:.4f}')
+        print(f'* im{idx+1}: {result_per_frame_all_seqs[idx]:.4f}')

@@ -1,4 +1,4 @@
-_base_ = 'basicvsr_plusplus_vimeo90k_triplet.py'
+_base_ = 'basicvsr_plus_plus_vimeo90k_triplet.py'
 
 exp_name = 'basicvsr_plus_plus_vimeo90k_septuplet'
 
