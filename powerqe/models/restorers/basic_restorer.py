@@ -1,5 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 # Modified by RyanXingQL @2022
+import math
 import numbers
 import os.path as osp
 
@@ -303,16 +304,16 @@ class BasicVQERestorer(BasicRestorer):
             raise ValueError('Number of output frames should be odd.')
 
         crop_border = self.test_cfg.get('crop_border', 0)
-
         eval_result = dict()
+
         for metric in metrics:
             if metric not in self.supported_metrics:
                 raise ValueError(
                     f'Supported metrics include `{self.supported_metrics}`;'
                     f' received `{metric}`.')
+            eval_func = self.supported_metrics[metric]
 
-            results = []
-            results_baseline = []
+            results = dict(lq=[], output=[])
             for it in range(T):
                 if self.center_gt and (it != (T // 2)):
                     continue
@@ -325,12 +326,17 @@ class BasicVQERestorer(BasicRestorer):
                     output_it = tensor2img(output[it])
                 lq_it = tensor2img(lq[it])
 
-                results.append(self.supported_metrics[metric](output_it, gt_it,
-                                                              crop_border))
-                results_baseline.append(self.supported_metrics[metric](
-                    lq_it, gt_it, crop_border))
-            eval_result[metric] = np.mean(results)
-            eval_result[metric + '_baseline'] = np.mean(results_baseline)
+                result = eval_func(output_it, gt_it, crop_border)
+                if not (metric == 'PSNR' and math.isinf(result)):
+                    results['output'].append(result)
+
+                result = eval_func(lq_it, gt_it, crop_border)
+                if not (metric == 'PSNR' and math.isinf(result)):
+                    results['lq'].append(result)
+
+            assert results['output'] and results['lq']
+            eval_result[metric] = np.mean(results['output'])
+            eval_result[metric + '_baseline'] = np.mean(results['lq'])
 
         return eval_result
 
