@@ -31,7 +31,7 @@ class ProVQERestorer(BasicVQERestorer):
       Default: `False`.
     """
 
-    @auto_fp16(apply_to=('lq', ))
+    @auto_fp16(apply_to=('lq'))
     def forward(self, lq, meta, gt=None, test_mode=False, **kwargs):
         """Forward function.
 
@@ -54,6 +54,7 @@ class ProVQERestorer(BasicVQERestorer):
         Args:
             lq (Tensor): LQ Tensor with shape (n, c, h, w).
             gt (Tensor): GT Tensor with shape (n, c, h, w).
+            key_frms (list[list[int]]): Key-frame annotation of samples.
 
         Returns:
             Tensor: Output tensor.
@@ -79,26 +80,24 @@ class ProVQERestorer(BasicVQERestorer):
                      iteration=None):
         """Test forward.
 
-        For image saving, `meta_keys` of `Collect` transform should contains
-        `key`.
+        For image saving, meta_keys of the transform Collect should contains
+        key.
 
         Args:
-        - `lq` (Tensor): LQ images with the shape of (N=1, T, C, H, W)
-        - `gt` (Tensor): GT images with the shape of (N=1, T!=1, C, H, W)
-          or (N=1, C, H, W).
-          Default: `None`.
-        - `meta` (list): Meta information of samples.
-          Default: `None`.
-        - `save_image` (bool): Whether to save image.
-          Default: `False`.
-        - `save_path` (str): Path to save image.
-          Default: `None`.
-        - `iteration` (int): Iteration for the saving image name.
-          Default: `None`.
+            lq (Tensor): LQ images with the shape of (N=1, T, C, H, W)
+            gt (Tensor): GT images with the shape of (N=1, T!=1, C, H, W)
+                or (N=1, C, H, W). Default: None.
+            meta (list): Meta information of samples. Default: None.
+            save_image (bool): Whether to save image. Default: False.
+            save_path (str): Path to save image. Default: None.
+            iteration (int): Iteration for the saving image name.
+                Default: None.
+            key_frms (list[list[int]]): Key-frame annotation of samples.
 
         Returns:
-        - dict[dict]: A dict with a single key-value pair.
-          The key is `eval_result`; the value is a dict of evaluation results.
+            dict[dict]: A dict with a single key-value pair.
+                The key is eval_result;
+                the value is a dict of evaluation results.
         """
         if self.test_cfg is None:
             raise ValueError(

@@ -31,7 +31,7 @@ class ProVQE(BasicVSRPlusPlus):
             Default: 100.
     """
 
-    def propagate(self, feats, flows, module_name):
+    def propagate(self, feats, flows, module_name, key_frms):
         """Propagate the latent features throughout the sequence.
 
         Args:
@@ -40,6 +40,7 @@ class ProVQE(BasicVSRPlusPlus):
             flows (tensor): Optical flows with shape (n, t - 1, 2, h, w).
             module_name (str): The name of the propagation branches. Can either
                 be 'backward_1', 'forward_1', 'backward_2', 'forward_2'.
+            key_frms (list[list[int]]): Key-frame annotation of samples.
 
         Return:
             dict(list[tensor]): A dictionary containing all the propagated
@@ -49,23 +50,23 @@ class ProVQE(BasicVSRPlusPlus):
 
         n, t, _, h, w = flows.size()  # (N, T-1, 2, H, W)
 
-        frame_idx = range(0, t + 1)  # 0, 1, ..., T-1
-        flow_idx = range(-1, t)  # -1, 0, ..., T-2
-        mapping_idx = list(range(0, len(feats['spatial'])))  # 0, 1, ..., T-1
-        mapping_idx += mapping_idx[::-1]  # 0, 1, ..., T-1, T-1, T-2, ..., 0
-
-        if 'backward' in module_name:
-            frame_idx = frame_idx[::-1]
-            flow_idx = frame_idx
+        T = t + 1
+        if 'forward' in module_name:
+            frame_idx = range(0, T)  # 0, 1, ..., T-1
+            flow_idx = range(-1, T - 1)  # -1, 0, ..., T-2
+        elif 'backward' in module_name:
+            frame_idx = range(T - 1, -1, -1)  # T-1, T-2, ..., 0
+            flow_idx = range(T - 1, -1, -1)  # T-1, T-2, ..., 0
+            key_frms = [kfs[::-1] for kfs in key_frms]
 
         feat_prop = flows.new_zeros(n, self.mid_channels, h, w)
         for i, idx in enumerate(frame_idx):
-            feat_current = feats['spatial'][mapping_idx[idx]]
+            feat_current = feats['spatial'][idx]
             if self.cpu_cache:
                 feat_current = feat_current.cuda()
                 feat_prop = feat_prop.cuda()
 
-            # second-order deformable alignment
+            # deformable alignment
             if i > 0:  # has at least one previous frame
                 flow_n1 = flows[:, flow_idx[i], :, :, :]
                 if self.cpu_cache:
@@ -80,20 +81,42 @@ class ProVQE(BasicVSRPlusPlus):
                 flow_n2 = torch.zeros_like(flow_n1)
                 cond_n2 = torch.zeros_like(cond_n1)
 
-                # second-order features
+                # key frame
                 if i > 1:  # has at least two previous frames
-                    feat_n2 = feats[module_name][-2]
-                    if self.cpu_cache:
-                        feat_n2 = feat_n2.cuda()
+                    for ib in range(
+                            n
+                    ):  # each sample may have different key-frame annotation
+                        if sum(key_frms[ib]
+                               [:i - 1]) > 0:  # has at least one key frame
+                            i_key = max(
+                                [j for j in range(i - 1) if key_frms[ib][j]])
+                        else:
+                            i_key = i - 2
 
-                    flow_n2 = flows[:, flow_idx[i - 1], :, :, :]
-                    if self.cpu_cache:
-                        flow_n2 = flow_n2.cuda()
-                    flow_n2 = flow_n1 + flow_warp(flow_n2,
-                                                  flow_n1.permute(0, 2, 3, 1))
-                    cond_n2 = flow_warp(feat_n2, flow_n2.permute(
-                        0, 2, 3,
-                        1))  # warp i-2 propagated feature from i-2 to i
+                        ngaps = i - i_key
+                        feat_n2_ib = feats[module_name][-ngaps][ib:ib + 1]
+                        if self.cpu_cache:
+                            feat_n2_ib = feat_n2_ib.cuda()
+
+                        flow_left = flows[ib:ib + 1,
+                                          flow_idx[i_key + 1], :, :, :]
+                        if self.cpu_cache:
+                            flow_left = flow_left.cuda()
+                        for j in range(1, ngaps):
+                            flow_right = flows[ib:ib + 1, flow_idx[i_key + 1 +
+                                                                   j], :, :, :]
+                            if self.cpu_cache:
+                                flow_right = flow_right.cuda()
+                            flow_left = flow_right + flow_warp(
+                                flow_left, flow_right.permute(0, 2, 3, 1))
+                        flow_n2_ib = flow_left
+
+                        cond_n2[ib:ib + 1] = flow_warp(
+                            feat_n2_ib, flow_n2_ib.permute(0, 2, 3, 1)
+                        )  # warp key propagated feature from i_key to i
+
+                        feat_n2[ib:ib + 1] = feat_n2_ib
+                        flow_n2[ib:ib + 1] = flow_n2_ib
 
                 # flow-guided deformable convolution
                 cond = torch.cat([cond_n1, feat_current, cond_n2], dim=1)
@@ -127,11 +150,12 @@ class ProVQE(BasicVSRPlusPlus):
         return feats
 
     def forward(self, lqs, key_frms):
-        """Forward function for BasicVSR++.
+        """Forward function for ProVQE.
 
         Args:
             lqs (tensor): Input low quality (LQ) sequence with
                 shape (n, t, c, h, w).
+            key_frms (list[list[int]]): Key-frame annotation of samples.
 
         Returns:
             Tensor: Output HR sequence with shape (n, t, c, 4h, 4w).
@@ -167,7 +191,8 @@ class ProVQE(BasicVSRPlusPlus):
             feats_ = self.feat_extract(lqs.view(-1, c, h, w))
             h, w = feats_.shape[2:]
             feats_ = feats_.view(n, t, -1, h, w)
-            feats['spatial'] = [feats_[:, i, :, :, :] for i in range(0, t)]
+            feats['spatial'] = [feats_[:, i, :, :, :]
+                                for i in range(0, t)]  # [t * (n, c, h, w)]
 
         # compute optical flow using the low-res inputs
         assert lqs_downsample.size(3) >= 64 and lqs_downsample.size(4) >= 64, (
@@ -178,9 +203,9 @@ class ProVQE(BasicVSRPlusPlus):
         # feature propagation
         for iter_ in [1, 2]:
             for direction in ['backward', 'forward']:
-                module = f'{direction}_{iter_}'
+                module_name = f'{direction}_{iter_}'
 
-                feats[module] = []
+                feats[module_name] = []
 
                 if direction == 'backward':
                     flows = flows_backward
@@ -189,7 +214,7 @@ class ProVQE(BasicVSRPlusPlus):
                 else:
                     flows = flows_backward.flip(1)
 
-                feats = self.propagate(feats, flows, module)
+                feats = self.propagate(feats, flows, module_name, key_frms)
                 if self.cpu_cache:
                     del flows
                     torch.cuda.empty_cache()
