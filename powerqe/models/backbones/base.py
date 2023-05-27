@@ -5,7 +5,7 @@ from mmedit.utils import get_root_logger
 
 
 class BaseNet(nn.Module):
-    """Base network with the function `init_weights`."""
+    """Base network with the function init_weights."""
 
     def __init__(self) -> None:
         super().__init__()
@@ -14,11 +14,11 @@ class BaseNet(nn.Module):
         """Init weights for models.
 
         Args:
-        - `pretrained` (str): Path for pretrained weights.
-          If given `None`, pretrained weights will not be loaded.
-          Default: `None`.
-        - `strict` (bool): Whether strictly load the pretrained model.
-          Default: `True`.
+            pretrained (str): Path for pretrained weights.
+                If given None, pretrained weights will not be loaded.
+                Default: None.
+            strict (bool): Whether strictly load the pretrained model.
+                Default: True.
         """
         if isinstance(pretrained, str):
             logger = get_root_logger()
@@ -26,5 +26,5 @@ class BaseNet(nn.Module):
         elif pretrained is None:
             pass  # use default initialization
         else:
-            raise TypeError('`pretrained` must be a string or `None`;'
-                            f' received `{type(pretrained)}`.')
+            raise TypeError('"pretrained" must be a string or None;'
+                            f' received "{type(pretrained)}".')

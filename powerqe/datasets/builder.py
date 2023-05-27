@@ -22,8 +22,7 @@ if platform.system() != 'Windows':
 def build_dataset(cfg, default_args=None):
     """Build dataset.
 
-    Differences to that in mmedit:
-    - Use the `DATASETS` in powerqe.
+    Difference to that in MMEditing: Use the DATASETS in PowerQE.
     """
     if isinstance(cfg, (list, tuple)):
         dataset = ConcatDataset([build_dataset(c, default_args) for c in cfg])

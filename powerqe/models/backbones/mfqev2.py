@@ -18,8 +18,8 @@ class MFQEv2(BaseNet):
     Ref: "https://github.com/ryanxingql/mfqev2.0/blob/master/net_MFCNN.py"
 
     Args:
-    - `io_channels` (int): Number of I/O channels.
-    - `nf` (int): Channel number of intermediate features.
+        io_channels (int): Number of I/O channels.
+        nf (int): Channel number of intermediate features.
     """
 
     def __init__(self, io_channels=3, nf=32, spynet_pretrained=None):
@@ -93,10 +93,10 @@ class MFQEv2(BaseNet):
         """Forward function.
 
         Args:
-        - `x` (Tensor): Input tensor with the shape of (N, T=3, C, H, W).
+            x (Tensor): Input tensor with the shape of (N, T=3, C, H, W).
 
         Returns:
-        - Tensor: Output center frame with the shape of (N, C, H, W).
+            Tensor: Output center frame with the shape of (N, C, H, W).
         """
         # alignment
         center_frm = x[:, 1, ...]  # n c=3 h w

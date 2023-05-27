@@ -11,11 +11,11 @@ class STDF(nn.Module):
     """STDF.
 
     Args:
-    - `in_nc` (int): Num of input channels.
-    - `out_nc` (int): Num of output channels.
-    - `nf` (int): Num of channels (filters) of each conv layer.
-    - `nb` (int): Num of conv layers.
-    - `deform_ks` (int): Size of the deformable kernel.
+        in_nc (int): Num of input channels.
+        out_nc (int): Num of output channels.
+        nf (int): Num of channels (filters) of each conv layer.
+        nb (int): Num of conv layers.
+        deform_ks (int): Size of the deformable kernel.
     """
 
     def __init__(self,
@@ -117,10 +117,10 @@ class QENet(nn.Module):
     """QE subnet.
 
     Args:
-    - `in_nc` (int): Num of input channels from STDF.
-    - `nf` (int): Num of channels (filters) of each conv layer.
-    - `nb` (int): Num of conv layers.
-    - `out_nc` (int): Num of output channel. 3 for RGB, 1 for Y.
+        in_nc (int): Num of input channels from STDF.
+        nf (int): Num of channels (filters) of each conv layer.
+        nb (int): Num of conv layers.
+        out_nc (int): Num of output channel. 3 for RGB, 1 for Y.
     """
 
     def __init__(self, in_nc=64, nf=48, nb=6, out_nc=3, base_ks=3):
@@ -151,13 +151,13 @@ class STDFNet(BaseNet):
     Ref: "https://github.com/ryanxingql/stdf-pytorch"
 
     Args:
-    - `io_channels` (int): Number of I/O channels.
-    - `radius`: Frames number before the center frame.
-    - `nf_stdf` (int): Channel number of intermediate features of STDF module.
-    - `nb_stdf` (int): Block number of STDF module.
-    - `nf_qe` (int): Channel number of intermediate features of QE module.
-    - `nb_qe` (int): Block number of QE module.
-    - `deform_ks` (int): Kernel size of deformable convolutions.
+        io_channels (int): Number of I/O channels.
+        radius: Frames number before the center frame.
+        nf_stdf (int): Channel number of intermediate features of STDF module.
+        nb_stdf (int): Block number of STDF module.
+        nf_qe (int): Channel number of intermediate features of QE module.
+        nb_qe (int): Block number of QE module.
+        deform_ks (int): Kernel size of deformable convolutions.
     """
 
     def __init__(self,
@@ -189,10 +189,10 @@ class STDFNet(BaseNet):
         """Forward.
 
         Args:
-        - `x` (Tensor): Input tensor with the shape of (N, T, C, H, W).
+            x (Tensor): Input tensor with the shape of (N, T, C, H, W).
 
         Returns:
-        - Tensor: Out center frame with the shape of (N, C, H, W).
+            Tensor: Out center frame with the shape of (N, C, H, W).
         """
         out = self.stdf(x)
         out = self.qe_net(out)

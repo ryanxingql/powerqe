@@ -10,9 +10,9 @@ class DCAD(BaseNet):
     """DCAD network structure.
 
     Args:
-    - `io_channels` (int): Number of I/O channels.
-    - `mid_channels` (int): Channel number of intermediate features.
-    - `num_blocks` (int): Block number in the trunk network.
+        io_channels (int): Number of I/O channels.
+        mid_channels (int): Channel number of intermediate features.
+        num_blocks (int): Block number in the trunk network.
     """
 
     def __init__(self, io_channels=3, mid_channels=64, num_blocks=8):
@@ -42,9 +42,9 @@ class DCAD(BaseNet):
         """Forward function.
 
         Args:
-        - `x` (Tensor): Input tensor with the shape of (N, C, H, W).
+            x (Tensor): Input tensor with the shape of (N, C, H, W).
 
         Returns:
-        - Tensor
+            Tensor
         """
         return self.layers(x) + x

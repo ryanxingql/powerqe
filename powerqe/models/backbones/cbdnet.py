@@ -12,22 +12,22 @@ class CBDNet(BaseNet):
     """CBDNet network structure.
 
     Args:
-    - `io_channels` (int): Number of I/O channels.
-    - `estimate_channels` (int): Channel number of the features in the
-      estimation module.
-    - `nlevel_denoise` (int): Level number of UNet for denoising.
-    - `nf_base_denoise` (int): Base channel number of the features in the
-      denoising module.
-    - `nf_gr_denoise` (int): Growth rate of the channel number in the denoising
-      module.
-    - `nl_base_denoise` (int): Base convolution layer number in the denoising
-      module.
-    - `nl_gr_denoise` (int): Growth rate of the convolution layer number in the
-      denoising module.
-    - `down_denoise` (str): Downsampling method in the denoising module.
-    - `up_denoise` (str): Upsampling method in the denoising module.
-    - `reduce_denoise` (str): Reduction method for the guidance/feature maps in
-      the denoising module.
+        io_channels (int): Number of I/O channels.
+        estimate_channels (int): Channel number of the features in the
+            estimation module.
+        nlevel_denoise (int): Level number of UNet for denoising.
+        nf_base_denoise (int): Base channel number of the features in the
+            denoising module.
+        nf_gr_denoise (int): Growth rate of the channel number in the denoising
+            module.
+        nl_base_denoise (int): Base convolution layer number in the denoising
+            module.
+        nl_gr_denoise (int): Growth rate of the convolution layer number in the
+            denoising module.
+        down_denoise (str): Downsampling method in the denoising module.
+        up_denoise (str): Upsampling method in the denoising module.
+        reduce_denoise (str): Reduction method for the guidance/feature maps in
+            the denoising module.
     """
 
     def __init__(self,
@@ -80,10 +80,10 @@ class CBDNet(BaseNet):
         """Forward.
 
         Args:
-        - `x` (Tensor): Input tensor with the shape of (N, C, H, W).
+            x (Tensor): Input tensor with the shape of (N, C, H, W).
 
         Returns:
-        - Tensor
+            Tensor
         """
         estimated_noise_map = self.estimate(x)
         res = self.denoise(torch.cat([x, estimated_noise_map], dim=1))

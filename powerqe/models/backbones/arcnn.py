@@ -10,19 +10,19 @@ class ARCNN(BaseNet):
     """AR-CNN network structure.
 
     Args:
-    - `io_channels` (int): Number of I/O channels.
-    - `mid_channels_1` (int): Channel number of the first intermediate
-      features.
-    - `mid_channels_2` (int): Channel number of the second intermediate
-      features.
-    - `mid_channels_3` (int): Channel number of the third intermediate
-      features.
-    - `in_kernel_size` (int): Kernel size of the first convolution.
-    - `mid_kernel_size` (int): Kernel size of the first intermediate
-      convolution.
-    - `mid_kernel_size` (int): Kernel size of the second intermediate
-      convolution.
-    - `out_kernel_size` (int): Kernel size of the last convolution.
+        io_channels (int): Number of I/O channels.
+        mid_channels_1 (int): Channel number of the first intermediate
+            features.
+        mid_channels_2 (int): Channel number of the second intermediate
+            features.
+        mid_channels_3 (int): Channel number of the third intermediate
+            features.
+        in_kernel_size (int): Kernel size of the first convolution.
+        mid_kernel_size (int): Kernel size of the first intermediate
+            convolution.
+        mid_kernel_size (int): Kernel size of the second intermediate
+            convolution.
+        out_kernel_size (int): Kernel size of the last convolution.
     """
 
     def __init__(self,
@@ -58,9 +58,9 @@ class ARCNN(BaseNet):
         """Forward function.
 
         Args:
-        - `x` (Tensor): Input tensor with the shape of (N, C, H, W).
+            x (Tensor): Input tensor with the shape of (N, C, H, W).
 
         Returns:
-        - Tensor
+            Tensor
         """
         return self.layers(x) + x

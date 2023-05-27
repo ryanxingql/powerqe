@@ -10,20 +10,20 @@ from ..registry import BACKBONES
 class EDVRNetQE(EDVRNet):
     """EDVR network structure for quality enhancement.
 
-    Differences to `EDVRNet`:
-    - Comment all upsamplings since the input is with high resolution.
-      See `forward`.
+    Differences to EDVRNet:
+        Comment all upsamplings since the input is with high resolution.
+            See forward.
 
     Args:
-    - `io_channels` (int): Number of I/O channels.
-    - `mid_channels` (int): Channel number of intermediate features.
-    - `num_frames` (int): Number of input frames.
-    - `deform_groups` (int): Deformable groups.
-    - `num_blocks_extraction` (int): Number of blocks for feature extraction.
-    - `num_blocks_reconstruction` (int): Number of blocks for reconstruction.
-    - `center_frame_idx` (int): The index of center frame.
-      Frame counting from 0.
-    - `with_tsa` (bool): Whether to use TSA module.
+        io_channels (int): Number of I/O channels.
+        mid_channels (int): Channel number of intermediate features.
+        num_frames (int): Number of input frames.
+        deform_groups (int): Deformable groups.
+        num_blocks_extraction (int): Number of blocks for feature extraction.
+        num_blocks_reconstruction (int): Number of blocks for reconstruction.
+        center_frame_idx (int): The index of center frame.
+            Frame counting from 0.
+        with_tsa (bool): Whether to use TSA module.
     """
 
     def __init__(self,
@@ -54,7 +54,7 @@ class EDVRNetQE(EDVRNet):
         n, t, c, h, w = x.size()
         if h % 4 != 0 or w % 4 != 0:
             raise ValueError(
-                f'Height (`{h}`) and width (`{w}`) should be divisible by 4.')
+                f'Height ({h}) and width ({w}) should be divisible by 4.')
 
         x_center = x[:, self.center_frame_idx, :, :, :].contiguous()
 

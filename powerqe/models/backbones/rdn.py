@@ -33,17 +33,17 @@ class Interpolate(nn.Module):
 class RDNQE(BaseNet):
     """RDN for quality enhancement.
 
-    Differences to the `RDN` in mmedit:
-    - Support rescaling before/after enhancement.
+    Differences to the RDN in MMEditing:
+        Support rescaling before/after enhancement.
 
     Args:
-    - `rescale` (int): Rescaling factor.
-    - `io_channels` (int): Number of I/O channels.
-    - `mid_channels` (int): Channel number of intermediate features.
-    - `num_blocks` (int): Block number in the trunk network.
-    - `upscale_factor` (int): Upsampling factor. Support 2^n and 3.
-    - `num_layer` (int): Layer number in the Residual Dense Block.
-    - `channel_growth` (int): Channels growth in each layer of RDB.
+        rescale (int): Rescaling factor.
+        io_channels (int): Number of I/O channels.
+        mid_channels (int): Channel number of intermediate features.
+        num_blocks (int): Block number in the trunk network.
+        upscale_factor (int): Upsampling factor. Support 2^n and 3.
+        num_layer (int): Layer number in the Residual Dense Block.
+        channel_growth (int): Channels growth in each layer of RDB.
     """
 
     def __init__(
@@ -65,7 +65,7 @@ class RDNQE(BaseNet):
 
         if not math.log2(rescale).is_integer():
             raise ValueError(
-                f'Rescale factor (`{rescale}`) should be a power of 2.')
+                f'Rescale factor ({rescale}) should be a power of 2.')
 
         if rescale == 1:
             self.downscale = nn.Identity()
@@ -123,10 +123,10 @@ class RDNQE(BaseNet):
         """Forward.
 
         Args:
-        - `x` (Tensor): Input tensor with the shape of (N, C, H, W).
+            x (Tensor): Input tensor with the shape of (N, C, H, W).
 
         Returns:
-        - Tensor
+            Tensor
         """
         x = self.downscale(x)
 

@@ -17,12 +17,12 @@ class RRDBNetQE(RRDBNet):
     Currently, it supports [x1/x2/x4] upsampling scale factor.
 
     Args:
-    - `in_channels` (int): Channel number of inputs.
-    - `out_channels` (int): Channel number of outputs.
-    - `mid_channels` (int): Channel number of intermediate features.
-    - `num_blocks` (int): Block number in the trunk network.
-    - `growth_channels` (int): Channels for each growth.
-    - `upscale_factor` (int): Upsampling factor. Support x1, x2 and x4.
+        in_channels (int): Channel number of inputs.
+        out_channels (int): Channel number of outputs.
+        mid_channels (int): Channel number of intermediate features.
+        num_blocks (int): Block number in the trunk network.
+        growth_channels (int): Channels for each growth.
+        upscale_factor (int): Upsampling factor. Support x1, x2 and x4.
     """
 
     def __init__(self,
@@ -44,17 +44,17 @@ class RRDBNetQE(RRDBNet):
                      revise_keys=[(r'^module\.', '')]):
         """Init weights for models.
 
-        Accept `revise_keys` for restorer `ESRGANRestorer`.
-        Default value is equal to that of `load_checkpoint`.
+        Accept revise_keys for restorer ESRGANRestorer.
+        Default value is equal to that of load_checkpoint.
 
         Args:
-        - `pretrained` (str, optional): Path for pretrained weights.
-          If given `None`, pretrained weights will not be loaded.
-        - `strict` (boo, optional): Whether strictly load the pretrained model.
-        - `revise_keys` (list): A list of customized keywords to modify the
-          state_dict in checkpoint. Each item is a (pattern, replacement)
-          pair of the regular expression operations.
-          Default: strip the prefix 'module.' by `[(r'^module\\.', '')]`.
+            pretrained (str, optional): Path for pretrained weights.
+                If given None, pretrained weights will not be loaded.
+            strict (boo, optional): Whether strictly load the pretrained model.
+            revise_keys (list): A list of customized keywords to modify the
+                state_dict in checkpoint. Each item is a (pattern, replacement)
+                pair of the regular expression operations.
+                Default: strip the prefix 'module.' by [(r'^module\\.', '')].
         """
         if isinstance(pretrained, str):
             logger = get_root_logger()
@@ -73,5 +73,5 @@ class RRDBNetQE(RRDBNet):
             ]:
                 default_init_weights(m, 0.1)
         else:
-            raise TypeError('`pretrained` must be a string or `None`;'
-                            f' received `{type(pretrained)}`.')
+            raise TypeError('"pretrained" must be a string or None;'
+                            f' received "{type(pretrained)}".')

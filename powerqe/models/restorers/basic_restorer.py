@@ -18,20 +18,17 @@ from .script import combine_patches, crop_img, pad_img, unfold_img
 class BasicQERestorer(BasicRestorer):
     """Basic restorer for quality enhancement.
 
-    Differences to `BasicRestorer`:
-    - Support LQ vs. GT evaluation. See `evaluate`.
-    - Support saving GT and LQ. See `forward_test`.
-    - Support unfolding testing. See `forward_test`.
+    Differences to BasicRestorer:
+        Support LQ vs. GT evaluation. See evaluate.
+        Support saving GT and LQ. See forward_test.
+        Support unfolding testing. See forward_test.
 
     Args:
-    - `generator` (dict): Config for the generator structure.
-    - `pixel_loss` (dict): Config for pixel-wise loss.
-    - `train_cfg` (dict): Config for training.
-      Default: `None`.
-    - `test_cfg` (dict): Config for testing.
-      Default: `None`.
-    - `pretrained` (str): Path for pretrained model.
-      Default: `None`.
+        generator (dict): Config for the generator structure.
+        pixel_loss (dict): Config for pixel-wise loss.
+        train_cfg (dict): Config for training. Default: None.
+        test_cfg (dict): Config for testing. Default: None.
+        pretrained (str): Path for pretrained model. Default: None.
     """
     supported_metrics = {'PSNR': psnr, 'SSIM': ssim}
 
@@ -51,13 +48,13 @@ class BasicQERestorer(BasicRestorer):
         """Evaluation.
 
         Args:
-        - `metrics` (list): List of evaluation metrics.
-        - `output` (Tensor): Model output with the shape of (N=1, C, H, W).
-        - `gt` (Tensor): GT image with the shape of (N=1, C, H, W).
-        - `lq` (Tensor): LQ image with the shape of (N=1, C, H, W).
+            metrics (list): List of evaluation metrics.
+            output (Tensor): Model output with the shape of (N=1, C, H, W).
+            gt (Tensor): GT image with the shape of (N=1, C, H, W).
+            lq (Tensor): LQ image with the shape of (N=1, C, H, W).
 
         Returns:
-        - dict: Evaluation results.
+            dict: Evaluation results.
         """
         crop_border = self.test_cfg.get('crop_border', 0)
 
@@ -69,8 +66,8 @@ class BasicQERestorer(BasicRestorer):
         for metric in metrics:
             if metric not in self.supported_metrics:
                 raise ValueError(
-                    f'Supported metrics include `{self.supported_metrics}`;'
-                    f' received `{metric}`.')
+                    f'Supported metrics include "{self.supported_metrics}";'
+                    f' received "{metric}".')
 
             eval_result[metric] = self.supported_metrics[metric](output, gt,
                                                                  crop_border)
@@ -90,32 +87,33 @@ class BasicQERestorer(BasicRestorer):
 
         To save memory, image can be cut (or unfolded) into patches.
         Those patches can be tested separately.
-        `test_cfg` must contains `unfolding`, which is a dict contains
-        `patchsize` (patch size) and `splits` (number of testing splits).
+        test_cfg must contains unfolding, which is a dict contains
+        patchsize (patch size) and splits (number of testing splits).
 
-        For image saving, `meta_keys` of `Collect` transform should contains
-        `lq_path`.
+        For image saving, meta_keys of Collect transform should contains
+        lq_path.
 
         Args:
-        - `lq` (Tensor): LQ image with the shape of (N=1, C, H, W).
-        - `gt` (Tensor): GT image with the shape of (N=1, C, H, W).
-          Default: `None`.
-        - `meta` (list): Meta information of samples.
-          Default: `None`.
-        - `save_image` (bool): Whether to save image.
-          Default: `False`.
-        - `save_path` (str): Path to save image.
-          Default: `None`.
-        - `iteration` (int): Iteration for the saving image name.
-          Default: `None`.
+            lq (Tensor): LQ image with the shape of (N=1, C, H, W).
+            gt (Tensor): GT image with the shape of (N=1, C, H, W).
+                Default: None.
+            meta (list): Meta information of samples.
+                Default: None.
+            save_image (bool): Whether to save image.
+                Default: False.
+            save_path (str): Path to save image.
+                Default: None.
+            iteration (int): Iteration for the saving image name.
+                Default: None.
 
         Returns:
-        - dict[dict]: A dict with a single key-value pair.
-          The key is `eval_result`; the value is a dict of evaluation results.
+            dict[dict]: A dict with a single key-value pair.
+                The key is eval_result;
+                the value is a dict of evaluation results.
         """
         if self.test_cfg is None:
             raise ValueError(
-                '`self.test_cfg` should be provided; received `None`.')
+                '"self.test_cfg" should be provided; received None.')
 
         if len(lq) != 1:
             raise ValueError(
@@ -192,8 +190,8 @@ class BasicQERestorer(BasicRestorer):
                     save_path_lq = osp.join(save_path, 'lq', save_subpath)
                     save_path_gt = osp.join(save_path, 'gt', save_subpath)
             else:
-                raise TypeError('`iteration` should be a number or `None`;'
-                                f' received `{type(iteration)}`.')
+                raise TypeError('"iteration" should be a number or None;'
+                                f' received "{type(iteration)}".')
 
             mmcv.imwrite(tensor2img(output), save_path_output)
             if save_gt_lq:
@@ -203,7 +201,7 @@ class BasicQERestorer(BasicRestorer):
         # evaluation
         if 'metrics' not in self.test_cfg:
             raise ValueError(
-                '`metrics` should be provided in `test_cfg` for evaluation.')
+                'metrics should be provided in test_cfg for evaluation.')
         results = dict(eval_result=self.evaluate(
             metrics=self.test_cfg['metrics'], output=output, gt=gt, lq=lq))
         return results
@@ -213,22 +211,19 @@ class BasicQERestorer(BasicRestorer):
 class BasicVQERestorer(BasicRestorer):
     """Basic restorer for video quality enhancement.
 
-    Differences to `BasicRestorer`:
-    - Support LQ vs. GT testing.
-    - Support sequence LQ and sequence/center GT. See `forward_test`.
-    - Support parameter fix for some iters. See `train_step`.
+    Differences to BasicRestorer:
+        Support LQ vs. GT testing.
+        Support sequence LQ and sequence/center GT. See forward_test.
+        Support parameter fix for some iters. See train_step.
 
     Args:
-    - `generator` (dict): Config for the generator structure.
-    - `pixel_loss` (dict): Config for pixel-wise loss.
-    - `train_cfg` (dict): Config for training.
-      Default: `None`.
-    - `test_cfg` (dict): Config for testing.
-      Default: `None`.
-    - `pretrained` (str): Path for pretrained model.
-      Default: `None`.
-    - `center_gt` (bool): Only the center GT is provided and evaluated.
-      Default: `False`.
+        generator (dict): Config for the generator structure.
+        pixel_loss (dict): Config for pixel-wise loss.
+        train_cfg (dict): Config for training. Default: None.
+        test_cfg (dict): Config for testing. Default: None.
+        pretrained (str): Path for pretrained model. Default: None.
+        center_gt (bool): Only the center GT is provided and evaluated.
+            Default: False.
     """
     supported_metrics = {'PSNR': psnr, 'SSIM': ssim}
 
@@ -289,15 +284,15 @@ class BasicVQERestorer(BasicRestorer):
         """Evaluation.
 
         Args:
-        - `metrics` (list): List of evaluation metrics.
-        - `output` (Tensor): Output images with the shape of (T!=1, C, H, W)
-          or (C, H, W).
-        - `gt` (Tensor): GT images with the shape of (T!=1, C, H, W)
-          or (C, H, W).
-        - `lq` (Tensor): LQ images with the shape of (T, C, H, W).
+            metrics (list): List of evaluation metrics.
+            output (Tensor): Output images with the shape of (T!=1, C, H, W)
+                or (C, H, W).
+            gt (Tensor): GT images with the shape of (T!=1, C, H, W)
+                or (C, H, W).
+            lq (Tensor): LQ images with the shape of (T, C, H, W).
 
         Returns:
-        - dict: Evaluation results.
+            dict: Evaluation results.
         """
         T = lq.shape[0]
         if self.center_gt and (T % 2 == 0):
@@ -309,8 +304,8 @@ class BasicVQERestorer(BasicRestorer):
         for metric in metrics:
             if metric not in self.supported_metrics:
                 raise ValueError(
-                    f'Supported metrics include `{self.supported_metrics}`;'
-                    f' received `{metric}`.')
+                    f'Supported metrics include "{self.supported_metrics}";'
+                    f' received "{metric}".')
             eval_func = self.supported_metrics[metric]
 
             results = dict(lq=[], output=[])
@@ -349,30 +344,27 @@ class BasicVQERestorer(BasicRestorer):
                      iteration=None):
         """Test forward.
 
-        For image saving, `meta_keys` of `Collect` transform should contains
-        `key`.
+        For image saving, meta_keys of Collect transform should contains
+        key.
 
         Args:
-        - `lq` (Tensor): LQ images with the shape of (N=1, T, C, H, W)
-        - `gt` (Tensor): GT images with the shape of (N=1, T!=1, C, H, W)
-          or (N=1, C, H, W).
-          Default: `None`.
-        - `meta` (list): Meta information of samples.
-          Default: `None`.
-        - `save_image` (bool): Whether to save image.
-          Default: `False`.
-        - `save_path` (str): Path to save image.
-          Default: `None`.
-        - `iteration` (int): Iteration for the saving image name.
-          Default: `None`.
+            lq (Tensor): LQ images with the shape of (N=1, T, C, H, W)
+            gt (Tensor): GT images with the shape of (N=1, T!=1, C, H, W)
+                or (N=1, C, H, W). Default: None.
+            meta (list): Meta information of samples. Default: None.
+            save_image (bool): Whether to save image. Default: False.
+            save_path (str): Path to save image. Default: None.
+            iteration (int): Iteration for the saving image name.
+                Default: None.
 
         Returns:
-        - dict[dict]: A dict with a single key-value pair.
-          The key is `eval_result`; the value is a dict of evaluation results.
+            dict[dict]: A dict with a single key-value pair.
+                The key is eval_result; the value is a dict of evaluation
+                results.
         """
         if self.test_cfg is None:
             raise ValueError(
-                '`self.test_cfg` should be provided; received `None`.')
+                '"self.test_cfg" should be provided; received None.')
 
         if len(lq) != 1:
             raise ValueError(
@@ -387,7 +379,7 @@ class BasicVQERestorer(BasicRestorer):
         T = lq.shape[1]
         if self.center_gt and (T % 2 == 0):
             raise ValueError('Number of input frames should be odd'
-                             ' when `center_gt` is `True`.')
+                             ' when "center_gt" is True.')
 
         # inference
         output = self.generator(lq)
@@ -456,8 +448,8 @@ class BasicVQERestorer(BasicRestorer):
                         save_path_lq = osp.join(save_path, 'lq', save_subpath)
                         save_path_gt = osp.join(save_path, 'gt', save_subpath)
                 else:
-                    raise TypeError('`iteration` should be a number or `None`;'
-                                    f' received `{type(iteration)}`.')
+                    raise TypeError('"iteration" should be a number or None;'
+                                    f' received "{type(iteration)}".')
 
                 if self.center_gt:
                     mmcv.imwrite(tensor2img(output), save_path_output)
@@ -473,7 +465,7 @@ class BasicVQERestorer(BasicRestorer):
         # evaluation
         if 'metrics' not in self.test_cfg:
             raise ValueError(
-                '`metrics` should be provided in `test_cfg` for evaluation.')
+                'metrics should be provided in "test_cfg" for evaluation.')
         results = dict(eval_result=self.evaluate(
             metrics=self.test_cfg['metrics'], output=output, gt=gt, lq=lq))
         return results

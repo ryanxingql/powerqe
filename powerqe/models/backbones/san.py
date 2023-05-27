@@ -155,15 +155,15 @@ class _NonLocalBlockND(nn.Module):
 
         supported_dims = [1, 2, 3]
         if dimension not in supported_dims:
-            raise ValueError(f'Dimension should be in {supported_dims};'
-                             f' received `{dimension}`.')
+            raise ValueError(f'Dimension should be in "{supported_dims}";'
+                             f' received {dimension}.')
 
         supported_modes = [
             'embedded_gaussian', 'gaussian', 'dot_product', 'concatenation'
         ]
         if mode not in supported_modes:
-            raise NotImplementedError(f'Mode should be in {supported_modes};'
-                                      f' received `{mode}`.')
+            raise NotImplementedError(f'Mode should be in "{supported_modes}";'
+                                      f' received "{mode}".')
 
         # print('Dimension: %d, mode: %s' % (dimension, mode))
 

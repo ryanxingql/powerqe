@@ -17,7 +17,7 @@ class ECA(nn.Module):
     /3adf7a99f829ffa2e94a0de1de8a362614d66958/models/eca_module.py#L5"
 
     Args:
-    - `k_size`: kernel size.
+        k_size: Kernel size.
     """
 
     def __init__(self, k_size=3):
@@ -72,11 +72,11 @@ class GaussianSmoothing(nn.Module):
     in the input using a depthwise convolution.
 
     Args:
-    - `channels` (int, sequence): Number of channels of the input tensors.
-      Output will have this number of channels as well.
-    - `kernel_size` (int, sequence): Size of the gaussian kernel.
-    - `sigma` (float, sequence): Standard deviation of the gaussian kernel.
-    - `dim` (int, optional): The number of dimensions of the data.
+        channels (int, sequence): Number of channels of the input tensors.
+            Output will have this number of channels as well.
+        kernel_size (int, sequence): Size of the gaussian kernel.
+        sigma (float, sequence): Standard deviation of the gaussian kernel.
+        dim (int, optional): The number of dimensions of the data.
     """
 
     def __init__(self, channels, kernel_size, sigma, padding, dim=2):
@@ -124,10 +124,10 @@ class GaussianSmoothing(nn.Module):
         """Apply gaussian filter to input.
 
         Args:
-        - `x` (Tensor): Input to apply gaussian filter on.
+            x (Tensor): Input to apply gaussian filter on.
 
         Returns:
-        - Tensor: Filtered output.
+            Tensor: Filtered output.
         """
         return self.conv(x,
                          weight=self.weight,
@@ -216,7 +216,7 @@ class IQAM:
         Only test one channel, e.g., red.
 
         Args:
-        - `x` (Tensor): Image with the shape of (B=1, C, H, W).
+            x (Tensor): Image with the shape of (B=1, C, H, W).
         """
         h, w = x.shape[2:]
         h_cut = h // self.patch_sz * self.patch_sz
@@ -315,8 +315,8 @@ class Down(nn.Module):
         supported_methods = ['avepool2d', 'strideconv']
         if method not in supported_methods:
             raise NotImplementedError(
-                f'Downsampling method should be in `{supported_methods}`;'
-                f' received `{method}`.')
+                f'Downsampling method should be in "{supported_methods}";'
+                f' received "{method}".')
 
         if if_separable and if_eca:
             layers = nn.ModuleList(
@@ -387,8 +387,8 @@ class Up(nn.Module):
         supported_methods = ['upsample', 'transpose2d']
         if method not in supported_methods:
             raise NotImplementedError(
-                f'Upsampling method should be in `{supported_methods}`;'
-                f' received `{method}`.')
+                f'Upsampling method should be in "{supported_methods}";'
+                f' received "{method}".')
 
         if method == 'upsample':
             self.up = nn.Upsample(scale_factor=2)
@@ -564,12 +564,12 @@ class RBQE(BaseNet):
         """Forward.
 
         Args:
-        - `x` (Tensor): Image with the shape of (B=1, C, H, W).
-        - `idx_out` (int):
-          - `-2`: Determined by IQAM.
-          - `-1`: Output all images from all outputs for training.
-          - `0` | `1` | ... | `self.nlevel-1`: Output from the assigned exit.
-          - `None`: Output from the last exit.
+            x (Tensor): Image with the shape of (B=1, C, H, W).
+            idx_out (int):
+                -2: Determined by IQAM.
+                -1: Output all images from all outputs for training.
+                0 | 1 | ... | self.nlevel-1: Output from the assigned exit.
+                None: Output from the last exit.
         """
         if self.if_only_last_output:
             if idx_out is not None:

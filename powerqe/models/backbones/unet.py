@@ -15,8 +15,8 @@ class Up(nn.Module):
         supported_methods = ['upsample', 'transpose2d']
         if method not in supported_methods:
             raise NotImplementedError(
-                f'Upsampling method should be in `{supported_methods}`;'
-                f' received `{method}`.')
+                f'Upsampling method should be in "{supported_methods}";'
+                f' received "{method}".')
 
         if method == 'upsample':
             self.up = nn.Upsample(scale_factor=2,
@@ -78,20 +78,20 @@ class UNet(BaseNet):
         supported_up_methods = ['upsample', 'transpose2d']
         if up not in supported_up_methods:
             raise NotImplementedError(
-                f'Upsampling method should be in `{supported_up_methods}`;'
-                f' received `{up}`.')
+                f'Upsampling method should be in "{supported_up_methods}";'
+                f' received "{up}".')
 
         supported_down_methods = ['avepool2d', 'strideconv']
         if down not in supported_down_methods:
             raise NotImplementedError(
-                f'Downsampling method should be in `{supported_down_methods}`;'
-                f' received `{down}`.')
+                f'Downsampling method should be in "{supported_down_methods}";'
+                f' received "{down}".')
 
         supported_reduce_methods = ['add', 'concat']
         if reduce not in supported_reduce_methods:
             raise NotImplementedError(
-                f'Reduce method should be in `{supported_reduce_methods}`;'
-                f' received `{reduce}`.')
+                f'Reduce method should be in "{supported_reduce_methods}";'
+                f' received "{reduce}".')
 
         if residual and (nf_in != nf_out):
             raise ValueError('The input channel number should be equal to the'

@@ -11,20 +11,18 @@ def pad_img(img, sz_mul):
     """Image padding.
 
     Args:
-    - `img` (Tensor): Image with the shape of (N, C, H, W).
-    - `sz_mul` (int): Height and width of the padded image should be divisible
-      by this factor.
+        img (Tensor): Image with the shape of (N, C, H, W).
+        sz_mul (int): Height and width of the padded image should be divisible
+            by this factor.
 
     Returns:
-    - Tensor: Padded image with the shape of (N, C, H, W).
-    - Tuple: Padding information recorded as
-      (left, right, top, bottom).
+        Tensor: Padded image with the shape of (N, C, H, W).
+        Tuple: Padding information recorded as (left, right, top, bottom).
     """
     h, w = img.shape[2:]
     if (h < sz_mul) or (w < sz_mul):
-        raise ValueError(
-            f'Height (`{h}`) and width (`{w}`) should not be smaller'
-            f' than the patch size (`{sz_mul}`).')
+        raise ValueError(f'Height ({h}) and width ({w}) should not be smaller'
+                         f' than the patch size ({sz_mul}).')
     diff_h, diff_w = cal_diff(h, sz_mul), cal_diff(w, sz_mul)
     pad_info = ((diff_w // 2), (diff_w - diff_w // 2), (diff_h // 2),
                 (diff_h - diff_h // 2))
@@ -38,18 +36,18 @@ def unfold_img(img, patch_sz):
     Ref: "https://pytorch.org/docs/stable/generated/torch.Tensor.unfold.html"
 
     Args:
-    - `img` (Tensor): Image with the shape of (N, C, H, W).
-    - `patch_sz` (int): Unfolding patch size.
+        img (Tensor): Image with the shape of (N, C, H, W).
+        patch_sz (int): Unfolding patch size.
 
     Returns:
-    - Tensor: Unfolded patches with the shape of (B*N1*N2, C, PS, PS),
-      where N1 is the patch number for H;
-      N2 is the patch number for W;
-      PS is the patch size.
-    - Tuple: Information for folding recording (B, N1, N2, C, PS, PS),
-      where N1 is the patch number for H;
-      N2 is the patch number for W;
-      PS is the patch size.
+        Tensor: Unfolded patches with the shape of (B*N1*N2, C, PS, PS),
+            where N1 is the patch number for H;
+            N2 is the patch number for W;
+            PS is the patch size.
+        Tuple: Information for folding recording (B, N1, N2, C, PS, PS),
+            where N1 is the patch number for H;
+            N2 is the patch number for W;
+            PS is the patch size.
     """
     patches = img.unfold(2, patch_sz, patch_sz).unfold(3, patch_sz, patch_sz)
     # unfold h: b c num_patch_h w patch_sz
@@ -67,17 +65,17 @@ def combine_patches(patches, unfold_shape):
     """Patch combination.
 
     Args:
-    - `patches` (Tensor): Patches with the shape of (B*N1*N2 C PS PS),
-      where N1 is the patch number for H;
-      N2 is the patch number for W;
-      PS is the patch size.
-    - `unfold_shape` (Tuple): Information for folding recording
-      (B, N1, N2, C, PS, PS), where N1 is the patch number for H;
-      N2 is the patch number for W;
-      PS is the patch size.
+        patches (Tensor): Patches with the shape of (B*N1*N2 C PS PS),
+            where N1 is the patch number for H;
+            N2 is the patch number for W;
+            PS is the patch size.
+        unfold_shape (Tuple): Information for folding recording
+            (B, N1, N2, C, PS, PS), where N1 is the patch number for H;
+            N2 is the patch number for W;
+            PS is the patch size.
 
     Returns:
-    - Tensor: Image with the shape of (N, C, H, W).
+        Tensor: Image with the shape of (N, C, H, W).
     """
     b, c = unfold_shape[0], unfold_shape[3]
     h_pad = unfold_shape[1] * unfold_shape[4]
@@ -96,12 +94,12 @@ def crop_img(img, pad_info):
     """Image cropping.
 
     Args:
-    - `img` (Tensor): Image with the shape of (N, C, H, W).
-    - `pad_info` (Tuple): Padding information recorded as
-      (left, right, top, bottom).
+        img (Tensor): Image with the shape of (N, C, H, W).
+        pad_info (Tuple): Padding information recorded as
+            (left, right, top, bottom).
 
     Returns:
-    - Tensor: Cropped image.
+        Tensor: Cropped image.
     """
     if pad_info[3] == 0 and pad_info[1] == 0:
         img = img[..., pad_info[2]:, pad_info[0]:]

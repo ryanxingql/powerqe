@@ -15,20 +15,17 @@ from .basic_restorer import BasicVQERestorer
 class ProVQERestorer(BasicVQERestorer):
     """ProVQE restorer.
 
-    Differences to `BasicVQERestorer`:
-    - Require `key_frms` in `meta`. See `forward`.
+    Differences to BasicVQERestorer:
+        Require key_frms in meta. See forward.
 
     Args:
-    - `generator` (dict): Config for the generator structure.
-    - `pixel_loss` (dict): Config for pixel-wise loss.
-    - `train_cfg` (dict): Config for training.
-      Default: `None`.
-    - `test_cfg` (dict): Config for testing.
-      Default: `None`.
-    - `pretrained` (str): Path for pretrained model.
-      Default: `None`.
-    - `center_gt` (bool): Only the center GT is provided and evaluated.
-      Default: `False`.
+        generator (dict): Config for the generator structure.
+        pixel_loss (dict): Config for pixel-wise loss.
+        train_cfg (dict): Config for training. Default: None.
+        test_cfg (dict): Config for testing. Default: None.
+        pretrained (str): Path for pretrained model. Default: None.
+        center_gt (bool): Only the center GT is provided and evaluated.
+            Default: False.
     """
 
     @auto_fp16(apply_to=('lq'))
@@ -100,8 +97,7 @@ class ProVQERestorer(BasicVQERestorer):
                 the value is a dict of evaluation results.
         """
         if self.test_cfg is None:
-            raise ValueError(
-                '`self.test_cfg` should be provided; received `None`.')
+            raise ValueError('"test_cfg" should be provided; received None.')
 
         if len(lq) != 1:
             raise ValueError(
@@ -116,7 +112,7 @@ class ProVQERestorer(BasicVQERestorer):
         T = lq.shape[1]
         if self.center_gt and (T % 2 == 0):
             raise ValueError('Number of input frames should be odd'
-                             ' when `center_gt` is `True`.')
+                             ' when "center_gt" is True.')
 
         # inference
         output = self.generator(lq, key_frms)
@@ -168,8 +164,8 @@ class ProVQERestorer(BasicVQERestorer):
                         save_path_lq = osp.join(save_path, 'lq', save_subpath)
                         save_path_gt = osp.join(save_path, 'gt', save_subpath)
                 else:
-                    raise TypeError('`iteration` should be a number or `None`;'
-                                    f' received `{type(iteration)}`.')
+                    raise TypeError('"iteration" should be a number or None;'
+                                    f' received "{type(iteration)}".')
 
                 if self.center_gt:
                     mmcv.imwrite(tensor2img(output), save_path_output)
@@ -185,7 +181,7 @@ class ProVQERestorer(BasicVQERestorer):
         # evaluation
         if 'metrics' not in self.test_cfg:
             raise ValueError(
-                '`metrics` should be provided in `test_cfg` for evaluation.')
+                'metrics should be provided in "test_cfg" for evaluation.')
         results = dict(eval_result=self.evaluate(
             metrics=self.test_cfg['metrics'], output=output, gt=gt, lq=lq))
         return results

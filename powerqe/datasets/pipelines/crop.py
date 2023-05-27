@@ -8,13 +8,13 @@ from ..registry import PIPELINES
 class PairedRandomCropQE:
     """Paired random crop for quality enhancement.
 
-    Differences to `PairedRandomCrop` in mmedit:
-    - Support user-defined keys, e.g., `lq` and `gt`.
-    - Scaling is not allowed.
+    Differences to PairedRandomCrop in MMEditing:
+        Support user-defined keys, e.g., 'lq' and 'gt'.
+        Scaling is not allowed.
 
     Args:
-    - `patch_size` (int): Patch size.
-    - `keys` (Sequence[str]): Images to be transformed.
+        patch_size (int): Patch size.
+        keys (Sequence[str]): Images to be transformed.
     """
 
     def __init__(self, patch_size, keys):
@@ -30,11 +30,11 @@ class PairedRandomCropQE:
         """Call function.
 
         Args:
-        - `results` (dict[list | array]): Each value is a image (list) with
-          the shape of (H, W, C).
+            results (dict[list | array]): Each value is a image (list) with
+                the shape of (H, W, C).
 
         Returns:
-        - dict: Cropped images. The shape is the same to the input.
+            dict: Cropped images. The shape is the same to the input.
         """
         is_list_flags = dict()
         check_flag = False
@@ -52,9 +52,9 @@ class PairedRandomCropQE:
                 h, w = h_curr, w_curr
                 if h < self.patch_size or w < self.patch_size:
                     raise ValueError(
-                        f'The image size (`{h}`, `{w}`) is smaller than the'
+                        f'The image size ({h}, {w}) is smaller than the'
                         ' patch size'
-                        f' (`{self.patch_size}`, `{self.patch_size}`).')
+                        f' ({self.patch_size}, {self.patch_size}).')
                 check_flag = True
             else:
                 if (h_curr != h) or (w_curr != w):
@@ -81,12 +81,12 @@ class PairedRandomCropQE:
 class PairedCenterCrop(PairedRandomCropQE):
     """Paired center crop for quality enhancement.
 
-    Differences to `PairedRandomCropQE`:
-    - Center cropping instead of random cropping.
+    Differences to PairedRandomCropQE:
+        Center cropping instead of random cropping.
 
     Args:
-    - `patch_size` (int): Patch size.
-    - `keys` (Sequence[str]): Images to be transformed.
+        patch_size (int): Patch size.
+        keys (Sequence[str]): Images to be transformed.
     """
 
     def choose_coordinates(self, h, w):

@@ -35,7 +35,7 @@ class ProVQE(BasicVSRPlusPlus):
         """Propagate the latent features throughout the sequence.
 
         Args:
-            feats dict(list[tensor]): Features from previous branches. Each
+            feats (dict(list[tensor])): Features from previous branches. Each
                 component is a list of tensors with shape (n, c, h, w).
             flows (tensor): Optical flows with shape (n, t - 1, 2, h, w).
             module_name (str): The name of the propagation branches. Can either
@@ -196,7 +196,7 @@ class ProVQE(BasicVSRPlusPlus):
 
         # compute optical flow using the low-res inputs
         assert lqs_downsample.size(3) >= 64 and lqs_downsample.size(4) >= 64, (
-            'The height and width of low-res inputs must be at least 64, '
+            'The height and width of LR inputs must be at least 64, '
             f'but got {h} and {w}.')
         flows_forward, flows_backward = self.compute_flow(lqs_downsample)
 
