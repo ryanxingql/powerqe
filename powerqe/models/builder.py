@@ -10,8 +10,9 @@ def build(cfg, registry, default_args=None):
 
     Args:
         cfg (dict): Configuration for building modules.
-        registry (obj): ``registry`` object.
-        default_args (dict, optional): Default arguments. Defaults to None.
+        registry (obj): Registry object.
+        default_args (dict, optional): Default arguments.
+            Default: None.
     """
     if isinstance(cfg, list):
         modules = [

@@ -3,14 +3,35 @@
 import torch
 from mmedit.models.common import set_requires_grad
 
-from ..builder import build_backbone, build_component, build_loss
+from ..builder import build_component, build_loss
 from ..registry import MODELS
-from .basic_restorer import BasicRestorerQE
+from .basic_restorer import BasicQERestorer
 
 
 @MODELS.register_module()
-class ESRGANQE(BasicRestorerQE):
-    """Support LQ vs. GT testing for BasicRestorerQE."""
+class ESRGANRestorer(BasicQERestorer):
+    """ESRGAN restorer for quality enhancement.
+
+    Args:
+        generator (dict): Config for the generator.
+        discriminator (dict): Config for the discriminator. Default: None.
+        gan_loss (dict): Config for the GAN loss.
+            Note that the loss weight in GAN loss is only for the generator.
+        pixel_loss (dict): Config for the pixel loss. Default: None.
+        perceptual_loss (dict): Config for the perceptual loss. Default: None.
+        train_cfg (dict): Config for training. Default: None.
+            You may change the training of GAN by setting:
+                disc_steps: how many discriminator updates after one generate
+                    update;
+                disc_init_steps: how many discriminator updates at the start of
+                    the training.
+
+    These two keys are useful when training with WGAN.
+        test_cfg (dict): Config for testing.
+            Default: None.
+        pretrained (str): Path for pretrained model.
+            Default: None.
+    """
 
     def __init__(self,
                  generator,
@@ -21,30 +42,23 @@ class ESRGANQE(BasicRestorerQE):
                  train_cfg=None,
                  test_cfg=None,
                  pretrained=None):
-        # search for the __init__ above BasicRestorerQE
-        super().__init__(generator=generator,
-                         pixel_loss=pixel_loss,
-                         train_cfg=train_cfg,
-                         test_cfg=test_cfg,
-                         pretrained=pretrained)
+        super().__init__(
+            generator=generator,
+            pixel_loss=pixel_loss,
+            train_cfg=train_cfg,
+            test_cfg=test_cfg,
+            pretrained=pretrained,
+        )
 
-        self.train_cfg = train_cfg
-        self.test_cfg = test_cfg
-
-        # generator
-        self.generator = build_backbone(generator)
-        self.init_weights(pretrained)
+        # generator is defined in the __init__() of BasicRestorer
 
         # discriminator
         self.discriminator = build_component(
             discriminator) if discriminator else None
 
-        # support fp16
-        self.fp16_enabled = False
-
         # loss
+        # pixel_loss is defined in the __init__() of BasicRestorer
         self.gan_loss = build_loss(gan_loss) if gan_loss else None
-        self.pixel_loss = build_loss(pixel_loss) if pixel_loss else None
         self.perceptual_loss = build_loss(
             perceptual_loss) if perceptual_loss else None
 
@@ -55,11 +69,13 @@ class ESRGANQE(BasicRestorerQE):
         self.step_counter = 0  # counting training steps
 
     def init_weights(self, pretrained=None):
-        """Init weights for models.
+        """Init the generator weights using the generator's method.
+
+        Therefore r'^generator.' must be removed.
 
         Args:
-            pretrained (str, optional): Path for pretrained weights. If given
-                None, pretrained weights will not be loaded. Defaults to None.
+            pretrained (str, optional): Path for pretrained weights.
+                If given None, pretrained weights will not be loaded.
         """
         self.generator.init_weights(pretrained=pretrained,
                                     revise_keys=[(r'^generator\.', ''),

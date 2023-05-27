@@ -5,20 +5,24 @@ import numbers
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from mmcv.runner import load_checkpoint
-from mmedit.utils import get_root_logger
 
 from ..registry import BACKBONES
+from .base import BaseNet
 
 
 class ECA(nn.Module):
     """Efficient Channel Attention.
-    https://github.com/BangguWu/ECANet/blob/
-    3adf7a99f829ffa2e94a0de1de8a362614d66958/models/eca_module.py#L5
+
+    Ref: "https://github.com/BangguWu/ECANet/blob
+    /3adf7a99f829ffa2e94a0de1de8a362614d66958/models/eca_module.py#L5"
+
+    Args:
+        k_size: Kernel size.
     """
 
     def __init__(self, k_size=3):
         super().__init__()
+
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
         self.conv = nn.Conv1d(in_channels=1,
                               out_channels=1,
@@ -28,11 +32,9 @@ class ECA(nn.Module):
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
-        """
-        B C H W -> B C 1 1
-        -> B C 1 -> B 1 C -> conv (just like FC, but ks=3)
-        -> B 1 C -> B C 1 -> B C 1 1
-        """
+        # (N, C, H, W) -> (N, C, 1, 1)
+        # -> (N, C, 1) -> (N, 1, C) -> Conv (just like FC, but ks=3)
+        # -> (N, 1, C) -> (N, C, 1) -> (N, C, 1, 1)
         logic = self.avg_pool(x)
         logic = self.conv(logic.squeeze(-1).transpose(-1, -2)).transpose(
             -1, -2).unsqueeze(-1)
@@ -51,14 +53,12 @@ class SeparableConv2d(nn.Module):
                 out_channels=nf_in,
                 kernel_size=3,
                 padding=3 // 2,
-                groups=nf_in,
-            ),  # groups=inch: each channel is convolved with its own filter
-            nn.Conv2d(
-                in_channels=nf_in,
-                out_channels=nf_out,
-                kernel_size=1,
-                groups=1,
-            )  # then point-wise
+                groups=nf_in  # each channel is convolved with its own filter
+            ),
+            nn.Conv2d(in_channels=nf_in,
+                      out_channels=nf_out,
+                      kernel_size=1,
+                      groups=1)  # then point-wise
         )
 
     def forward(self, x):
@@ -66,21 +66,22 @@ class SeparableConv2d(nn.Module):
 
 
 class GaussianSmoothing(nn.Module):
-    """
-    Apply gaussian smoothing on a
-    1d, 2d or 3d tensor. Filtering is performed separately for each channel
+    """Apply gaussian smoothing on a 1d, 2d or 3d tensor.
+
+    Filtering is performed separately for each channel
     in the input using a depthwise convolution.
-    Arguments:
+
+    Args:
         channels (int, sequence): Number of channels of the input tensors.
             Output will have this number of channels as well.
         kernel_size (int, sequence): Size of the gaussian kernel.
         sigma (float, sequence): Standard deviation of the gaussian kernel.
         dim (int, optional): The number of dimensions of the data.
-            Default value is 2 (spatial).
     """
 
     def __init__(self, channels, kernel_size, sigma, padding, dim=2):
-        super(GaussianSmoothing, self).__init__()
+        super().__init__()
+
         if isinstance(kernel_size, numbers.Number):
             kernel_size = [kernel_size] * dim
         if isinstance(sigma, numbers.Number):
@@ -116,24 +117,22 @@ class GaussianSmoothing(nn.Module):
         elif dim == 3:
             self.conv = F.conv3d
         else:
-            raise RuntimeError(
-                'Only 1, 2 and 3 dimensions are supported. Received {}.'.
-                format(dim))
+            raise ValueError('Data with 1/2/3 dimensions is supported;'
+                             f' received {dim} dimensions.')
 
     def forward(self, x):
-        """
-        Apply gaussian filter to input.
-        Arguments:
-            x (torch.Tensor): Input to apply gaussian filter on.
+        """Apply gaussian filter to input.
+
+        Args:
+            x (Tensor): Input to apply gaussian filter on.
+
         Returns:
-            filtered (torch.Tensor): Filtered output.
+            Tensor: Filtered output.
         """
-        return self.conv(
-            x,
-            weight=self.weight,
-            groups=self.groups,
-            padding=self.padding,
-        )
+        return self.conv(x,
+                         weight=self.weight,
+                         groups=self.groups,
+                         padding=self.padding)
 
 
 class IQAM:
@@ -143,57 +142,50 @@ class IQAM:
             self.patch_sz = 8
 
             self.tche_poly = torch.tensor(
-                [
-                    [
-                        0.3536, 0.3536, 0.3536, 0.3536, 0.3536, 0.3536, 0.3536,
-                        0.3536
-                    ],
-                    [
-                        -0.5401, -0.3858, -0.2315, -0.0772, 0.0772, 0.2315,
-                        0.3858, 0.5401
-                    ],
-                    [
-                        0.5401, 0.0772, -0.2315, -0.3858, -0.3858, -0.2315,
-                        0.0772, 0.5401
-                    ],
-                    [
-                        -0.4308, 0.3077, 0.4308, 0.1846, -0.1846, -0.4308,
-                        -0.3077, 0.4308
-                    ],
-                    [
-                        0.2820, -0.5238, -0.1209, 0.3626, 0.3626, -0.1209,
-                        -0.5238, 0.2820
-                    ],
-                    [
-                        -0.1498, 0.4922, -0.3638, -0.3210, 0.3210, 0.3638,
-                        -0.4922, 0.1498
-                    ],
-                    [
-                        0.0615, -0.3077, 0.5539, -0.3077, -0.3077, 0.5539,
-                        -0.3077, 0.0615
-                    ],
-                    [
-                        -0.0171, 0.1195, -0.3585, 0.5974, -0.5974, 0.3585,
-                        -0.1195, 0.0171
-                    ],
+                [[
+                    0.3536, 0.3536, 0.3536, 0.3536, 0.3536, 0.3536, 0.3536,
+                    0.3536
                 ],
-                dtype=torch.float32,
-            ).cuda()
+                 [
+                     -0.5401, -0.3858, -0.2315, -0.0772, 0.0772, 0.2315,
+                     0.3858, 0.5401
+                 ],
+                 [
+                     0.5401, 0.0772, -0.2315, -0.3858, -0.3858, -0.2315,
+                     0.0772, 0.5401
+                 ],
+                 [
+                     -0.4308, 0.3077, 0.4308, 0.1846, -0.1846, -0.4308,
+                     -0.3077, 0.4308
+                 ],
+                 [
+                     0.2820, -0.5238, -0.1209, 0.3626, 0.3626, -0.1209,
+                     -0.5238, 0.2820
+                 ],
+                 [
+                     -0.1498, 0.4922, -0.3638, -0.3210, 0.3210, 0.3638,
+                     -0.4922, 0.1498
+                 ],
+                 [
+                     0.0615, -0.3077, 0.5539, -0.3077, -0.3077, 0.5539,
+                     -0.3077, 0.0615
+                 ],
+                 [
+                     -0.0171, 0.1195, -0.3585, 0.5974, -0.5974, 0.3585,
+                     -0.1195, 0.0171
+                 ]],
+                dtype=torch.float32).cuda()
 
             self.thr_out = 0.855
 
         elif comp_type == 'hevc':
             self.patch_sz = 4
 
-            self.tche_poly = torch.tensor(
-                [
-                    [0.5000, 0.5000, 0.5000, 0.5000],
-                    [-0.6708, -0.2236, 0.2236, 0.6708],
-                    [0.5000, -0.5000, -0.5000, 0.5000],
-                    [-0.2236, 0.6708, -0.6708, 0.2236],
-                ],
-                dtype=torch.float32,
-            ).cuda()
+            self.tche_poly = torch.tensor([[0.5000, 0.5000, 0.5000, 0.5000],
+                                           [-0.6708, -0.2236, 0.2236, 0.6708],
+                                           [0.5000, -0.5000, -0.5000, 0.5000],
+                                           [-0.2236, 0.6708, -0.6708, 0.2236]],
+                                          dtype=torch.float32).cuda()
 
             self.thr_out = 0.900
 
@@ -204,12 +196,10 @@ class IQAM:
         self.bigc = torch.tensor(1e-5)  # numerical stability
         self.alpha_block = 0.9  # [0, 1]
 
-        self.gaussian_filter = GaussianSmoothing(
-            channels=1,
-            kernel_size=3,
-            sigma=5,
-            padding=3 // 2,
-        ).cuda()
+        self.gaussian_filter = GaussianSmoothing(channels=1,
+                                                 kernel_size=3,
+                                                 sigma=5,
+                                                 padding=3 // 2).cuda()
 
     def cal_tchebichef_moments(self, x):
         x = x.clone()
@@ -221,9 +211,12 @@ class IQAM:
         return moments
 
     def forward(self, x):
-        """
-        (B=1 C H W)
-        only test one channel, e.g., Red
+        """Forward.
+
+        Only test one channel, e.g., red.
+
+        Args:
+            x (Tensor): Image with the shape of (B=1, C, H, W).
         """
         h, w = x.shape[2:]
         h_cut = h // self.patch_sz * self.patch_sz
@@ -314,52 +307,48 @@ class IQAM:
 
 
 class Down(nn.Module):
-    """Downsample for one time.
-    E.g., from C2,1 to C3,2."""
+    # downsample for one time, e.g., from C2,1 to C3,2
 
     def __init__(self, nf_in, nf_out, method, if_separable, if_eca):
-        assert method in ['avepool2d', 'strideconv'], '> not supported!'
-
         super().__init__()
 
+        supported_methods = ['avepool2d', 'strideconv']
+        if method not in supported_methods:
+            raise NotImplementedError(
+                f'Downsampling method should be in "{supported_methods}";'
+                f' received "{method}".')
+
         if if_separable and if_eca:
-            layers = nn.ModuleList([
-                ECA(k_size=3),
-                SeparableConv2d(nf_in=nf_in, nf_out=nf_in),
-            ])
+            layers = nn.ModuleList(
+                [ECA(k_size=3),
+                 SeparableConv2d(nf_in=nf_in, nf_out=nf_in)])
         elif if_separable and (not if_eca):
             layers = nn.ModuleList(SeparableConv2d(nf_in=nf_in, nf_out=nf_in))
         elif (not if_separable) and if_eca:
             layers = nn.ModuleList([
                 ECA(k_size=3),
-                nn.Conv2d(
-                    in_channels=nf_in,
-                    out_channels=nf_in,
-                    kernel_size=3,
-                    padding=3 // 2,
-                )
+                nn.Conv2d(in_channels=nf_in,
+                          out_channels=nf_in,
+                          kernel_size=3,
+                          padding=3 // 2)
             ])
         else:
             layers = nn.ModuleList([
-                nn.Conv2d(
-                    in_channels=nf_in,
-                    out_channels=nf_in,
-                    kernel_size=3,
-                    padding=3 // 2,
-                )
+                nn.Conv2d(in_channels=nf_in,
+                          out_channels=nf_in,
+                          kernel_size=3,
+                          padding=3 // 2)
             ])
 
         if method == 'avepool2d':
             layers.append(nn.AvgPool2d(kernel_size=2))
         elif method == 'strideconv':
             layers.append(
-                nn.Conv2d(
-                    in_channels=nf_in,
-                    out_channels=nf_out,
-                    kernel_size=3,
-                    padding=3 // 2,
-                    stride=2,
-                ))
+                nn.Conv2d(in_channels=nf_in,
+                          out_channels=nf_out,
+                          kernel_size=3,
+                          padding=3 // 2,
+                          stride=2))
 
         if if_separable and if_eca:
             layers += [
@@ -371,21 +360,17 @@ class Down(nn.Module):
         elif (not if_separable) and if_eca:
             layers += [
                 ECA(k_size=3),
-                nn.Conv2d(
-                    in_channels=nf_out,
-                    out_channels=nf_out,
-                    kernel_size=3,
-                    padding=3 // 2,
-                ),
+                nn.Conv2d(in_channels=nf_out,
+                          out_channels=nf_out,
+                          kernel_size=3,
+                          padding=3 // 2),
             ]
         else:
             layers.append(
-                nn.Conv2d(
-                    in_channels=nf_out,
-                    out_channels=nf_out,
-                    kernel_size=3,
-                    padding=3 // 2,
-                ))
+                nn.Conv2d(in_channels=nf_out,
+                          out_channels=nf_out,
+                          kernel_size=3,
+                          padding=3 // 2))
 
         self.layers = nn.Sequential(*layers)
 
@@ -394,24 +379,25 @@ class Down(nn.Module):
 
 
 class Up(nn.Module):
-    """Upsample for one time.
-    E.g., from C3,1 and C2,1 to C2,2."""
+    # upsample for one time, e.g., from C3,1 and C2,1 to C2,2
 
     def __init__(self, nf_in_s, nf_in, nf_out, method, if_separable, if_eca):
-        assert method in ['upsample', 'transpose2d'], '> not supported yet.'
-
         super().__init__()
+
+        supported_methods = ['upsample', 'transpose2d']
+        if method not in supported_methods:
+            raise NotImplementedError(
+                f'Upsampling method should be in "{supported_methods}";'
+                f' received "{method}".')
 
         if method == 'upsample':
             self.up = nn.Upsample(scale_factor=2)
         elif method == 'transpose2d':
-            self.up = nn.ConvTranspose2d(
-                in_channels=nf_in_s,
-                out_channels=nf_out,
-                kernel_size=3,
-                stride=2,
-                padding=1,
-            )
+            self.up = nn.ConvTranspose2d(in_channels=nf_in_s,
+                                         out_channels=nf_out,
+                                         kernel_size=3,
+                                         stride=2,
+                                         padding=1)
 
         if if_separable and if_eca:
             layers = nn.ModuleList([
@@ -430,36 +416,28 @@ class Up(nn.Module):
         elif (not if_separable) and if_eca:
             layers = nn.ModuleList([
                 ECA(k_size=3),
-                nn.Conv2d(
-                    in_channels=nf_in,
-                    out_channels=nf_out,
-                    kernel_size=3,
-                    padding=3 // 2,
-                ),
+                nn.Conv2d(in_channels=nf_in,
+                          out_channels=nf_out,
+                          kernel_size=3,
+                          padding=3 // 2),
                 nn.ReLU(inplace=True),
                 ECA(k_size=3),
-                nn.Conv2d(
-                    in_channels=nf_out,
-                    out_channels=nf_out,
-                    kernel_size=3,
-                    padding=3 // 2,
-                ),
+                nn.Conv2d(in_channels=nf_out,
+                          out_channels=nf_out,
+                          kernel_size=3,
+                          padding=3 // 2)
             ])
         else:
             layers = nn.ModuleList([
-                nn.Conv2d(
-                    in_channels=nf_in,
-                    out_channels=nf_out,
-                    kernel_size=3,
-                    padding=3 // 2,
-                ),
+                nn.Conv2d(in_channels=nf_in,
+                          out_channels=nf_out,
+                          kernel_size=3,
+                          padding=3 // 2),
                 nn.ReLU(inplace=True),
-                nn.Conv2d(
-                    in_channels=nf_out,
-                    out_channels=nf_out,
-                    kernel_size=3,
-                    padding=3 // 2,
-                ),
+                nn.Conv2d(in_channels=nf_out,
+                          out_channels=nf_out,
+                          kernel_size=3,
+                          padding=3 // 2)
             ])
         self.layers = nn.Sequential(*layers)
 
@@ -468,7 +446,7 @@ class Up(nn.Module):
 
         # pad feat according to a normal_t
         if len(normal_t_list) > 0:
-            h_s, w_s = feat.size()[2:]  # B C H W
+            h_s, w_s = feat.size()[2:]  # (N, C, H, W)
             h, w = normal_t_list[0].size()[2:]
             dh = h - h_s
             dw = w - w_s
@@ -483,8 +461,7 @@ class Up(nn.Module):
                 input=feat,
                 pad=[dw // 2, (dw - dw // 2), dh // 2, (dh - dh // 2)],
                 mode='constant',
-                value=0,
-            )
+                value=0)
 
             feat = torch.cat((feat, *normal_t_list), dim=1)
 
@@ -492,20 +469,18 @@ class Up(nn.Module):
 
 
 @BACKBONES.register_module()
-class RBQE(nn.Module):
+class RBQE(BaseNet):
 
     def __init__(self,
-                 nf_in=3,
+                 nf_io=3,
                  nf_base=32,
                  nlevel=5,
                  down_method='strideconv',
                  up_method='transpose2d',
                  if_separable=False,
                  if_eca=True,
-                 nf_out=3,
                  if_only_last_output=True,
                  comp_type='hevc'):
-
         super().__init__()
 
         self.nlevel = nlevel
@@ -514,38 +489,30 @@ class RBQE(nn.Module):
         # input conv
         if if_separable:
             self.in_conv_seq = nn.Sequential(
-                SeparableConv2d(nf_in=nf_in, nf_out=nf_base),
+                SeparableConv2d(nf_in=nf_io, nf_out=nf_base),
                 nn.ReLU(inplace=True),
                 SeparableConv2d(nf_in=nf_base, nf_out=nf_base),
             )
         else:
             self.in_conv_seq = nn.Sequential(
-                nn.Conv2d(
-                    in_channels=nf_in,
-                    out_channels=nf_base,
-                    kernel_size=3,
-                    padding=3 // 2,
-                ),
-                nn.ReLU(inplace=True),
-                nn.Conv2d(
-                    in_channels=nf_base,
-                    out_channels=nf_base,
-                    kernel_size=3,
-                    padding=3 // 2,
-                ),
-            )
+                nn.Conv2d(in_channels=nf_io,
+                          out_channels=nf_base,
+                          kernel_size=3,
+                          padding=3 // 2), nn.ReLU(inplace=True),
+                nn.Conv2d(in_channels=nf_base,
+                          out_channels=nf_base,
+                          kernel_size=3,
+                          padding=3 // 2))
 
         # down then up at each nested u-net
         for idx_unet in range(nlevel):
             setattr(
                 self, f'down_{idx_unet}',
-                Down(
-                    nf_in=nf_base,
-                    nf_out=nf_base,
-                    method=down_method,
-                    if_separable=if_separable,
-                    if_eca=if_eca,
-                ))
+                Down(nf_in=nf_base,
+                     nf_out=nf_base,
+                     method=down_method,
+                     if_separable=if_separable,
+                     if_eca=if_eca))
             for idx_up in range(idx_unet + 1):
                 setattr(
                     self,
@@ -556,8 +523,7 @@ class RBQE(nn.Module):
                         nf_out=nf_base,
                         method=up_method,
                         if_separable=if_separable,
-                        if_eca=if_eca,
-                    ))
+                        if_eca=if_eca))
 
         # output side
         self.out_layers = nn.ModuleList()
@@ -568,32 +534,26 @@ class RBQE(nn.Module):
         for _ in range(repeat_times):
             if if_separable and if_eca:
                 self.out_layers.append(
-                    nn.Sequential(
-                        ECA(k_size=3),
-                        SeparableConv2d(nf_in=nf_base, nf_out=nf_out),
-                    ))
+                    nn.Sequential(ECA(k_size=3),
+                                  SeparableConv2d(nf_in=nf_base,
+                                                  nf_out=nf_io)))
             elif if_separable and (not if_eca):
                 self.out_layers.append(
-                    SeparableConv2d(nf_in=nf_base, nf_out=nf_out))
+                    SeparableConv2d(nf_in=nf_base, nf_out=nf_io))
             elif (not if_separable) and if_eca:
                 self.out_layers.append(
                     nn.Sequential(
                         ECA(k_size=3),
-                        nn.Conv2d(
-                            in_channels=nf_base,
-                            out_channels=nf_out,
-                            kernel_size=3,
-                            padding=3 // 2,
-                        ),
-                    ))
+                        nn.Conv2d(in_channels=nf_base,
+                                  out_channels=nf_io,
+                                  kernel_size=3,
+                                  padding=3 // 2)))
             else:
                 self.out_layers.append(
-                    nn.Conv2d(
-                        in_channels=nf_base,
-                        out_channels=nf_out,
-                        kernel_size=3,
-                        padding=3 // 2,
-                    ))
+                    nn.Conv2d(in_channels=nf_base,
+                              out_channels=nf_io,
+                              kernel_size=3,
+                              padding=3 // 2))
 
         # IQA module
         # no trainable parameters
@@ -601,15 +561,20 @@ class RBQE(nn.Module):
             self.iqam = IQAM(comp_type=comp_type)
 
     def forward(self, x, idx_out=None):
-        """
-        idx_out:
-            -2: judge by IQAM.
-            -1: output all images from all outputs for training.
-            0, 1, ..., (self.nlevel-1): output from the assigned exit.
+        """Forward.
+
+        Args:
+            x (Tensor): Image with the shape of (B=1, C, H, W).
+            idx_out (int):
+                -2: Determined by IQAM.
+                -1: Output all images from all outputs for training.
+                0 | 1 | ... | self.nlevel-1: Output from the assigned exit.
+                None: Output from the last exit.
         """
         if self.if_only_last_output:
-            assert idx_out is None, ('You cannot indicate the exit since the '
-                                     'network has only a single exit.')
+            if idx_out is not None:
+                raise ValueError('Exit cannot be indicated'
+                                 ' since there is only one exit.')
             idx_out = self.nlevel - 1
 
         feat = self.in_conv_seq(x)
@@ -628,13 +593,11 @@ class RBQE(nn.Module):
             # for the first u-net (idx=0), up one time
             for idx_up in range(idx_unet + 1):
                 dense_inp_list = []
-                """
-                To obtain C2,4
-                It is the second upsampling, idx_up == 2
-                It needs C2,1 to C2,3 at feat_level_unet[1][0],
-                feat_level_unet[2][1] and feat_level_unet[3][2]
-                feat_level_unet now contains 4 lists.
-                """
+                # To obtain C2,4
+                # It is the second upsampling, idx_up == 2.
+                # It needs C2,1 to C2,3 at feat_level_unet[1][0],
+                # feat_level_unet[2][1] and feat_level_unet[3][2].
+                # feat_level_unet now contains 4 lists.
                 for idx_, feat_level in enumerate(
                         feat_level_unet[-(idx_up + 1):]):
                     dense_inp_list.append(
@@ -667,24 +630,7 @@ class RBQE(nn.Module):
             feat_level_unet.append(feat_up_list)
 
         if idx_out == -1:
-            return torch.stack(out_img_list, dim=0)  # (self.nlevel B C H W)
+            return torch.stack(out_img_list,
+                               dim=0)  # (self.nlevel, N, C, H, W)
         else:
-            return out_img  # (B=1 C H W)
-
-    def init_weights(self, pretrained=None, strict=True):
-        """Init weights for models.
-
-        Args:
-            pretrained (str, optional): Path for pretrained weights. If given
-                None, pretrained weights will not be loaded. Defaults to None.
-            strict (boo, optional): Whether strictly load the pretrained model.
-                Defaults to True.
-        """
-        if isinstance(pretrained, str):
-            logger = get_root_logger()
-            load_checkpoint(self, pretrained, strict=strict, logger=logger)
-        elif pretrained is None:
-            pass  # use default initialization
-        else:
-            raise TypeError('"pretrained" must be a str or None. '
-                            f'But received {type(pretrained)}.')
+            return out_img  # (B=1, C, H, W)

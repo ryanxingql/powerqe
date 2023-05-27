@@ -1,37 +1,27 @@
 # RyanXingQL @2022
 import torch.nn as nn
-from mmcv.runner import load_checkpoint
-from mmedit.utils import get_root_logger
 
 from ..registry import BACKBONES
+from .base import BaseNet
 
 
 @BACKBONES.register_module()
-class DCAD(nn.Module):
+class DCAD(BaseNet):
     """DCAD network structure.
 
-    Paper: https://ieeexplore.ieee.org/document/7923714
-
     Args:
-        in_channels (int): Channel number of inputs.
-        out_channels (int): Channel number of outputs.
+        io_channels (int): Number of I/O channels.
         mid_channels (int): Channel number of intermediate features.
-            Default: 64.
-        num_blocks (int): Block number in the trunk network. Default: 8.
+        num_blocks (int): Block number in the trunk network.
     """
 
-    def __init__(self,
-                 in_channels=3,
-                 out_channels=3,
-                 mid_channels=64,
-                 num_blocks=8):
-
+    def __init__(self, io_channels=3, mid_channels=64, num_blocks=8):
         super().__init__()
 
         layers = []
 
         # input conv
-        layers.append(nn.Conv2d(in_channels, mid_channels, 3, padding=1))
+        layers.append(nn.Conv2d(io_channels, mid_channels, 3, padding=1))
 
         # body
         for _ in range(num_blocks):
@@ -43,7 +33,7 @@ class DCAD(nn.Module):
         # output conv
         layers += [
             nn.ReLU(inplace=False),
-            nn.Conv2d(mid_channels, out_channels, 3, padding=1),
+            nn.Conv2d(mid_channels, io_channels, 3, padding=1)
         ]
 
         self.layers = nn.Sequential(*layers)
@@ -52,27 +42,9 @@ class DCAD(nn.Module):
         """Forward function.
 
         Args:
-            x (Tensor): Input tensor with shape (n, c, h, w).
+            x (Tensor): Input tensor with the shape of (N, C, H, W).
 
         Returns:
-            Tensor: Forward results.
+            Tensor
         """
         return self.layers(x) + x
-
-    def init_weights(self, pretrained=None, strict=True):
-        """Init weights for models.
-
-        Args:
-            pretrained (str, optional): Path for pretrained weights. If given
-                None, pretrained weights will not be loaded. Defaults to None.
-            strict (boo, optional): Whether strictly load the pretrained model.
-                Defaults to True.
-        """
-        if isinstance(pretrained, str):
-            logger = get_root_logger()
-            load_checkpoint(self, pretrained, strict=strict, logger=logger)
-        elif pretrained is None:
-            pass  # use default initialization
-        else:
-            raise TypeError('"pretrained" must be a str or None. '
-                            f'But received {type(pretrained)}.')

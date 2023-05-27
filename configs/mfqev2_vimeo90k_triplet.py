@@ -1,23 +1,18 @@
-exp_name = 'stdf_vimeo90k_triplet'
+exp_name = 'mfqev2_vimeo90k_triplet'
 
 center_gt = True
-model = dict(type='BasicVQERestorer',
-             generator=dict(
-                 type='STDFNet',
-                 io_channels=3,
-                 radius=1,
-                 nf_stdf=32,
-                 nb_stdf=3,
-                 nf_stdf_out=64,
-                 nf_qe=48,
-                 nb_qe=6,
-             ),
-             pixel_loss=dict(type='CharbonnierLoss',
-                             loss_weight=1.0,
-                             reduction='mean'),
-             center_gt=center_gt)
+model = dict(
+    type='BasicVQERestorer',
+    generator=dict(
+        type='MFQEv2',
+        io_channels=3,
+        nf=32,
+        spynet_pretrained='https://download.openmmlab.com/mmediting/restorers/'
+        'basicvsr/spynet_20210409-c6c1bd09.pth'),
+    pixel_loss=dict(type='CharbonnierLoss', loss_weight=1.0, reduction='mean'),
+    center_gt=center_gt)
 
-train_cfg = None
+train_cfg = dict(fix_iter=5000, fix_module=['spynet'])
 test_cfg = dict(metrics=['PSNR', 'SSIM'], crop_border=1)
 
 train_pipeline = [
@@ -52,13 +47,11 @@ batchsize = 8
 ngpus = 1
 assert batchsize % ngpus == 0, ('Samples in a batch should better be evenly'
                                 ' distributed among all GPUs.')
-dataset_type = 'PairedSameSizeVideoDataset'
-dataset_gt_root = 'data/vimeo_triplet'
-dataset_lq_folder = 'data/vimeo_triplet_lq'
+dataset_type = 'PairedSameSizeVideoKeyFramesDataset'
+dataset_gt_dir = 'data/vimeo_triplet'
+dataset_lq_dir = 'data/vimeo_triplet_lq'
+key_frames = [1, 0, 1]
 batchsize_gpu = batchsize // ngpus
-# since there are only three frames in a sequence
-# two of which need padding in testing
-# training also use padding
 data = dict(workers_per_gpu=batchsize_gpu,
             train_dataloader=dict(samples_per_gpu=batchsize_gpu,
                                   drop_last=True),
@@ -68,9 +61,10 @@ data = dict(workers_per_gpu=batchsize_gpu,
                        times=1000,
                        dataset=dict(
                            type=dataset_type,
-                           lq_folder=f'{dataset_lq_folder}',
-                           gt_folder=f'{dataset_gt_root}/sequences',
-                           ann_file=f'{dataset_gt_root}/tri_trainlist.txt',
+                           key_frames=key_frames,
+                           lq_folder=f'{dataset_lq_dir}',
+                           gt_folder=f'{dataset_gt_dir}/sequences',
+                           ann_file=f'{dataset_gt_dir}/tri_trainlist.txt',
                            pipeline=train_pipeline,
                            test_mode=False,
                            lq_ext='.png',
@@ -78,9 +72,10 @@ data = dict(workers_per_gpu=batchsize_gpu,
                            edge_padding=True,
                            center_gt=center_gt)),
             val=dict(type=dataset_type,
-                     lq_folder=f'{dataset_lq_folder}',
-                     gt_folder=f'{dataset_gt_root}/sequences',
-                     ann_file=f'{dataset_gt_root}/tri_validlist.txt',
+                     key_frames=key_frames,
+                     lq_folder=f'{dataset_lq_dir}',
+                     gt_folder=f'{dataset_gt_dir}/sequences',
+                     ann_file=f'{dataset_gt_dir}/tri_validlist.txt',
                      pipeline=test_pipeline,
                      test_mode=True,
                      lq_ext='.png',
@@ -88,9 +83,10 @@ data = dict(workers_per_gpu=batchsize_gpu,
                      edge_padding=True,
                      center_gt=center_gt),
             test=dict(type=dataset_type,
-                      lq_folder=f'{dataset_lq_folder}',
-                      gt_folder=f'{dataset_gt_root}/sequences',
-                      ann_file=f'{dataset_gt_root}/tri_testlist.txt',
+                      key_frames=key_frames,
+                      lq_folder=f'{dataset_lq_dir}',
+                      gt_folder=f'{dataset_gt_dir}/sequences',
+                      ann_file=f'{dataset_gt_dir}/tri_testlist.txt',
                       pipeline=test_pipeline,
                       test_mode=True,
                       lq_ext='.png',
@@ -121,3 +117,4 @@ work_dir = f'work_dirs/{exp_name}'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]
+find_unused_parameters = True  # for spynet pre-training

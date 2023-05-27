@@ -2,21 +2,26 @@
 
 This repository supports some quality enhancement approaches for compressed image/video based on PyTorch and MMEditing.
 
-- [ ] [ProVQE @ CVPRW'22](https://github.com/ryanxingql/winner-ntire22-vqe)
-- [ ] [BasicVSR++ @ CVPR'22](https://arxiv.org/abs/2104.13371)
-- [x] [MPRNet @ CVPR'21](https://github.com/swz30/MPRNet)
-- [ ] [STDF @ AAAI'20](https://github.com/ryanxingql/stdf-pytorch)
-- [x] [RBQE @ ECCV'20](https://arxiv.org/abs/2006.16581): non-blind version.
-- [ ] [MFQEv2 @ TPAMI'19](https://github.com/ryanxingql/mfqev2.0)
-- [x] [CBDNet @ CVPR'19](https://arxiv.org/abs/1807.04686): non-blind version.
-- [ ] [EDVR @ CVPR'19](https://arxiv.org/abs/1905.02716)
-- [x] [SAN @ CVPR'19](https://github.com/daitao/SAN)
-- [x] [ESRGAN @ ECCVW'18](https://arxiv.org/abs/1809.00219)
-- [x] [RDN @ CVPR'18](https://arxiv.org/abs/1802.08797)
-- [x] [DnCNN @ TIP'17](https://arxiv.org/abs/1608.03981)
-- [x] [DCAD @ DCC'17](https://ieeexplore.ieee.org/abstract/document/7923714)
-- [x] [U-Net @ MICCAI'15](https://arxiv.org/abs/1505.04597)
-- [x] [AR-CNN @ ICCV'15](https://arxiv.org/abs/1504.06993)
+Image approaches:
+
+- [MPRNet @ CVPR'21](https://github.com/swz30/MPRNet): Multi-stage structure.
+- [RBQE @ ECCV'20](https://github.com/ryanxingql/rbqe): Multi-exit structure and early-exit mechanism. Non-blind model is implemented.
+- [CBDNet @ CVPR'19](https://github.com/GuoShi28/CBDNet): Noise estimation. Originally for image denoising.
+- [SAN @ CVPR'19](https://github.com/daitao/SAN): Second-order attention. Originally for image super resolution.
+- [ESRGAN @ ECCVW'18](https://github.com/xinntao/ESRGAN): Relativistic discriminator. Originally for image super resolution. PIRM'18 winner.
+- [RDN @ CVPR'18](https://github.com/yulunzhang/RDN): Residual dense network. Originally for image super resolution.
+- [DnCNN @ TIP'17](https://github.com/cszn/DnCNN): Pioneer of CNN-based image denoising.
+- [DCAD @ DCC'17](https://ieeexplore.ieee.org/abstract/document/7923714): Pioneer of HEVC compression artifacts reduction.
+- [U-Net @ MICCAI'15](https://arxiv.org/abs/1505.04597): Multi-scale structure. Originally for biomedical image processing.
+- [AR-CNN @ ICCV'15](https://arxiv.org/abs/1504.06993): Pioneer of CNN-based image compression artifacts reduction.
+
+Video approaches:
+
+- [ProVQE @ CVPRW'22](https://github.com/ryanxingql/winner-ntire22-vqe): Key-frame propagation. NTIRE'22 winner. Only the first-stage model is implemented.
+- [BasicVSR++ @ CVPR'22](https://github.com/ckkelvinchan/BasicVSR_PlusPlus): Flow-guided deformable alignment. Originally for video super resolution. NTIRE'21 winner.
+- [STDF @ AAAI'20](https://github.com/ryanxingql/stdf-pytorch): Deformable alignment.
+- [MFQEv2 @ TPAMI'19](https://github.com/ryanxingql/mfqev2.0): Key-frame alignment.
+- [EDVR @ CVPR'19](https://github.com/xinntao/EDVR): Deformable alignment. Originally for video super resolution. NTIRE'19 winner.
 
 ## Installation
 
@@ -29,9 +34,9 @@ git clone --depth 1 --recurse-submodules --shallow-submodules\
 
 Create environment:
 
-- environment.yml
+- "environment.yml"
 - MMEditing (PyTorch + MMCV + MMEdit v0.x)
-- requirements.txt
+- "requirements.txt"
 
 Please refer to the [document](docs/v3.md#create-environment) for detailed installation.
 
@@ -116,3 +121,5 @@ conda activate powerqe &&\
 Optional options:
 
 - `--save-path <save-folder>`: To save output images.
+
+Please refer to the [document](docs/v3.md) for more information.

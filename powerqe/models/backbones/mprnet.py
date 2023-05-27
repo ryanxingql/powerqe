@@ -1,12 +1,11 @@
-# https://github.com/swz30/MPRNet/blob/main/Deblurring/MPRNet.py
+# Ref: "https://github.com/swz30/MPRNet/blob/main/Deblurring/MPRNet.py"
 # Modified by RyanXingQL @2022
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from mmcv.runner import load_checkpoint
-from mmedit.utils import get_root_logger
 
 from ..registry import BACKBONES
+from .base import BaseNet
 
 
 def conv(in_channels, out_channels, kernel_size, bias=False, stride=1):
@@ -22,7 +21,8 @@ def conv(in_channels, out_channels, kernel_size, bias=False, stride=1):
 class CALayer(nn.Module):
 
     def __init__(self, channel, reduction=16, bias=False):
-        super(CALayer, self).__init__()
+        super().__init__()
+
         # global average pooling: feature --> point
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
         # feature channel downscale and upscale --> channel weight
@@ -42,7 +42,8 @@ class CALayer(nn.Module):
 class CAB(nn.Module):
 
     def __init__(self, n_feat, kernel_size, reduction, bias, act):
-        super(CAB, self).__init__()
+        super().__init__()
+
         modules_body = []
         modules_body.append(conv(n_feat, n_feat, kernel_size, bias=bias))
         modules_body.append(act)
@@ -62,7 +63,8 @@ class CAB(nn.Module):
 class SAM(nn.Module):
 
     def __init__(self, n_feat, kernel_size, bias):
-        super(SAM, self).__init__()
+        super().__init__()
+
         self.conv1 = conv(n_feat, n_feat, kernel_size, bias=bias)
         self.conv2 = conv(n_feat, 3, kernel_size, bias=bias)
         self.conv3 = conv(3, n_feat, kernel_size, bias=bias)
@@ -101,18 +103,8 @@ def pad_and_add(x, y):
         x_pads[0] = (-diff) // 2
         x_pads[1] = (-diff) - (-diff) // 2
 
-    x = F.pad(
-        input=x,
-        pad=x_pads,
-        mode='constant',
-        value=0,
-    )
-    y = F.pad(
-        input=y,
-        pad=y_pads,
-        mode='constant',
-        value=0,
-    )
+    x = F.pad(input=x, pad=x_pads, mode='constant', value=0)
+    y = F.pad(input=y, pad=y_pads, mode='constant', value=0)
     return x + y
 
 
@@ -120,7 +112,7 @@ class Encoder(nn.Module):
 
     def __init__(self, n_feat, kernel_size, reduction, act, bias,
                  scale_unetfeats, csff):
-        super(Encoder, self).__init__()
+        super().__init__()
 
         self.encoder_level1 = [
             CAB(n_feat, kernel_size, reduction, bias=bias, act=act)
@@ -203,7 +195,7 @@ class Decoder(nn.Module):
 
     def __init__(self, n_feat, kernel_size, reduction, act, bias,
                  scale_unetfeats):
-        super(Decoder, self).__init__()
+        super().__init__()
 
         self.decoder_level1 = [
             CAB(n_feat, kernel_size, reduction, bias=bias, act=act)
@@ -259,7 +251,8 @@ class Decoder(nn.Module):
 class DownSample(nn.Module):
 
     def __init__(self, in_channels, s_factor):
-        super(DownSample, self).__init__()
+        super().__init__()
+
         self.down = nn.Sequential(
             nn.Upsample(scale_factor=0.5, mode='bilinear',
                         align_corners=False),
@@ -278,7 +271,8 @@ class DownSample(nn.Module):
 class UpSample(nn.Module):
 
     def __init__(self, in_channels, s_factor):
-        super(UpSample, self).__init__()
+        super().__init__()
+
         self.up = nn.Sequential(
             nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),
             nn.Conv2d(in_channels + s_factor,
@@ -296,7 +290,8 @@ class UpSample(nn.Module):
 class SkipUpSample(nn.Module):
 
     def __init__(self, in_channels, s_factor):
-        super(SkipUpSample, self).__init__()
+        super().__init__()
+
         self.up = nn.Sequential(
             nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),
             nn.Conv2d(in_channels + s_factor,
@@ -315,7 +310,8 @@ class SkipUpSample(nn.Module):
 class ORB(nn.Module):
 
     def __init__(self, n_feat, kernel_size, reduction, act, bias, num_cab):
-        super(ORB, self).__init__()
+        super().__init__()
+
         modules_body = []
         modules_body = [
             CAB(n_feat, kernel_size, reduction, bias=bias, act=act)
@@ -334,7 +330,7 @@ class ORSNet(nn.Module):
 
     def __init__(self, n_feat, scale_orsnetfeats, kernel_size, reduction, act,
                  bias, scale_unetfeats, num_cab):
-        super(ORSNet, self).__init__()
+        super().__init__()
 
         self.orb1 = ORB(n_feat + scale_orsnetfeats, kernel_size, reduction,
                         act, bias, num_cab)
@@ -395,12 +391,10 @@ class ORSNet(nn.Module):
 
 
 @BACKBONES.register_module()
-class MPRNet(nn.Module):
-    """MPRNet for enhancement."""
+class MPRNet(BaseNet):
 
     def __init__(self,
-                 in_c=3,
-                 out_c=3,
+                 io_c=3,
                  n_feat=96,
                  scale_unetfeats=48,
                  scale_orsnetfeats=32,
@@ -408,17 +402,17 @@ class MPRNet(nn.Module):
                  kernel_size=3,
                  reduction=4,
                  bias=False):
-        super(MPRNet, self).__init__()
+        super().__init__()
 
         act = nn.PReLU()
         self.shallow_feat1 = nn.Sequential(
-            conv(in_c, n_feat, kernel_size, bias=bias),
+            conv(io_c, n_feat, kernel_size, bias=bias),
             CAB(n_feat, kernel_size, reduction, bias=bias, act=act))
         self.shallow_feat2 = nn.Sequential(
-            conv(in_c, n_feat, kernel_size, bias=bias),
+            conv(io_c, n_feat, kernel_size, bias=bias),
             CAB(n_feat, kernel_size, reduction, bias=bias, act=act))
         self.shallow_feat3 = nn.Sequential(
-            conv(in_c, n_feat, kernel_size, bias=bias),
+            conv(io_c, n_feat, kernel_size, bias=bias),
             CAB(n_feat, kernel_size, reduction, bias=bias, act=act))
 
         # Cross Stage Feature Fusion (CSFF)
@@ -455,7 +449,7 @@ class MPRNet(nn.Module):
                              kernel_size,
                              bias=bias)
         self.tail = conv(n_feat + scale_orsnetfeats,
-                         out_c,
+                         io_c,
                          kernel_size,
                          bias=bias)
 
@@ -548,21 +542,3 @@ class MPRNet(nn.Module):
         stage3_img = self.tail(x3_cat)
 
         return stage3_img + x3_img
-
-    def init_weights(self, pretrained=None, strict=True):
-        """Init weights for models.
-
-        Args:
-            pretrained (str, optional): Path for pretrained weights. If given
-                None, pretrained weights will not be loaded. Defaults to None.
-            strict (boo, optional): Whether strictly load the pretrained model.
-                Defaults to True.
-        """
-        if isinstance(pretrained, str):
-            logger = get_root_logger()
-            load_checkpoint(self, pretrained, strict=strict, logger=logger)
-        elif pretrained is None:
-            pass  # use default initialization
-        else:
-            raise TypeError('"pretrained" must be a str or None. '
-                            f'But received {type(pretrained)}.')

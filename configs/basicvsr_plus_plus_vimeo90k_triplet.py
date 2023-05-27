@@ -1,23 +1,22 @@
-exp_name = 'stdf_vimeo90k_triplet'
+"""Inherited from mmediting/configs/restorers/basicvsr_plusplus/
+basicvsr_plusplus_c64n7_8x1_600k_reds4."""
 
-center_gt = True
-model = dict(type='BasicVQERestorer',
-             generator=dict(
-                 type='STDFNet',
-                 io_channels=3,
-                 radius=1,
-                 nf_stdf=32,
-                 nb_stdf=3,
-                 nf_stdf_out=64,
-                 nf_qe=48,
-                 nb_qe=6,
-             ),
-             pixel_loss=dict(type='CharbonnierLoss',
-                             loss_weight=1.0,
-                             reduction='mean'),
-             center_gt=center_gt)
+exp_name = 'basicvsr_plus_plus_vimeo90k_triplet'
 
-train_cfg = None
+center_gt = False
+model = dict(
+    type='BasicVQERestorer',
+    generator=dict(
+        type='BasicVSRPlusPlus',
+        mid_channels=64,
+        num_blocks=7,
+        is_low_res_input=False,
+        spynet_pretrained='https://download.openmmlab.com/mmediting/restorers/'
+        'basicvsr/spynet_20210409-c6c1bd09.pth'),
+    pixel_loss=dict(type='CharbonnierLoss', loss_weight=1.0, reduction='mean'),
+    center_gt=center_gt)
+
+train_cfg = dict(fix_iter=5000, fix_module=['edvr', 'spynet'])
 test_cfg = dict(metrics=['PSNR', 'SSIM'], crop_border=1)
 
 train_pipeline = [
@@ -56,9 +55,6 @@ dataset_type = 'PairedSameSizeVideoDataset'
 dataset_gt_root = 'data/vimeo_triplet'
 dataset_lq_folder = 'data/vimeo_triplet_lq'
 batchsize_gpu = batchsize // ngpus
-# since there are only three frames in a sequence
-# two of which need padding in testing
-# training also use padding
 data = dict(workers_per_gpu=batchsize_gpu,
             train_dataloader=dict(samples_per_gpu=batchsize_gpu,
                                   drop_last=True),
@@ -75,7 +71,7 @@ data = dict(workers_per_gpu=batchsize_gpu,
                            test_mode=False,
                            lq_ext='.png',
                            samp_len=-1,
-                           edge_padding=True,
+                           edge_padding=False,
                            center_gt=center_gt)),
             val=dict(type=dataset_type,
                      lq_folder=f'{dataset_lq_folder}',
@@ -85,7 +81,7 @@ data = dict(workers_per_gpu=batchsize_gpu,
                      test_mode=True,
                      lq_ext='.png',
                      samp_len=-1,
-                     edge_padding=True,
+                     edge_padding=False,
                      center_gt=center_gt),
             test=dict(type=dataset_type,
                       lq_folder=f'{dataset_lq_folder}',
@@ -95,15 +91,21 @@ data = dict(workers_per_gpu=batchsize_gpu,
                       test_mode=True,
                       lq_ext='.png',
                       samp_len=-1,
-                      edge_padding=True,
+                      edge_padding=False,
                       center_gt=center_gt))
 
-optimizers = dict(generator=dict(type='Adam', lr=1e-4, betas=(0.9, 0.999)))
+optimizers = dict(
+    generator=dict(type='Adam',
+                   lr=1e-4,
+                   betas=(0.9, 0.99),
+                   paramwise_cfg=dict(
+                       custom_keys={'spynet': dict(lr_mult=0.25)})))
 
 total_iters = 500 * 1000
 lr_config = dict(policy='CosineRestart',
                  by_epoch=False,
                  periods=[total_iters],
+                 restart_weights=[1],
                  min_lr=1e-7)
 
 checkpoint_config = dict(interval=5000, save_optimizer=True, by_epoch=False)
@@ -121,3 +123,4 @@ work_dir = f'work_dirs/{exp_name}'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]
+find_unused_parameters = True  # for spynet pre-training

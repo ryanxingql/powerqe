@@ -3,13 +3,40 @@
 from mmcv.runner import load_checkpoint
 from mmedit.models import RRDBNet
 from mmedit.models.common import default_init_weights
-from mmedit.models.registry import BACKBONES
 from mmedit.utils import get_root_logger
+
+from ..registry import BACKBONES
 
 
 @BACKBONES.register_module()
 class RRDBNetQE(RRDBNet):
-    """See RRDBNet."""
+    """Networks consisting of Residual in Residual Dense Block, which is used
+    in ESRGAN and Real-ESRGAN.
+
+    ESRGAN: Enhanced Super-Resolution Generative Adversarial Networks.
+    Currently, it supports [x1/x2/x4] upsampling scale factor.
+
+    Args:
+        in_channels (int): Channel number of inputs.
+        out_channels (int): Channel number of outputs.
+        mid_channels (int): Channel number of intermediate features.
+        num_blocks (int): Block number in the trunk network.
+        growth_channels (int): Channels for each growth.
+        upscale_factor (int): Upsampling factor. Support x1, x2 and x4.
+    """
+
+    def __init__(self,
+                 io_channels,
+                 mid_channels=64,
+                 num_blocks=23,
+                 growth_channels=32,
+                 upscale_factor=4):
+        super().__init__(in_channels=io_channels,
+                         out_channels=io_channels,
+                         mid_channels=mid_channels,
+                         num_blocks=num_blocks,
+                         growth_channels=growth_channels,
+                         upscale_factor=upscale_factor)
 
     def init_weights(self,
                      pretrained=None,
@@ -17,11 +44,17 @@ class RRDBNetQE(RRDBNet):
                      revise_keys=[(r'^module\.', '')]):
         """Init weights for models.
 
+        Accept revise_keys for restorer ESRGANRestorer.
+        Default value is equal to that of load_checkpoint.
+
         Args:
-            pretrained (str, optional): Path for pretrained weights. If given
-                None, pretrained weights will not be loaded. Defaults to None.
+            pretrained (str, optional): Path for pretrained weights.
+                If given None, pretrained weights will not be loaded.
             strict (boo, optional): Whether strictly load the pretrained model.
-                Defaults to True.
+            revise_keys (list): A list of customized keywords to modify the
+                state_dict in checkpoint. Each item is a (pattern, replacement)
+                pair of the regular expression operations.
+                Default: strip the prefix 'module.' by [(r'^module\\.', '')].
         """
         if isinstance(pretrained, str):
             logger = get_root_logger()
@@ -40,5 +73,5 @@ class RRDBNetQE(RRDBNet):
             ]:
                 default_init_weights(m, 0.1)
         else:
-            raise TypeError(f'"pretrained" must be a str or None. '
-                            f'But received {type(pretrained)}.')
+            raise TypeError('"pretrained" must be a string or None;'
+                            f' received "{type(pretrained)}".')

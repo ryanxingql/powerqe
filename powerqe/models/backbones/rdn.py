@@ -3,81 +3,20 @@
 import math
 
 import torch
-from mmcv.runner import load_checkpoint
-from mmedit.utils import get_root_logger
+from mmedit.models.backbones.sr_backbones.rdn import RDB
 from torch import nn
 
 from ..registry import BACKBONES
-
-
-class DenseLayer(nn.Module):
-    """Dense layer.
-
-    Args:
-        in_channels (int): Channel number of inputs.
-        out_channels (int): Channel number of outputs.
-    """
-
-    def __init__(self, in_channels, out_channels):
-        super().__init__()
-        self.conv = nn.Conv2d(in_channels,
-                              out_channels,
-                              kernel_size=3,
-                              padding=3 // 2)
-        self.relu = nn.ReLU(inplace=True)
-
-    def forward(self, x):
-        """Forward function.
-
-        Args:
-            x (Tensor): Input tensor with shape (n, c_in, h, w).
-
-        Returns:
-            Tensor: Forward results, tensor with shape (n, c_in+c_out, h, w).
-        """
-        return torch.cat([x, self.relu(self.conv(x))], 1)
-
-
-class RDB(nn.Module):
-    """Residual Dense Block of Residual Dense Network.
-
-    Args:
-        in_channels (int): Channel number of inputs.
-        channel_growth (int): Channels growth in each layer.
-        num_layers (int): Layer number in the Residual Dense Block.
-    """
-
-    def __init__(self, in_channels, channel_growth, num_layers):
-        super().__init__()
-        self.layers = nn.Sequential(*[
-            DenseLayer(in_channels + channel_growth * i, channel_growth)
-            for i in range(num_layers)
-        ])
-
-        # local feature fusion
-        self.lff = nn.Conv2d(in_channels + channel_growth * num_layers,
-                             in_channels,
-                             kernel_size=1)
-
-    def forward(self, x):
-        """Forward function.
-
-        Args:
-            x (Tensor): Input tensor with shape (n, c, h, w).
-
-        Returns:
-            Tensor: Forward results.
-        """
-        return x + self.lff(self.layers(x))  # local residual learning
+from .base import BaseNet
 
 
 class Interpolate(nn.Module):
-    """
-    https://discuss.pytorch.org/t/using-nn-function-interpolate-inside-nn-sequential/23588/2
-    """
+    # Ref: "https://discuss.pytorch.org/t
+    # /using-nn-function-interpolate-inside-nn-sequential/23588/2"
 
     def __init__(self, scale_factor, mode):
-        super(Interpolate, self).__init__()
+        super().__init__()
+
         self.interp = nn.functional.interpolate
         self.scale_factor = scale_factor
         self.mode = mode
@@ -91,41 +30,42 @@ class Interpolate(nn.Module):
 
 
 @BACKBONES.register_module()
-class RDNQE(nn.Module):
-    """RDN model for image quality enhancement.
+class RDNQE(BaseNet):
+    """RDN for quality enhancement.
 
-    Adapted from the RDN in MMEditing 0.15.
+    Differences to the RDN in MMEditing:
+        Support rescaling before/after enhancement.
 
     Args:
         rescale (int): Rescaling factor.
-        in_channels (int): Channel number of inputs.
-        out_channels (int): Channel number of outputs.
+        io_channels (int): Number of I/O channels.
         mid_channels (int): Channel number of intermediate features.
-            Default: 64.
-        num_blocks (int): Block number in the trunk network. Default: 8.
+        num_blocks (int): Block number in the trunk network.
+        upscale_factor (int): Upsampling factor. Support 2^n and 3.
         num_layer (int): Layer number in the Residual Dense Block.
-            Default: 8.
-        channel_growth(int): Channels growth in each layer of RDB.
-            Default: 64.
+        channel_growth (int): Channels growth in each layer of RDB.
     """
 
     def __init__(
             self,
             rescale,
-            in_channels,
-            out_channels,
+            io_channels,
             mid_channels=64,
             num_blocks=8,
-            #  upscale_factor=4,
+            # upscale_factor=4,
             num_layers=8,
             channel_growth=64):
-
         super().__init__()
+
         self.rescale = rescale
         self.mid_channels = mid_channels
         self.channel_growth = channel_growth
         self.num_blocks = num_blocks
         self.num_layers = num_layers
+
+        if not math.log2(rescale).is_integer():
+            raise ValueError(
+                f'Rescale factor ({rescale}) should be a power of 2.')
 
         if rescale == 1:
             self.downscale = nn.Identity()
@@ -134,7 +74,7 @@ class RDNQE(nn.Module):
                                          mode='bicubic')
 
         # shallow feature extraction
-        self.sfe1 = nn.Conv2d(in_channels,
+        self.sfe1 = nn.Conv2d(io_channels,
                               mid_channels,
                               kernel_size=3,
                               padding=3 // 2)
@@ -144,13 +84,6 @@ class RDNQE(nn.Module):
                               padding=3 // 2)
 
         # residual dense blocks
-        """
-        self.rdbs = nn.ModuleList(
-            [RDB(self.mid_channels, self.channel_growth, self.num_layers)])
-        for _ in range(self.num_blocks - 1):
-            self.rdbs.append(
-                RDB(self.channel_growth, self.channel_growth, self.num_layers))
-        """
         self.rdbs = nn.ModuleList()
         for _ in range(self.num_blocks):
             self.rdbs.append(
@@ -166,28 +99,7 @@ class RDNQE(nn.Module):
                       kernel_size=3,
                       padding=3 // 2))
 
-        # up-sampling
-        # assert 2 <= upscale_factor <= 4
-        # if upscale_factor == 2 or upscale_factor == 4:
-        #     self.upscale = []
-        #     for _ in range(upscale_factor // 2):
-        #         self.upscale.extend([
-        #             nn.Conv2d(
-        #                 self.mid_channels,
-        #                 self.mid_channels * (2**2),
-        #                 kernel_size=3,
-        #                 padding=3 // 2),
-        #             nn.PixelShuffle(2)
-        #         ])
-        #     self.upscale = nn.Sequential(*self.upscale)
-        # else:
-        #     self.upscale = nn.Sequential(
-        #         nn.Conv2d(
-        #             self.mid_channels,
-        #             self.mid_channels * (upscale_factor**2),
-        #             kernel_size=3,
-        #             padding=3 // 2), nn.PixelShuffle(upscale_factor))
-        assert math.log2(rescale).is_integer()
+        # upsampling
         if rescale == 1:
             self.upscale = nn.Identity()
         else:
@@ -203,20 +115,19 @@ class RDNQE(nn.Module):
             self.upscale = nn.Sequential(*self.upscale)
 
         self.output = nn.Conv2d(self.mid_channels,
-                                out_channels,
+                                io_channels,
                                 kernel_size=3,
                                 padding=3 // 2)
 
     def forward(self, x):
-        """Forward function.
+        """Forward.
 
         Args:
-            x (Tensor): Input tensor with shape (n, c, h, w).
+            x (Tensor): Input tensor with the shape of (N, C, H, W).
 
         Returns:
-            Tensor: Forward results.
+            Tensor
         """
-
         x = self.downscale(x)
 
         sfe1 = self.sfe1(x)
@@ -234,21 +145,3 @@ class RDNQE(nn.Module):
         x = self.upscale(x)
         x = self.output(x)
         return x
-
-    def init_weights(self, pretrained=None, strict=True):
-        """Init weights for models.
-
-        Args:
-            pretrained (str, optional): Path for pretrained weights. If given
-                None, pretrained weights will not be loaded. Defaults to None.
-            strict (boo, optional): Whether strictly load the pretrained model.
-                Defaults to True.
-        """
-        if isinstance(pretrained, str):
-            logger = get_root_logger()
-            load_checkpoint(self, pretrained, strict=strict, logger=logger)
-        elif pretrained is None:
-            pass  # use default initialization
-        else:
-            raise TypeError('"pretrained" must be a str or None. '
-                            f'But received {type(pretrained)}.')

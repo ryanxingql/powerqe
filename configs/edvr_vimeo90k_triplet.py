@@ -1,24 +1,30 @@
-exp_name = 'stdf_vimeo90k_triplet'
+"""Inherited from mmediting/configs/restorers/edvr/
+edvrm_wotsa_x4_g8_600k_reds.py to avoid the pre-training of TSA.
+
+Decrease patch size from 256 to 128 to save memory.
+"""
+
+exp_name = 'edvr_vimeo90k_triplet'
 
 center_gt = True
-model = dict(type='BasicVQERestorer',
-             generator=dict(
-                 type='STDFNet',
-                 io_channels=3,
-                 radius=1,
-                 nf_stdf=32,
-                 nb_stdf=3,
-                 nf_stdf_out=64,
-                 nf_qe=48,
-                 nb_qe=6,
-             ),
-             pixel_loss=dict(type='CharbonnierLoss',
-                             loss_weight=1.0,
-                             reduction='mean'),
-             center_gt=center_gt)
+model = dict(
+    type='BasicVQERestorer',
+    generator=dict(
+        type='EDVRNetQE',
+        io_channels=3,
+        mid_channels=64,
+        num_frames=3,
+        deform_groups=8,
+        num_blocks_extraction=5,
+        num_blocks_reconstruction=10,
+        center_frame_idx=1,  # invalid when TSA is off
+        with_tsa=False),
+    pixel_loss=dict(type='CharbonnierLoss', loss_weight=1.0, reduction='mean'),
+    center_gt=center_gt)
 
 train_cfg = None
-test_cfg = dict(metrics=['PSNR', 'SSIM'], crop_border=1)
+norm_cfg = dict(mean=[0, 0, 0], std=[1, 1, 1])
+test_cfg = dict(metrics=['PSNR', 'SSIM'], crop_border=1, denormalize=norm_cfg)
 
 train_pipeline = [
     dict(type='LoadImageFromFileListMultiKeys',
@@ -26,7 +32,8 @@ train_pipeline = [
          keys=['lq', 'gt'],
          channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
-    dict(type='PairedRandomCropQE', patch_size=256, keys=['lq', 'gt']),
+    dict(type='Normalize', keys=['lq', 'gt'], **norm_cfg),
+    dict(type='PairedRandomCropQE', patch_size=128, keys=['lq', 'gt']),
     dict(type='Flip',
          keys=['lq', 'gt'],
          flip_ratio=0.5,
@@ -42,10 +49,13 @@ test_pipeline = [
          keys=['lq', 'gt'],
          channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
+    dict(type='Normalize', keys=['lq', 'gt'], **norm_cfg),
     dict(type='FramesToTensor', keys=['lq', 'gt']),
-    dict(type='Collect',
-         keys=['lq', 'gt'],
-         meta_keys=['lq_path', 'gt_path', 'key'])
+    dict(
+        type='Collect',
+        keys=['lq', 'gt'],
+        meta_keys=['lq_path', 'gt_path', 'key'],
+    )
 ]
 
 batchsize = 8
@@ -98,12 +108,13 @@ data = dict(workers_per_gpu=batchsize_gpu,
                       edge_padding=True,
                       center_gt=center_gt))
 
-optimizers = dict(generator=dict(type='Adam', lr=1e-4, betas=(0.9, 0.999)))
+optimizers = dict(generator=dict(type='Adam', lr=4e-4, betas=(0.9, 0.999)))
 
-total_iters = 500 * 1000
+total_iters = 600 * 1000
 lr_config = dict(policy='CosineRestart',
                  by_epoch=False,
-                 periods=[total_iters],
+                 periods=[p * 1000 for p in [150, 150, 150, 150]],
+                 restart_weights=[1, 0.5, 0.5, 0.5],
                  min_lr=1e-7)
 
 checkpoint_config = dict(interval=5000, save_optimizer=True, by_epoch=False)

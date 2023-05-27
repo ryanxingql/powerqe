@@ -1,9 +1,9 @@
-.vscode/
+.vscode
 .DS_Store
 
-/data/
-/tmp/
-/work_dirs/
+/data
+/tmp
+/work_dirs
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

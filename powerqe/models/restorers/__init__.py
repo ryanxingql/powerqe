@@ -1,5 +1,11 @@
 # RyanXingQL @2022
-from .basic_restorer import BasicRestorerQE, BasicRestorerVQE
-from .esrgan import ESRGANQE
+from .basic_restorer import BasicQERestorer, BasicVQERestorer
+from .esrgan import ESRGANRestorer
+from .provqe import ProVQERestorer
 
-__all__ = ['BasicRestorerQE', 'BasicRestorerVQE', 'ESRGANQE']
+__all__ = [
+    'BasicQERestorer',
+    'BasicVQERestorer',
+    'ESRGANRestorer',
+    'ProVQERestorer',
+]
