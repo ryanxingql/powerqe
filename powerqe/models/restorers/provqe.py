@@ -44,9 +44,9 @@ class ProVQERestorer(BasicVQERestorer):
         key_frms = [m['key_frms'] for m in meta]
 
         if test_mode:
-            return self.forward_test(lq, gt, key_frms, **kwargs)
+            return self.forward_test(lq=lq, gt=gt, key_frms=key_frms, **kwargs)
 
-        return self.forward_train(lq, gt, key_frms)
+        return self.forward_train(lq=lq, gt=gt, key_frms=key_frms)
 
     def forward_train(self, lq, gt, key_frms):
         """Training forward function.
