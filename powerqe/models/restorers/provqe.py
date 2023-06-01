@@ -29,7 +29,7 @@ class ProVQERestorer(BasicVQERestorer):
     """
 
     @auto_fp16(apply_to=('lq'))
-    def forward(self, lq, meta, gt=None, test_mode=False, **kwargs):
+    def forward(self, lq, gt=None, test_mode=False, meta=None, **kwargs):
         """Forward function.
 
         Args:
@@ -41,7 +41,11 @@ class ProVQERestorer(BasicVQERestorer):
         key_frms = [m['key_frms'] for m in meta]
 
         if test_mode:
-            return self.forward_test(lq=lq, gt=gt, key_frms=key_frms, **kwargs)
+            return self.forward_test(lq=lq,
+                                     gt=gt,
+                                     key_frms=key_frms,
+                                     meta=meta,
+                                     **kwargs)
 
         return self.forward_train(lq=lq, gt=gt, key_frms=key_frms)
 
