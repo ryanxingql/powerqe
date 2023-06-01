@@ -1,10 +1,16 @@
 # RyanXingQL @2022
+import math
 import os.path as osp
+from collections import defaultdict
 
+import numpy as np
+from mmedit.core.registry import build_metric
 from mmedit.datasets import SRFolderDataset
 
 from .pipelines.compose import Compose
 from .registry import DATASETS
+
+FEATURE_BASED_METRICS = ['FID', 'KID']
 
 
 @DATASETS.register_module()
@@ -69,3 +75,71 @@ class PairedSameSizeImageDataset(SRFolderDataset):
                     f'Cannot find "{lq_path}" in "{self.lq_folder}".')
             data_infos.append(dict(gt_path=gt_path, lq_path=lq_path))
         return data_infos
+
+    def evaluate(self, results, logger=None):
+        """Evaluate with different metrics.
+
+        Difference to that of BaseSRDataset: Deal with inf PSNR values.
+
+        Args:
+            results (list[tuple]): The output of forward_test() of the model.
+
+        Return:
+            dict: Evaluation results dict.
+        """
+        if not isinstance(results, list):
+            raise TypeError(f'results must be a list, but got {type(results)}')
+        assert len(results) == len(self), (
+            'The length of results is not equal to the dataset len: '
+            f'{len(results)} != {len(self)}')
+
+        results = [res['eval_result'] for res in results]  # a list of dict
+        eval_result = defaultdict(list)  # a dict of list
+
+        for res in results:
+            for metric, val in res.items():
+                eval_result[metric].append(val)
+        for metric, values in eval_result.items():
+            assert len(values) == len(self), (
+                f'Length of evaluation result of {metric} is {len(values)}, '
+                f'should be {len(self)}')
+
+            if 'PSNR' in metric:
+                values_pro = [v for v in values if not math.isinf(v)]
+                if len(values_pro) < len(values):
+                    ndel = len(values) - len(values_pro)
+                    if ndel == 1:
+                        print('Ignore a PSNR result of inf dB.')
+                    else:
+                        print(f'Ignore {ndel} PSNR results of inf dB.')
+                    eval_result[metric] = values_pro
+
+        # average the results
+        for metric, values in eval_result.items():
+            if metric in ['_inception_feat'] + FEATURE_BASED_METRICS:
+                continue
+
+            ave_value = sum(values) / len(self)
+            if ('PSNR' in metric) or ('SSIM' in metric):
+                eval_result.update({metric: f'{ave_value:.4f}'})
+            else:
+                eval_result.update({metric: ave_value})
+
+        # evaluate feature-based metrics
+        if '_inception_feat' in eval_result:
+            feat1, feat2 = [], []
+            for f1, f2 in eval_result['_inception_feat']:
+                feat1.append(f1)
+                feat2.append(f2)
+            feat1 = np.concatenate(feat1, 0)
+            feat2 = np.concatenate(feat2, 0)
+
+            for metric in FEATURE_BASED_METRICS:
+                if metric in eval_result:
+                    metric_func = build_metric(eval_result[metric].pop())
+                    eval_result[metric] = metric_func(feat1, feat2)
+
+            # delete a redundant key for clean logging
+            del eval_result['_inception_feat']
+
+        return eval_result

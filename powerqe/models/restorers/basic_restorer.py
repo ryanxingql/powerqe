@@ -1,6 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 # Modified by RyanXingQL @2022
-import math
 import numbers
 import os.path as osp
 
@@ -322,14 +321,11 @@ class BasicVQERestorer(BasicRestorer):
                 lq_it = tensor2img(lq[it])
 
                 result = eval_func(output_it, gt_it, crop_border)
-                if not (metric == 'PSNR' and math.isinf(result)):
-                    results['output'].append(result)
+                results['output'].append(result)
 
                 result = eval_func(lq_it, gt_it, crop_border)
-                if not (metric == 'PSNR' and math.isinf(result)):
-                    results['lq'].append(result)
+                results['lq'].append(result)
 
-            assert results['output'] and results['lq']
             eval_result[metric] = np.mean(results['output'])
             eval_result[metric + '_baseline'] = np.mean(results['lq'])
 
@@ -384,7 +380,8 @@ class BasicVQERestorer(BasicRestorer):
         # inference
         output = self.generator(lq)
 
-        assert lq.shape[0] == 1
+        assert lq.shape[0] == 1, ('Only one sample is allowed per batch to'
+                                  ' squeeze the first dim.')
         lq = lq.squeeze(0)  # (T, C, H, W)
         gt = gt.squeeze(0)  # (T, C, H, W) or (C, H, W)
         output = output.squeeze(0)  # (T, C, H, W) or (C, H, W)

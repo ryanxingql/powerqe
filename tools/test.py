@@ -142,11 +142,11 @@ def main():
         # print metrics
         stats = dataset.evaluate(outputs)
         for stat in stats:
-            print('Eval-{}: {}'.format(stat, stats[stat]))
+            print(f'Eval {stat}: {stats[stat]}')
 
         # save result pickle
         if args.out:
-            print('writing results to {}'.format(args.out))
+            print(f'Writing results to {args.out}.')
             mmcv.dump(outputs, args.out)
 
 
