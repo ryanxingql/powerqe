@@ -1,6 +1,6 @@
 # PowerQE
 
-This repository supports some quality enhancement approaches for compressed image/video based on PyTorch and MMEditing.
+This repository supports some quality enhancement approaches for compressed image/video based on PyTorch and MMagic.
 
 Image approaches:
 
@@ -25,7 +25,7 @@ Video approaches:
 
 ## Installation
 
-MMEditing is a submodule of PowerQE. One can easily upgrade the MMEditing, and add their models to PowerQE without modifying the MMEditing repository. One should clone PowerQE along with MMEditing like this:
+MMagic is a submodule of PowerQE. One can easily upgrade the MMagic, and add their models to PowerQE without modifying the MMagic repository. One should clone PowerQE along with MMagic like this:
 
 ```bash
 git clone --depth 1 --recurse-submodules --shallow-submodules\
@@ -35,9 +35,9 @@ git clone --depth 1 --recurse-submodules --shallow-submodules\
 Create environment:
 
 - "environment.yml"
-- MMEditing (PyTorch 1.x + MMCV 1.x + MMEdit 0.x)
+- MMagic (PyTorch 2.x + MMCV 2.x + MMEngine + MMagic 1.x)
 
-Please refer to the [document](docs/v3.md#create-environment) for detailed installation.
+Please refer to the [document](docs/v4.md#create-environment) for detailed installation.
 
 ## Prepare data
 
@@ -65,14 +65,14 @@ powerqe/data/div2k
     `-- lq
 ```
 
-Please refer to the [document](docs/v3.md#compress-image-and-video) for details about image/video compression.
+Please refer to the [document](docs/v4.md#compress-image-and-video) for details about image/video compression.
 
 ## Training
 
 ```bash
 #chmod +x tools/dist_train.sh  # for the first time
 
-conda activate powerqe &&\
+conda activate powerqev4 &&\
  CUDA_VISIBLE_DEVICES=0\
  PORT=29500\
  tools/dist_train.sh\
@@ -98,7 +98,7 @@ Optional options:
 ```bash
 #chmod +x tools/dist_test.sh  # for the first time
 
-conda activate powerqe &&\
+conda activate powerqev4 &&\
  CUDA_VISIBLE_DEVICES=0\
  PORT=29510\
  tools/dist_test.sh\
@@ -121,4 +121,4 @@ Optional options:
 
 - `--save-path <save-folder>`: To save output images.
 
-Please refer to the [document](docs/v3.md) for more information.
+Please refer to the [document](docs/v4.md) for more information.

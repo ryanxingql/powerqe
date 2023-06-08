@@ -25,7 +25,7 @@ Edit `configs/debug.py`.
 Then run:
 
 ```bash
-conda activate powerqe &&\
+conda activate powerqev4 &&\
   PYTHONPATH=./\
   python tools/train.py\
   configs/debug.py
