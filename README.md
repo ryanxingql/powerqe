@@ -81,7 +81,7 @@ conda activate powerqev4 &&\
  <optional-options>
 ```
 
-- Activate environment powerqe.
+- Activate environment powerqev4.
 - Use GPU 0.
 - Use port 29500 for communication.
 - Training script.
@@ -108,7 +108,7 @@ conda activate powerqev4 &&\
  <optional-options>
 ```
 
-- Activate environment powerqe.
+- Activate environment powerqev4.
 - Use GPU 0.
 - Use port 29510 for communication.
 - Test script.
@@ -121,4 +121,11 @@ Optional options:
 
 - `--save-path <save-folder>`: To save output images.
 
-Please refer to the [document](docs/v4.md) for more information.
+## Changelog
+
+| Version                                                         | Document               | MMagic (MMEditing) | Video approaches |
+| --------------------------------------------------------------- | ---------------------- | ------------------ | ---------------- |
+| [V4](https://github.com/ryanxingql/powerqe/releases/tag/v4.0.0) | [Document](docs/v4.md) | 1.x                | Supported        |
+| [V3](https://github.com/ryanxingql/powerqe/releases/tag/v3.0.0) | [Document](docs/v3.md) | 0.x                | Supported        |
+| [V2](https://github.com/ryanxingql/powerqe/releases/tag/v2.1.0) | N/A                    | 0.x                | N/A              |
+| [V1](https://github.com/ryanxingql/powerqe/releases/tag/v1.0.0) | N/A                    | 0.x                | N/A              |
