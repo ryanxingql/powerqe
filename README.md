@@ -34,8 +34,9 @@ git clone --depth 1 --recurse-submodules --shallow-submodules\
 
 Create environment:
 
-- "environment.yml"
-- MMagic (PyTorch 2.x + MMCV 2.x + MMEngine + MMagic 1.x)
+- Python v3
+- PyTorch v2
+- MMagic v1 (requires MMEngine and MMCV)
 
 Please refer to the [document](docs/v4.md#create-environment) for detailed installation.
 
@@ -123,9 +124,9 @@ Optional options:
 
 ## Changelog
 
-| Version                                                       | Document               | MMagic (MMEditing) | Video approaches |
-| ------------------------------------------------------------- | ---------------------- | ------------------ | ---------------- |
-| [V4](https://github.com/ryanxingql/powerqe/releases/tag/v4.0) | [Document](docs/v4.md) | 1.x                | Supported        |
-| [V3](https://github.com/ryanxingql/powerqe/releases/tag/v3.0) | [Document](docs/v3.md) | 0.x                | Supported        |
-| [V2](https://github.com/ryanxingql/powerqe/releases/tag/v2.0) | N/A                    | 0.x                | N/A              |
-| [V1](https://github.com/ryanxingql/powerqe/releases/tag/v1.0) | N/A                    | 0.x                | N/A              |
+| Version                                                       | Document               | PyTorch | MMagic (MMEditing) | Video approaches |
+| ------------------------------------------------------------- | ---------------------- | ------- | ------------------ | ---------------- |
+| [V4](https://github.com/ryanxingql/powerqe/releases/tag/v4.0) | [Document](docs/v4.md) | v2      | v1                 | Supported        |
+| [V3](https://github.com/ryanxingql/powerqe/releases/tag/v3.0) | [Document](docs/v3.md) | v1      | v0                 | Supported        |
+| [V2](https://github.com/ryanxingql/powerqe/releases/tag/v2.0) | N/A                    | v1      | v0                 | N/A              |
+| [V1](https://github.com/ryanxingql/powerqe/releases/tag/v1.0) | N/A                    | v1      | v0                 | N/A              |
