@@ -36,7 +36,7 @@ Create environment:
 
 - Python v3
 - PyTorch v2
-- MMagic v1 (requires MMEngine and MMCV)
+- MMagic v1
 
 Please refer to the [document](docs/v4.md#create-environment) for detailed installation.
 
