@@ -1,12 +1,12 @@
 # RyanXingQL @2022
 import torch.nn as nn
+from mmengine.model import BaseModule
 
-from ..registry import BACKBONES
-from .base import BaseNet
+from mmagic.registry import MODELS
 
 
-@BACKBONES.register_module()
-class ARCNN(BaseNet):
+@MODELS.register_module()
+class ARCNN(BaseModule):
     """AR-CNN network structure.
 
     Args:
