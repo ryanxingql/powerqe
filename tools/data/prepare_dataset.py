@@ -289,70 +289,38 @@ def parse_args():
         description='Prepare dataset',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument(
-        '-no-patch',
-        '--no-patch',
-        action='store_true',
-        help='whether to crop image patches',
-    )
-    parser.add_argument(
-        '-no-lmdb',
-        '--no-lmdb',
-        action='store_true',
-        help='whether to generate lmdb',
-    )
-    parser.add_argument(
-        '-src',
-        '--src',
-        default='data/div2k/train/gt',
-        help='source path',
-    )
-    parser.add_argument(
-        '-tmp',
-        '--tmp',
-        default='tmp/div2k/train/gt_patches',
-        help='temporal path',
-    )
-    parser.add_argument(
-        '-save',
-        '--save',
-        default='data/div2k/train/gt_patches.lmdb',
-        help='save path',
-    )
-    parser.add_argument(
-        '-n',
-        '--nthreads',
-        type=int,
-        default=16,
-        help='thread number for multiprocessing',
-    )
-    parser.add_argument(
-        '-cl',
-        '--compression-level',
-        type=int,
-        default=0,
-        help='compression level when save png images',
-    )
-    parser.add_argument(
-        '-ps',
-        '--patch-size',
-        type=int,
-        default=128,
-        help='cropped size for HR images',
-    )
-    parser.add_argument(
-        '-step',
-        '--step',
-        type=int,
-        default=64,
-        help='cropping step',
-    )
-    parser.add_argument(
-        '--thresh-size',
-        type=int,
-        default=0,
-        help='threshold size for HR images',
-    )
+    parser.add_argument('--no-patch',
+                        action='store_true',
+                        help='whether to crop image patches')
+    parser.add_argument('--no-lmdb',
+                        action='store_true',
+                        help='whether to generate lmdb')
+    parser.add_argument('--src',
+                        default='data/div2k/train',
+                        help='source path')
+    parser.add_argument('--tmp',
+                        default='tmp/div2k_lmdb/train',
+                        help='temporal path')
+    parser.add_argument('--save',
+                        default='data/div2k_lmdb/train.lmdb',
+                        help='save path')
+    parser.add_argument('--nthreads',
+                        type=int,
+                        default=16,
+                        help='thread number for multiprocessing')
+    parser.add_argument('--compression-level',
+                        type=int,
+                        default=0,
+                        help='compression level when save png images')
+    parser.add_argument('--patch-size',
+                        type=int,
+                        default=128,
+                        help='cropped size for HR images')
+    parser.add_argument('--step', type=int, default=64, help='cropping step')
+    parser.add_argument('--thresh-size',
+                        type=int,
+                        default=0,
+                        help='threshold size for HR images')
     args = parser.parse_args()
     return args
 

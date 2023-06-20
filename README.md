@@ -34,7 +34,7 @@ git clone --depth 1 --recurse-submodules --shallow-submodules\
 
 Create environment:
 
-- "environment.yml"
+- `environment.yml`
 - MMEditing (PyTorch 1.x + MMCV 1.x + MMEdit 0.x)
 
 Please refer to the [document](docs/v3.md#create-environment) for detailed installation.
@@ -50,19 +50,25 @@ ln -s <absolute-path-to-your-data> data
 Place your data like this:
 
 ```txt
-powerqe/data/div2k
-`-- train
-`   `-- gt
+powerqe/data
+`-- div2k
+`   `-- train
 `   `   `-- 0001.png
 `   `   `-- ...
 `   `   `-- 0800.png
-`   `-- lq
-`-- valid
-    `-- gt
-    `   `-- 0801.png
+`   `-- valid
+`   `   `-- 0801.png
+`   `   `-- ...
+`   `   `-- 0900.png
+`-- div2k_lq/bpg/qp37
+    `-- train
+    `   `-- 0001.png
     `   `-- ...
-    `   `-- 0900.png
-    `-- lq
+    `   `-- 0800.png
+    `-- valid
+        `-- 0801.png
+        `-- ...
+        `-- 0900.png
 ```
 
 Please refer to the [document](docs/v3.md#compress-image-and-video) for details about image/video compression.

@@ -1,36 +1,35 @@
-_base_ = 'mfqev2_vimeo90k_triplet.py'
+_base_ = ['_base_/runtime.py', '_base_/vimeo90k_septuplet.py']
 
 exp_name = 'mfqev2_vimeo90k_septuplet'
 
-batchsize = 8
-ngpus = 2
-assert batchsize % ngpus == 0, ('Samples in a batch should better be evenly'
-                                ' distributed among all GPUs.')
-dataset_gt_dir = 'data/vimeo_septuplet'
-dataset_lq_dir = 'data/vimeo_septuplet_lq'
+center_gt = True
+model = dict(
+    type='BasicVQERestorer',
+    generator=dict(
+        type='MFQEv2',
+        io_channels=3,
+        nf=32,
+        spynet_pretrained='https://download.openmmlab.com/mmediting/restorers/'
+        'basicvsr/spynet_20210409-c6c1bd09.pth'),
+    pixel_loss=dict(type='CharbonnierLoss', loss_weight=1.0, reduction='mean'),
+    center_gt=center_gt)
+
+train_cfg = dict(fix_iter=5000, fix_module=['spynet'])
+
+dataset_type = 'PairedSameSizeVideoKeyFramesDataset'
 key_frames = [1, 0, 1, 0, 1, 0, 1]
-batchsize_gpu = batchsize // ngpus
-data = dict(
-    workers_per_gpu=batchsize_gpu,
-    train_dataloader=dict(samples_per_gpu=batchsize_gpu),
-    train=dict(
-        dataset=dict(key_frames=key_frames,
-                     lq_folder=f'{dataset_lq_dir}',
-                     gt_folder=f'{dataset_gt_dir}/sequences',
-                     ann_file=f'{dataset_gt_dir}/sep_trainlist.txt',
+
+data = dict(train=dict(dataset=dict(
+    type=dataset_type, key_frames=key_frames, samp_len=3,
+    center_gt=center_gt)),
+            val=dict(type=dataset_type,
+                     key_frames=key_frames,
                      samp_len=3,
-                     edge_padding=False)),  # no need to pad with abundant data
-    val=dict(key_frames=key_frames,
-             lq_folder=f'{dataset_lq_dir}',
-             gt_folder=f'{dataset_gt_dir}/sequences',
-             ann_file=f'{dataset_gt_dir}/sep_validlist.txt',
-             samp_len=3,
-             edge_padding=True),
-    test=dict(key_frames=key_frames,
-              lq_folder=f'{dataset_lq_dir}',
-              gt_folder=f'{dataset_gt_dir}/sequences',
-              ann_file=f'{dataset_gt_dir}/sep_testlist.txt',
-              samp_len=3,
-              edge_padding=True))
+                     center_gt=center_gt),
+            test=dict(type=dataset_type,
+                      key_frames=key_frames,
+                      samp_len=3,
+                      center_gt=center_gt))
 
 work_dir = f'work_dirs/{exp_name}'
+find_unused_parameters = True  # for spynet pre-training

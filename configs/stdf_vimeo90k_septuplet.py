@@ -1,27 +1,26 @@
-_base_ = 'stdf_vimeo90k_triplet.py'
+_base_ = ['_base_/runtime.py', '_base_/vimeo90k_septuplet.py']
 
 exp_name = 'stdf_vimeo90k_septuplet'
 
-model = dict(generator=dict(radius=3))
+center_gt = True
+model = dict(type='BasicVQERestorer',
+             generator=dict(
+                 type='STDFNet',
+                 io_channels=3,
+                 radius=3,
+                 nf_stdf=32,
+                 nb_stdf=3,
+                 nf_stdf_out=64,
+                 nf_qe=48,
+                 nb_qe=6,
+             ),
+             pixel_loss=dict(type='CharbonnierLoss',
+                             loss_weight=1.0,
+                             reduction='mean'),
+             center_gt=center_gt)
 
-batchsize = 8
-ngpus = 2
-assert batchsize % ngpus == 0, ('Samples in a batch should better be evenly'
-                                ' distributed among all GPUs.')
-dataset_gt_root = 'data/vimeo_septuplet'
-dataset_lq_folder = 'data/vimeo_septuplet_lq'
-batchsize_gpu = batchsize // ngpus
-data = dict(
-    workers_per_gpu=batchsize_gpu,
-    train_dataloader=dict(samples_per_gpu=batchsize_gpu),
-    train=dict(dataset=dict(lq_folder=f'{dataset_lq_folder}',
-                            gt_folder=f'{dataset_gt_root}/sequences',
-                            ann_file=f'{dataset_gt_root}/sep_trainlist.txt')),
-    val=dict(lq_folder=f'{dataset_lq_folder}',
-             gt_folder=f'{dataset_gt_root}/sequences',
-             ann_file=f'{dataset_gt_root}/sep_validlist.txt'),
-    test=dict(lq_folder=f'{dataset_lq_folder}',
-              gt_folder=f'{dataset_gt_root}/sequences',
-              ann_file=f'{dataset_gt_root}/sep_testlist.txt'))
+data = dict(train=dict(dataset=dict(center_gt=center_gt)),
+            val=dict(center_gt=center_gt),
+            test=dict(center_gt=center_gt))
 
 work_dir = f'work_dirs/{exp_name}'

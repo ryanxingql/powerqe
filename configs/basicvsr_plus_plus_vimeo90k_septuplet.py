@@ -1,25 +1,30 @@
-_base_ = 'basicvsr_plus_plus_vimeo90k_triplet.py'
+# mmediting/configs/restorers/basicvsr_plusplus/
+# basicvsr_plusplus_c64n7_8x1_600k_reds4
+_base_ = ['_base_/runtime.py', '_base_/vimeo90k_septuplet.py']
 
 exp_name = 'basicvsr_plus_plus_vimeo90k_septuplet'
 
-batchsize = 8
-ngpus = 2
-assert batchsize % ngpus == 0, ('Samples in a batch should better be evenly'
-                                ' distributed among all GPUs.')
-dataset_gt_root = 'data/vimeo_septuplet'
-dataset_lq_folder = 'data/vimeo_septuplet_lq'
-batchsize_gpu = batchsize // ngpus
-data = dict(
-    workers_per_gpu=batchsize_gpu,
-    train_dataloader=dict(samples_per_gpu=batchsize_gpu),
-    train=dict(dataset=dict(lq_folder=f'{dataset_lq_folder}',
-                            gt_folder=f'{dataset_gt_root}/sequences',
-                            ann_file=f'{dataset_gt_root}/sep_trainlist.txt')),
-    val=dict(lq_folder=f'{dataset_lq_folder}',
-             gt_folder=f'{dataset_gt_root}/sequences',
-             ann_file=f'{dataset_gt_root}/sep_validlist.txt'),
-    test=dict(lq_folder=f'{dataset_lq_folder}',
-              gt_folder=f'{dataset_gt_root}/sequences',
-              ann_file=f'{dataset_gt_root}/sep_testlist.txt'))
+center_gt = False
+model = dict(
+    type='BasicVQERestorer',
+    generator=dict(
+        type='BasicVSRPlusPlus',
+        mid_channels=64,
+        num_blocks=7,
+        is_low_res_input=False,
+        spynet_pretrained='https://download.openmmlab.com/mmediting/restorers/'
+        'basicvsr/spynet_20210409-c6c1bd09.pth'),
+    pixel_loss=dict(type='CharbonnierLoss', loss_weight=1.0, reduction='mean'),
+    center_gt=center_gt)
+
+train_cfg = dict(fix_iter=5000, fix_module=['edvr', 'spynet'])
+
+data = dict(train=dict(dataset=dict(edge_padding=False, center_gt=center_gt)),
+            val=dict(edge_padding=False, center_gt=center_gt),
+            test=dict(edge_padding=False, center_gt=center_gt))
+
+optimizers = dict(generator=dict(paramwise_cfg=dict(
+    custom_keys={'spynet': dict(lr_mult=0.25)})))
 
 work_dir = f'work_dirs/{exp_name}'
+find_unused_parameters = True  # for spynet pre-training

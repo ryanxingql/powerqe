@@ -1,29 +1,51 @@
-_base_ = 'provqe_vimeo90k_triplet.py'
+_base_ = [
+    '_base_/runtime.py', '_base_/vimeo90k_septuplet.py',
+    'basicvsr_plus_plus_vimeo90k_septuplet.py'
+]
 
 exp_name = 'provqe_vimeo90k_septuplet'
 
-batchsize = 8
-ngpus = 2
-assert batchsize % ngpus == 0, ('Samples in a batch should better be evenly'
-                                ' distributed among all GPUs.')
-dataset_gt_dir = 'data/vimeo_septuplet'
-dataset_lq_dir = 'data/vimeo_septuplet_lq'
+model = dict(type='ProVQERestorer', generator=dict(type='ProVQE'))
+
+train_pipeline = [
+    dict(type='LoadImageFromFileListMultiKeys',
+         io_backend='disk',
+         keys=['lq', 'gt'],
+         channel_order='rgb'),
+    dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
+    dict(type='PairedRandomCropQE', patch_size=256, keys=['lq', 'gt']),
+    dict(type='Flip',
+         keys=['lq', 'gt'],
+         flip_ratio=0.5,
+         direction='horizontal'),
+    dict(type='Flip', keys=['lq', 'gt'], flip_ratio=0.5, direction='vertical'),
+    dict(type='RandomTransposeHW', keys=['lq', 'gt'], transpose_ratio=0.5),
+    dict(type='FramesToTensor', keys=['lq', 'gt']),
+    dict(type='Collect',
+         keys=['lq', 'gt'],
+         meta_keys=['lq_path', 'gt_path', 'key_frms'])
+]
+test_pipeline = [
+    dict(type='LoadImageFromFileListMultiKeys',
+         io_backend='disk',
+         keys=['lq', 'gt'],
+         channel_order='rgb'),
+    dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
+    dict(type='FramesToTensor', keys=['lq', 'gt']),
+    dict(type='Collect',
+         keys=['lq', 'gt'],
+         meta_keys=['lq_path', 'gt_path', 'key', 'key_frms'])
+]
+
+dataset_type = 'PairedSameSizeVideoKeyAnnotationsDataset'
 key_frames = [1, 0, 1, 0, 1, 0, 1]
-batchsize_gpu = batchsize // ngpus
-data = dict(
-    workers_per_gpu=batchsize_gpu,
-    train_dataloader=dict(samples_per_gpu=batchsize_gpu),
-    train=dict(dataset=dict(key_frames=key_frames,
-                            lq_folder=f'{dataset_lq_dir}',
-                            gt_folder=f'{dataset_gt_dir}/sequences',
-                            ann_file=f'{dataset_gt_dir}/sep_trainlist.txt')),
-    val=dict(key_frames=key_frames,
-             lq_folder=f'{dataset_lq_dir}',
-             gt_folder=f'{dataset_gt_dir}/sequences',
-             ann_file=f'{dataset_gt_dir}/sep_validlist.txt'),
-    test=dict(key_frames=key_frames,
-              lq_folder=f'{dataset_lq_dir}',
-              gt_folder=f'{dataset_gt_dir}/sequences',
-              ann_file=f'{dataset_gt_dir}/sep_testlist.txt'))
+data = dict(train=dict(dataset=dict(
+    type=dataset_type, pipeline=train_pipeline, key_frames=key_frames)),
+            val=dict(type=dataset_type,
+                     pipeline=test_pipeline,
+                     key_frames=key_frames),
+            test=dict(type=dataset_type,
+                      pipeline=test_pipeline,
+                      key_frames=key_frames))
 
 work_dir = f'work_dirs/{exp_name}'

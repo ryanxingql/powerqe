@@ -26,20 +26,21 @@ class PairedSameSizeImageDataset(SRFolderDataset):
         lq_folder (str | :obj:Path): LQ folder.
         gt_folder (str | :obj:Path): GT folder.
         pipeline (List[dict | callable]): A sequence of data transformations.
+        ann_file (str | :obj:Path): Path to the annotation file.
+            Each line records an image path relative to the GT/LQ folder.
         test_mode (bool): Store True when building test dataset.
             Default: False.
-        lq_ext (str): Extension of LQ filenames. Default: '.png'.
     """
 
     def __init__(self,
                  lq_folder,
                  gt_folder,
                  pipeline,
-                 test_mode=False,
-                 lq_ext='.png'):
-        self.lq_ext = lq_ext
-        # BaseDataset cannot accept any pipelines outside MMEditing;
-        # Pass [] into __init__.
+                 ann_file='',
+                 test_mode=False):
+        self.ann_file = ann_file
+        # BaseDataset cannot accept any pipelines outside MMEditing
+        # pass [] into __init__
         super().__init__(lq_folder=lq_folder,
                          gt_folder=gt_folder,
                          pipeline=[],
@@ -51,25 +52,32 @@ class PairedSameSizeImageDataset(SRFolderDataset):
         """Scan GT and LQ folders and record samples.
 
         The GT folder includes all images by default.
-        LQ images are matches by self.lq_ext.
-        LQ images can use a different image extension than GT images,
-        which is indicated in self.lq_ext.
 
         Returns:
             list[dict]: Sample information.
         """
-        gt_paths = self.scan_folder(self.gt_folder)
-        lq_paths = self.scan_folder(self.lq_folder)
-        if len(gt_paths) != len(lq_paths):
-            raise ValueError(
-                'GT and LQ folders should have the same number of images;'
-                f' found {len(gt_paths)} and {len(lq_paths)} images,'
-                ' respectively.')
+        if self.ann_file:
+            with open(self.ann_file, 'r') as f:
+                img_names = f.read().split('\n')
+                img_names = [
+                    n.strip() for n in img_names
+                    if (n.strip() is not None and n != '')
+                ]
+            gt_paths = [osp.join(self.gt_folder, name) for name in img_names]
+            lq_paths = [osp.join(self.lq_folder, name) for name in img_names]
+        else:
+            gt_paths = self.scan_folder(self.gt_folder)
+            lq_paths = self.scan_folder(self.lq_folder)
+            if len(gt_paths) != len(lq_paths):
+                raise ValueError(
+                    'GT and LQ folders should have the same number of images;'
+                    f' found {len(gt_paths)} and {len(lq_paths)} images,'
+                    ' respectively.')
 
         data_infos = []
         for gt_path in gt_paths:
-            basename, _ = osp.splitext(osp.basename(gt_path))
-            lq_path = osp.join(self.lq_folder, basename + self.lq_ext)
+            basename, ext = osp.splitext(osp.basename(gt_path))
+            lq_path = osp.join(self.lq_folder, basename + ext)
             if lq_path not in lq_paths:
                 raise FileNotFoundError(
                     f'Cannot find "{lq_path}" in "{self.lq_folder}".')

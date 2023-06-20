@@ -1,3 +1,5 @@
+_base_ = ['_base_/runtime.py', '_base_/div2k.py']
+
 exp_name = 'esrgan_div2k_stage1'
 
 model = dict(type='BasicQERestorer',
@@ -9,9 +11,8 @@ model = dict(type='BasicQERestorer',
                             upscale_factor=1),
              pixel_loss=dict(type='L1Loss', loss_weight=1.0, reduction='mean'))
 
-train_cfg = None
 norm_cfg = dict(mean=[0, 0, 0], std=[1, 1, 1])
-test_cfg = dict(metrics=['PSNR', 'SSIM'], crop_border=1, denormalize=norm_cfg)
+test_cfg = dict(denormalize=norm_cfg)
 
 train_pipeline = [
     dict(type='LoadImageFromFileMultiKeys',
@@ -41,58 +42,8 @@ test_pipeline = [
     dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path'])
 ]
 
-batchsize = 16
-ngpus = 2
-assert batchsize % ngpus == 0, ('Samples in a batch should better be evenly'
-                                ' distributed among all GPUs.')
-batchsize_gpu = batchsize // ngpus
-dataset_type = 'PairedSameSizeImageDataset'
-data = dict(workers_per_gpu=batchsize_gpu,
-            train_dataloader=dict(samples_per_gpu=batchsize_gpu,
-                                  drop_last=True),
-            val_dataloader=dict(samples_per_gpu=1),
-            test_dataloader=dict(samples_per_gpu=1),
-            train=dict(type='RepeatDataset',
-                       times=1000,
-                       dataset=dict(type=dataset_type,
-                                    lq_folder='data/div2k/train/lq',
-                                    gt_folder='data/div2k/train/gt',
-                                    pipeline=train_pipeline,
-                                    lq_ext='.png',
-                                    test_mode=False)),
-            val=dict(type=dataset_type,
-                     lq_folder='data/div2k/valid/lq',
-                     gt_folder='data/div2k/valid/gt',
-                     pipeline=test_pipeline,
-                     lq_ext='.png',
-                     test_mode=True),
-            test=dict(type=dataset_type,
-                      lq_folder='data/div2k/valid/lq',
-                      gt_folder='data/div2k/valid/gt',
-                      pipeline=test_pipeline,
-                      lq_ext='.png',
-                      test_mode=True))
+data = dict(train=dict(dataset=dict(pipeline=train_pipeline)),
+            val=dict(pipeline=test_pipeline),
+            test=dict(pipeline=test_pipeline))
 
-optimizers = dict(generator=dict(type='Adam', lr=2e-4, betas=(0.9, 0.999)))
-
-total_iters = 500 * 1000
-lr_config = dict(policy='CosineRestart',
-                 by_epoch=False,
-                 periods=[total_iters],
-                 min_lr=1e-7)
-
-checkpoint_config = dict(interval=5000, save_optimizer=True, by_epoch=False)
-evaluation = dict(interval=5000, save_image=False, gpu_collect=True)
-log_config = dict(interval=100,
-                  hooks=[
-                      dict(type='TextLoggerHook', by_epoch=False),
-                      dict(type='TensorboardLoggerHook')
-                  ])
-visual_config = None
-
-dist_params = dict(backend='nccl')
-log_level = 'INFO'
 work_dir = f'work_dirs/{exp_name}'
-load_from = None
-resume_from = None
-workflow = [('train', 1)]

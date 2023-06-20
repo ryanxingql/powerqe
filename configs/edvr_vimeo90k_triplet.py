@@ -1,8 +1,6 @@
-"""Inherited from mmediting/configs/restorers/edvr/
-edvrm_wotsa_x4_g8_600k_reds.py to avoid the pre-training of TSA.
-
-Decrease patch size from 256 to 128 to save memory.
-"""
+# mmediting/configs/restorers/edvr/
+# edvrm_wotsa_x4_g8_600k_reds.py
+_base_ = ['_base_/runtime.py', '_base_/vimeo90k_triplet.py']
 
 exp_name = 'edvr_vimeo90k_triplet'
 
@@ -22,9 +20,8 @@ model = dict(
     pixel_loss=dict(type='CharbonnierLoss', loss_weight=1.0, reduction='mean'),
     center_gt=center_gt)
 
-train_cfg = None
 norm_cfg = dict(mean=[0, 0, 0], std=[1, 1, 1])
-test_cfg = dict(metrics=['PSNR', 'SSIM'], crop_border=1, denormalize=norm_cfg)
+test_cfg = dict(denormalize=norm_cfg)
 
 train_pipeline = [
     dict(type='LoadImageFromFileListMultiKeys',
@@ -58,77 +55,9 @@ test_pipeline = [
     )
 ]
 
-batchsize = 8
-ngpus = 1
-assert batchsize % ngpus == 0, ('Samples in a batch should better be evenly'
-                                ' distributed among all GPUs.')
-dataset_type = 'PairedSameSizeVideoDataset'
-dataset_gt_root = 'data/vimeo_triplet'
-dataset_lq_folder = 'data/vimeo_triplet_lq'
-batchsize_gpu = batchsize // ngpus
-# since there are only three frames in a sequence
-# two of which need padding in testing
-# training also use padding
-data = dict(workers_per_gpu=batchsize_gpu,
-            train_dataloader=dict(samples_per_gpu=batchsize_gpu,
-                                  drop_last=True),
-            val_dataloader=dict(samples_per_gpu=1),
-            test_dataloader=dict(samples_per_gpu=1),
-            train=dict(type='RepeatDataset',
-                       times=1000,
-                       dataset=dict(
-                           type=dataset_type,
-                           lq_folder=f'{dataset_lq_folder}',
-                           gt_folder=f'{dataset_gt_root}/sequences',
-                           ann_file=f'{dataset_gt_root}/tri_trainlist.txt',
-                           pipeline=train_pipeline,
-                           test_mode=False,
-                           lq_ext='.png',
-                           samp_len=-1,
-                           edge_padding=True,
-                           center_gt=center_gt)),
-            val=dict(type=dataset_type,
-                     lq_folder=f'{dataset_lq_folder}',
-                     gt_folder=f'{dataset_gt_root}/sequences',
-                     ann_file=f'{dataset_gt_root}/tri_validlist.txt',
-                     pipeline=test_pipeline,
-                     test_mode=True,
-                     lq_ext='.png',
-                     samp_len=-1,
-                     edge_padding=True,
-                     center_gt=center_gt),
-            test=dict(type=dataset_type,
-                      lq_folder=f'{dataset_lq_folder}',
-                      gt_folder=f'{dataset_gt_root}/sequences',
-                      ann_file=f'{dataset_gt_root}/tri_testlist.txt',
-                      pipeline=test_pipeline,
-                      test_mode=True,
-                      lq_ext='.png',
-                      samp_len=-1,
-                      edge_padding=True,
-                      center_gt=center_gt))
+data = dict(
+    train=dict(dataset=dict(pipeline=train_pipeline, center_gt=center_gt)),
+    val=dict(pipeline=test_pipeline, center_gt=center_gt),
+    test=dict(pipeline=test_pipeline, center_gt=center_gt))
 
-optimizers = dict(generator=dict(type='Adam', lr=4e-4, betas=(0.9, 0.999)))
-
-total_iters = 600 * 1000
-lr_config = dict(policy='CosineRestart',
-                 by_epoch=False,
-                 periods=[p * 1000 for p in [150, 150, 150, 150]],
-                 restart_weights=[1, 0.5, 0.5, 0.5],
-                 min_lr=1e-7)
-
-checkpoint_config = dict(interval=5000, save_optimizer=True, by_epoch=False)
-evaluation = dict(interval=5000, save_image=False, gpu_collect=True)
-log_config = dict(interval=100,
-                  hooks=[
-                      dict(type='TextLoggerHook', by_epoch=False),
-                      dict(type='TensorboardLoggerHook')
-                  ])
-visual_config = None
-
-dist_params = dict(backend='nccl')
-log_level = 'INFO'
 work_dir = f'work_dirs/{exp_name}'
-load_from = None
-resume_from = None
-workflow = [('train', 1)]

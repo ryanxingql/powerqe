@@ -1,6 +1,6 @@
-_base_ = ['_base_/runtime.py', '_base_/div2k.py']
+_base_ = ['_base_/runtime.py', '_base_/flickr2k.py']
 
-exp_name = 'rbqe_non_blind_div2k'
+exp_name = 'rbqe_non_blind_flickr2k'
 
 model = dict(
     type='BasicQERestorer',
