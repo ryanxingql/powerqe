@@ -1,4 +1,4 @@
-_base_ = ['_base_/runtime.py', '_base_/flickr2k.py']
+_base_ = ['_base_/runtime.py', '_base_/flickr2k_lmdb.py']
 
 exp_name = 'rbqe_non_blind_flickr2k'
 

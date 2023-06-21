@@ -62,10 +62,10 @@ class PairedSameSizeImageDataset(SRFolderDataset):
         if self.ann_file:
             with open(self.ann_file, 'r') as f:
                 img_names = f.read().split('\n')
-                img_names = [
-                    n.strip() for n in img_names
-                    if (n.strip() is not None and n != '')
-                ]
+            img_names = [
+                n.strip() for n in img_names
+                if (n.strip() is not None and n != '')
+            ]
             gt_paths = [osp.join(self.gt_folder, name) for name in img_names]
             lq_paths = [osp.join(self.lq_folder, name) for name in img_names]
 
