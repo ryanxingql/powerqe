@@ -29,6 +29,7 @@ ngpus = 1
 assert batchsize % ngpus == 0, ('Samples in a batch should better be evenly'
                                 ' distributed among all GPUs.')
 batchsize_gpu = batchsize // ngpus
+
 dataset_type = 'PairedSameSizeImageDataset'
 data = dict(workers_per_gpu=batchsize_gpu,
             train_dataloader=dict(samples_per_gpu=batchsize_gpu,

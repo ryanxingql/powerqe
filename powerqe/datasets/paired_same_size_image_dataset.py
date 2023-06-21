@@ -19,7 +19,6 @@ class PairedSameSizeImageDataset(SRFolderDataset):
 
     Differences to SRFolderDataset:
         Scale is set to 1.
-        Support different extensions between GT and LQ. See load_annotations.
         Use the Compose in PowerQE.
 
     Args:
@@ -52,10 +51,14 @@ class PairedSameSizeImageDataset(SRFolderDataset):
         """Scan GT and LQ folders and record samples.
 
         The GT folder includes all images by default.
+        The GT and LQ images have the same name (also extension) by default.
+            If different, please use an annotation file.
 
         Returns:
             list[dict]: Sample information.
         """
+        data_infos = []
+
         if self.ann_file:
             with open(self.ann_file, 'r') as f:
                 img_names = f.read().split('\n')
@@ -65,6 +68,9 @@ class PairedSameSizeImageDataset(SRFolderDataset):
                 ]
             gt_paths = [osp.join(self.gt_folder, name) for name in img_names]
             lq_paths = [osp.join(self.lq_folder, name) for name in img_names]
+
+            for gt_path, lq_path in zip(gt_paths, lq_paths):
+                data_infos.append(dict(gt_path=gt_path, lq_path=lq_path))
         else:
             gt_paths = self.scan_folder(self.gt_folder)
             lq_paths = self.scan_folder(self.lq_folder)
@@ -74,14 +80,14 @@ class PairedSameSizeImageDataset(SRFolderDataset):
                     f' found {len(gt_paths)} and {len(lq_paths)} images,'
                     ' respectively.')
 
-        data_infos = []
-        for gt_path in gt_paths:
-            basename, ext = osp.splitext(osp.basename(gt_path))
-            lq_path = osp.join(self.lq_folder, basename + ext)
-            if lq_path not in lq_paths:
-                raise FileNotFoundError(
-                    f'Cannot find "{lq_path}" in "{self.lq_folder}".')
-            data_infos.append(dict(gt_path=gt_path, lq_path=lq_path))
+            for gt_path in gt_paths:
+                basename, ext = osp.splitext(osp.basename(gt_path))
+                lq_path = osp.join(self.lq_folder, basename + ext)
+                if lq_path not in lq_paths:
+                    raise FileNotFoundError(
+                        f'Cannot find "{lq_path}" in "{self.lq_folder}".')
+                data_infos.append(dict(gt_path=gt_path, lq_path=lq_path))
+
         return data_infos
 
     def evaluate(self, results, logger=None):

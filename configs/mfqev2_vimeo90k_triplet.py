@@ -14,7 +14,7 @@ model = dict(
     pixel_loss=dict(type='CharbonnierLoss', loss_weight=1.0, reduction='mean'),
     center_gt=center_gt)
 
-train_cfg = dict(fix_iter=5000, fix_module=['spynet'])
+train_cfg = dict(_delete_=True, fix_iter=5000, fix_module=['spynet'])
 
 dataset_type = 'PairedSameSizeVideoKeyFramesDataset'
 key_frames = [1, 0, 1]

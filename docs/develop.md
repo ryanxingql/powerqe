@@ -20,7 +20,7 @@ Finally run the Bash script.
 
 ## Debug
 
-Edit `configs/debug.py`.
+Edit `configs/xxx.py`.
 
 Then run:
 
@@ -28,7 +28,7 @@ Then run:
 conda activate powerqe &&\
   PYTHONPATH=./\
   python tools/train.py\
-  configs/debug.py
+  configs/xxx.py
 ```
 
 With `PYTHONPATH=./`, the `powerqe` dataset can be found as a module by Python.

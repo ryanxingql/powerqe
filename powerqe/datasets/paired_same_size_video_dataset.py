@@ -99,6 +99,7 @@ class PairedSameSizeVideoDataset(PairedSameSizeImageDataset):
 
         super().__init__(lq_folder=lq_folder,
                          gt_folder=gt_folder,
+                         ann_file=ann_file,
                          pipeline=pipeline,
                          test_mode=test_mode)
 

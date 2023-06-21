@@ -1,7 +1,4 @@
-_base_ = [
-    '_base_/runtime.py', '_base_/vimeo90k_septuplet.py',
-    'basicvsr_plus_plus_vimeo90k_septuplet.py'
-]
+_base_ = ['basicvsr_plus_plus_vimeo90k_septuplet.py']
 
 exp_name = 'provqe_vimeo90k_septuplet'
 

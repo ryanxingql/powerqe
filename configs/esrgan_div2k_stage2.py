@@ -1,4 +1,4 @@
-_base_ = ['_base_/runtime.py', '_base_/div2k.py', 'esrgan_div2k_stage1.py']
+_base_ = ['esrgan_div2k_stage1.py']
 
 exp_name = 'esrgan_div2k_stage2'
 
