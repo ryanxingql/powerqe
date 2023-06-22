@@ -116,6 +116,8 @@ if __name__ == '__main__':
         TAR_DIR = 'data/vimeo_septuplet_lq/hm18.0/ldp/qp37'
 
     # img -> planar
+    # according to the HM manual, HM accepts videos in raw 4:2:0
+    # planar format (Y'CbCr)
 
     if args.dataset == 'vimeo90k-triplet':
         func_write = partial(vimeo90k_write_ycbcr420, nfrms=3)
@@ -147,7 +149,7 @@ if __name__ == '__main__':
     pool.close()
     pool.join()
 
-    # compress
+    # compress planar
 
     enc_cmd_add = f' -wdt 448 -hgt 256 -q {args.qp} --Level=3.1 -fr 30'
     if args.dataset == 'vimeo90k-triplet':

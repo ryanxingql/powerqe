@@ -23,7 +23,16 @@ Video approaches:
 - [MFQEv2 @ TPAMI'19](https://github.com/ryanxingql/mfqev2.0): Key-frame alignment.
 - [EDVR @ CVPR'19](https://github.com/xinntao/EDVR): Deformable alignment. Originally for video super resolution. NTIRE'19 winner.
 
-## Installation
+Content:
+
+- [PowerQE](#powerqe)
+  - [Install dependency](#install-dependency)
+  - [Prepare data](#prepare-data)
+  - [Training](#training)
+  - [Testing](#testing)
+  - [Changelog](#changelog)
+
+## Install dependency
 
 MMEditing is a submodule of PowerQE. One can easily upgrade the MMEditing, and add their models to PowerQE without modifying the MMEditing repository. One should clone PowerQE along with MMEditing like this:
 
@@ -32,12 +41,12 @@ git clone --depth 1 --recurse-submodules --shallow-submodules\
  https://github.com/ryanxingql/powerqe.git
 ```
 
-Create environment:
+Install dependency:
 
 - `environment.yml`
-- MMEditing (PyTorch 1.x + MMCV 1.x + MMEdit 0.x)
+- PyTorch v1 + MMCV v1 + MMEditing v0
 
-Please refer to the [document](docs/v3.md#create-environment) for detailed installation.
+Please refer to the document for [detailed installation](docs/v3.md#install-dependency).
 
 ## Prepare data
 
@@ -51,7 +60,7 @@ Place your data like this:
 
 ```txt
 powerqe/data
-`-- div2k
+`-- div2k,div2k_lq/bpg/qp37
 `   `-- train
 `   `   `-- 0001.png
 `   `   `-- ...
@@ -71,7 +80,7 @@ powerqe/data
         `-- 0900.png
 ```
 
-Please refer to the [document](docs/v3.md#compress-image-and-video) for details about image/video compression.
+Please refer to the document for [detailed preparation](docs/v3.md#prepare-data).
 
 ## Training
 
@@ -127,4 +136,10 @@ Optional options:
 
 - `--save-path <save-folder>`: To save output images.
 
-Please refer to the [document](docs/v3.md) for more information.
+## Changelog
+
+| Version                                                       | Document               | PyTorch | MMEditing | Video approaches |
+| ------------------------------------------------------------- | ---------------------- | ------- | --------- | ---------------- |
+| V3                                                            | [Document](docs/v3.md) | V1      | V0        | Supported        |
+| [V2](https://github.com/ryanxingql/powerqe/releases/tag/v2.0) | N/A                    | V1      | V0        | N/A              |
+| [V1](https://github.com/ryanxingql/powerqe/releases/tag/v1.0) | N/A                    | V1      | V0        | N/A              |

@@ -9,8 +9,11 @@ lr_config = dict(policy='CosineRestart',
                  periods=[total_iters],
                  min_lr=1e-7)
 
-checkpoint_config = dict(interval=5000, save_optimizer=True, by_epoch=False)
-evaluation = dict(interval=5000, save_image=False, gpu_collect=True)
+val_inter = total_iters // 10
+checkpoint_config = dict(interval=val_inter,
+                         save_optimizer=True,
+                         by_epoch=False)
+evaluation = dict(interval=val_inter, save_image=False, gpu_collect=True)
 log_config = dict(interval=100,
                   hooks=[
                       dict(type='TextLoggerHook', by_epoch=False),
