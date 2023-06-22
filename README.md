@@ -60,24 +60,11 @@ Place your data like this:
 
 ```txt
 powerqe/data
-`-- div2k,div2k_lq/bpg/qp37
-`   `-- train
-`   `   `-- 0001.png
-`   `   `-- ...
-`   `   `-- 0800.png
-`   `-- valid
-`   `   `-- 0801.png
-`   `   `-- ...
-`   `   `-- 0900.png
-`-- div2k_lq/bpg/qp37
+`-- {div2k,div2k_lq/bpg/qp37}
     `-- train
-    `   `-- 0001.png
-    `   `-- ...
-    `   `-- 0800.png
+    `   `-- 0{001,002,...,800}.png
     `-- valid
-        `-- 0801.png
-        `-- ...
-        `-- 0900.png
+        `-- 0{801,802,...,900}.png
 ```
 
 Please refer to the document for [detailed preparation](docs/v3.md#prepare-data).

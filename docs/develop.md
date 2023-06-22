@@ -1,5 +1,10 @@
 # Development Document
 
+- [Development Document](#development-document)
+  - [BPG compression on Mac](#bpg-compression-on-mac)
+  - [Debug](#debug)
+  - [Markdown heading text anchors](#markdown-heading-text-anchors)
+
 ## BPG compression on Mac
 
 First install libbpg via homebrew:
