@@ -233,9 +233,7 @@ def parse_args():
     parser.add_argument('--src',
                         default='data/div2k/train',
                         help='source path')
-    parser.add_argument('--anno-path',
-                        default='data/flickr2k_lq/bpg/qp37/train.txt',
-                        help='annotation path')
+    parser.add_argument('--anno-path', default='', help='annotation path')
     parser.add_argument('--tmp',
                         default='tmp/div2k_lmdb/train',
                         help='temporal path')
