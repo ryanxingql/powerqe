@@ -90,13 +90,19 @@ class PairedSameSizeImageDataset(SRFolderDataset):
 
         return data_infos
 
-    def evaluate(self, results, logger=None):
+    def evaluate2(self, results, logger=None):
         """Evaluate with different metrics.
 
         Difference to that of BaseSRDataset: Deal with inf PSNR values.
 
         Args:
             results (list[tuple]): The output of forward_test() of the model.
+                results: [item1,item2, ... , itemN]; N is the sample number.
+                item: dict(eval_result=dict(
+                    metric1=value1,
+                    metric2=value2,
+                    ...),
+                ...)
 
         Return:
             dict: Evaluation results dict.
@@ -107,12 +113,17 @@ class PairedSameSizeImageDataset(SRFolderDataset):
             'The length of results is not equal to the dataset len: '
             f'{len(results)} != {len(self)}')
 
+        # Collect eval values of samples under each metric into a list
+        # and record lists into a dict where keys are metric names
+
         results = [res['eval_result'] for res in results]  # a list of dict
         eval_result = defaultdict(list)  # a dict of list
-
         for res in results:
             for metric, val in res.items():
                 eval_result[metric].append(val)
+
+        # Deal with inf PSNR
+
         for metric, values in eval_result.items():
             assert len(values) == len(self), (
                 f'Length of evaluation result of {metric} is {len(values)}, '
@@ -128,18 +139,16 @@ class PairedSameSizeImageDataset(SRFolderDataset):
                         print(f'Ignore {ndel} PSNR results of inf dB.')
                     eval_result[metric] = values_pro
 
-        # average the results
-        for metric, values in eval_result.items():
-            if metric in ['_inception_feat'] + FEATURE_BASED_METRICS:
-                continue
+        # Replace lists with average scores
 
-            ave_value = sum(values) / len(self)
-            if ('PSNR' in metric) or ('SSIM' in metric):
-                eval_result.update({metric: f'{ave_value:.4f}'})
-            else:
-                eval_result.update({metric: ave_value})
+        eval_result.update({
+            metric: sum(values) / len(self)
+            for metric, values in eval_result.items()
+            if metric not in ['_inception_feat'] + FEATURE_BASED_METRICS
+        })
 
-        # evaluate feature-based metrics
+        # Evaluate feature-based metrics
+
         if '_inception_feat' in eval_result:
             feat1, feat2 = [], []
             for f1, f2 in eval_result['_inception_feat']:
