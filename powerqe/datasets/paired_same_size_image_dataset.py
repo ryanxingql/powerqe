@@ -90,7 +90,7 @@ class PairedSameSizeImageDataset(SRFolderDataset):
 
         return data_infos
 
-    def evaluate2(self, results, logger=None):
+    def evaluate(self, results, logger=None):
         """Evaluate with different metrics.
 
         Difference to that of BaseSRDataset: Deal with inf PSNR values.
