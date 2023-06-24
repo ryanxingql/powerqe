@@ -1,7 +1,7 @@
 _base_ = ['div2k.py']
 
-train_lq_folder = 'data/div2k_lq_lmdb/bpg/qp37/train.lmdb'
-train_gt_folder = 'data/div2k_lmdb/train.lmdb'
+train_lq_folder = 'data/div2k_lq_patches_lmdb/bpg/qp37/train.lmdb'
+train_gt_folder = 'data/div2k_patches_lmdb/train.lmdb'
 
 train_pipeline = [
     dict(type='LoadImageFromFile',

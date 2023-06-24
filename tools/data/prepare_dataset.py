@@ -1,33 +1,90 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 # Modified by RyanXingQL @2022
+"""According to SRLmdbDataset, each line in the meta should be like:
+`baboon.png (120,125,3) 1`, which means: 1) image name (with extension):
+baboon.png; 2) image shape: (120,125,3); and 3) compression level: 1. Also, it
+records the image name without extension as the 'lq_path', which is used in
+LmdbBackend as the key to search in the LMDB file. Therefore, keys in LMDB
+should be image names without extension.
+
+Each line in the txt file records 1)image name (with extension), 2)image shape,
+and 3)compression level, separated by a white space.
+"""
 import argparse
 import os
 import os.path as osp
-from multiprocessing import Manager, Pool
+# import re
+import sys
+from multiprocessing import Pool
 
 import cv2
 import lmdb
 import mmcv
 import numpy as np
-from tqdm import tqdm
 
 
-def crop_one_image(patch_names_all_imgs,
-                   img_path,
-                   crop_size,
-                   step,
-                   thresh_size,
-                   save_folder,
-                   compression_level,
-                   patch_ext='.png'):
-    """Crop one image into patches."""
-    img_name, _ = osp.splitext(osp.basename(img_path))
+def extract_subimages(opt):
+    """Crop images to subimages.
 
-    img = mmcv.imread(img_path, flag='unchanged')
+    Args:
+        opt (dict): Configuration dict. It contains:
+            input_folder (str): Path to the input folder.
+            save_folder (str): Path to save folder.
+            n_thread (int): Thread number.
+    """
+    input_folder = opt['input_folder']
+    save_folder = opt['save_folder']
+    if not osp.exists(save_folder):
+        os.makedirs(save_folder)
+        print(f'mkdir {save_folder} ...')
+    else:
+        print(f'Folder {save_folder} already exists. Exit.')
+        sys.exit(1)
+
+    img_list = list(mmcv.scandir(input_folder))
+    img_list = [osp.join(input_folder, v) for v in img_list]
+
+    prog_bar = mmcv.ProgressBar(len(img_list))
+    pool = Pool(opt['n_thread'])
+    for path in img_list:
+        pool.apply_async(worker,
+                         args=(path, opt),
+                         callback=lambda _: prog_bar.update())
+    pool.close()
+    pool.join()
+    print('All processes done.')
+
+
+def worker(path, opt):
+    """Worker for each process.
+
+    Args:
+        path (str): Image path.
+        opt (dict): Configuration dict. It contains:
+            crop_size (int): Crop size.
+            step (int): Step for overlapped sliding window.
+            thresh_size (int): Threshold size. Patches whose size is smaller
+                than thresh_size will be dropped.
+            save_folder (str): Path to save folder.
+            compression_level (int): for cv2.IMWRITE_PNG_COMPRESSION.
+
+    Returns:
+        process_info (str): Process information displayed in progress bar.
+    """
+    crop_size = opt['crop_size']
+    step = opt['step']
+    thresh_size = opt['thresh_size']
+    img_name, extension = osp.splitext(osp.basename(path))
+
+    # remove the x2, x3, x4 and x8 in the filename for DIV2K
+    # img_name = re.sub('x[2348]', '', img_name)
+
+    img = mmcv.imread(path, flag='unchanged')
+
     if img.ndim == 2 or img.ndim == 3:
         h, w = img.shape[:2]
     else:
-        raise ValueError(f'Image ndim should be 2 or 3, but got {img.ndim}.')
+        raise ValueError(f'Image ndim should be 2 or 3, but got {img.ndim}')
 
     h_space = np.arange(0, h - crop_size + 1, step)
     if h - (h_space[-1] + crop_size) > thresh_size:
@@ -36,91 +93,64 @@ def crop_one_image(patch_names_all_imgs,
     if w - (w_space[-1] + crop_size) > thresh_size:
         w_space = np.append(w_space, w - crop_size)
 
-    patch_names = []
     index = 0
     for x in h_space:
         for y in w_space:
             index += 1
-            patch_name = f'{img_name}_{index:d}{patch_ext}'
-            patch_names.append(patch_name)
-            save_path = osp.join(save_folder, patch_name)
-
-            patch = img[x:x + crop_size, y:y + crop_size, ...]
-            cv2.imwrite(save_path, patch,
-                        [cv2.IMWRITE_PNG_COMPRESSION, compression_level])
-
-    patch_names_all_imgs += patch_names
+            cropped_img = img[x:x + crop_size, y:y + crop_size, ...]
+            cv2.imwrite(
+                osp.join(opt['save_folder'],
+                         f'{img_name}_s{index:03d}{extension}'), cropped_img,
+                [cv2.IMWRITE_PNG_COMPRESSION, opt['compression_level']])
+    process_info = f'Processing {img_name} ...'
+    return process_info
 
 
-def crop_patches(img_names,
-                 nthreads,
-                 compression_level,
-                 crop_size,
-                 step,
-                 thresh_size,
-                 input_folder,
-                 save_folder,
-                 patch_ext='.png'):
-    """Crop images to patches."""
-    img_paths = [osp.join(input_folder, v) for v in img_names]
+def make_lmdb_for_datasets(opt):
+    """Create lmdb files."""
 
-    manager = Manager()
-    patch_names_all_imgs = manager.list()
-
-    prog_bar = tqdm(total=len(img_paths), ncols=0)
-    pool = Pool(nthreads)
-    for img_path in img_paths:
-        patch_cfg = dict(img_path=img_path,
-                         patch_names_all_imgs=patch_names_all_imgs,
-                         crop_size=crop_size,
-                         step=step,
-                         thresh_size=thresh_size,
-                         save_folder=save_folder,
-                         compression_level=compression_level,
-                         patch_ext=patch_ext)
-        pool.apply_async(crop_one_image,
-                         kwds=patch_cfg,
-                         callback=lambda _: prog_bar.update())
-    pool.close()
-    pool.join()
-    prog_bar.close()
-
-    return patch_names_all_imgs
+    folder_path = opt['save_folder']
+    lmdb_path = opt['lmdb_folder']
+    suffix = opt['suffix']
+    img_path_list, keys = prepare_keys(folder_path, suffix=suffix)
+    make_lmdb(folder_path, lmdb_path, img_path_list, keys)
 
 
-def read_img(img_path, compress_level, key):
-    """Read image.
+def prepare_keys(folder_path, suffix='png'):
+    """Prepare image path list and keys.
 
     Args:
-        img_path (str): Image path.
-        compress_level (int): Compress level when encoding images.
+        folder_path (str): Folder path.
 
     Returns:
-        str: Image key.
-        byte: Image byte.
-        tuple[int]: Image shape.
+        list[str]: Image path list.
+        list[str]: Key list.
     """
-    img = mmcv.imread(img_path, flag='unchanged')
-    _, img_byte = cv2.imencode('.png', img,
-                               [cv2.IMWRITE_PNG_COMPRESSION, compress_level])
-    return img_byte, key
+    print('Reading image path list ...')
+    img_path_list = sorted(
+        list(mmcv.scandir(folder_path, suffix=suffix, recursive=False)))
+    keys = [
+        img_path.split(f'.{suffix}')[0] for img_path in sorted(img_path_list)
+    ]
+
+    return img_path_list, keys
 
 
 def make_lmdb(data_path,
               lmdb_path,
-              img_names,
-              nthreads=32,
+              img_path_list,
+              keys,
               batch=5000,
               compress_level=1,
               multiprocessing_read=False,
-              meta_name='meta_info.txt'):
+              n_thread=40):
     """Make lmdb.
 
     Contents of lmdb. The file structure is:
     example.lmdb
-    `-- data.mdb
-    `-- lock.mdb
-    `-- meta_info.txt
+    ├── data.mdb
+    ├── lock.mdb
+    ├── meta_info.txt
 
     The data.mdb and lock.mdb are standard lmdb files and you can refer to
     https://lmdb.readthedocs.io/en/release/ for more details.
@@ -128,14 +158,16 @@ def make_lmdb(data_path,
     The meta_info.txt is a specified txt file to record the meta information
     of our datasets. It will be automatically created when preparing
     datasets by our provided dataset tools.
-    Each line in the txt file records the image name (with extension).
+    Each line in the txt file records 1)image name (with extension),
+    2)image shape, and 3)compression level, separated by a white space.
 
-    LMDB key: LMDB root / image name
-    It is because the input of the LoadImageFromFile pipeline is also used for
-    LMDB key search, which is also the results[f'{self.key}_path'].
-    According to the PairedSameSizeImageDataset dataset,
-    {gt,lq}_path is defined as osp.join(self.{gt,lq}_folder, name), where the
-    name is listed in meta_info.txt.
+    For example, the meta information could be:
+    `000_00000000.png (720,1280,3) 1`, which means:
+    1) image name (with extension): 000_00000000.png;
+    2) image shape: (720,1280,3);
+    3) compression level: 1
+
+    We use the image name without extension as the lmdb key.
 
     If `multiprocessing_read` is True, it will read all the images to memory
     using multiprocessing. Thus, your server needs to have enough memory.
@@ -143,120 +175,149 @@ def make_lmdb(data_path,
     Args:
         data_path (str): Data path for reading images.
         lmdb_path (str): Lmdb save path.
-        img_names (list)
+        img_path_list (str): Image path list.
+        keys (str): Used for lmdb keys.
         batch (int): After processing batch images, lmdb commits.
             Default: 5000.
         compress_level (int): Compress level when encoding images. Default: 1.
         multiprocessing_read (bool): Whether use multiprocessing to read all
             the images to memory. Default: False.
-        nthreads (int): For multiprocessing.
+        n_thread (int): For multiprocessing.
     """
+    assert len(img_path_list) == len(keys), (
+        'img_path_list and keys should have the same length, '
+        f'but got {len(img_path_list)} and {len(keys)}')
+    print(f'Create lmdb for {data_path}, save to {lmdb_path}...')
+    print(f'Total images: {len(img_path_list)}')
     if not lmdb_path.endswith('.lmdb'):
-        raise ValueError("'lmdb_path' must end with '.lmdb'.")
-
-    print(f'Source: {data_path}\nTarget: {lmdb_path}')
-    print(f'Total images: {len(img_names)}')
-
-    # read all the images to memory with multiprocessing
+        raise ValueError("lmdb_path must end with '.lmdb'.")
+    if osp.exists(lmdb_path):
+        print(f'Folder {lmdb_path} already exists. Exit.')
+        sys.exit(1)
+    else:
+        os.makedirs(lmdb_path)
 
     if multiprocessing_read:
+        # read all the images to memory (multiprocessing)
         dataset = {}  # use dict to keep the order for multiprocessing
+        shapes = {}
+        print(f'Read images with multiprocessing, #thread: {n_thread} ...')
+        prog_bar = mmcv.ProgressBar(len(img_path_list))
 
-        def callback(img_byte, key):
+        def callback(arg):
             """get the image data and update prog_bar."""
-            dataset[key] = img_byte
+            key, dataset[key], shapes[key] = arg
             prog_bar.update()
 
-        prog_bar = tqdm(total=len(img_names), ncols=0)
-        pool = Pool(nthreads)
-        for img_name in img_names:
-            img_path = osp.join(data_path, img_name)
-            key = osp.join(lmdb_path, img_name)
-            pool.apply_async(read_img,
-                             args=(img_path, compress_level, key),
+        pool = Pool(n_thread)
+        for path, key in zip(img_path_list, keys):
+            pool.apply_async(read_img_worker,
+                             args=(osp.join(data_path,
+                                            path), key, compress_level),
                              callback=callback)
         pool.close()
         pool.join()
-        prog_bar.close()
+        print(f'Finish reading {len(img_path_list)} images.')
 
     # create lmdb environment
-
-    # obtain data size by one image
-    img = mmcv.imread(osp.join(data_path, img_names[0]), flag='unchanged')
+    # obtain data size for one image
+    img = mmcv.imread(osp.join(data_path, img_path_list[0]), flag='unchanged')
     _, img_byte = cv2.imencode('.png', img,
                                [cv2.IMWRITE_PNG_COMPRESSION, compress_level])
     data_size_per_img = img_byte.nbytes
     print('Data size per image is: ', data_size_per_img)
-
-    data_size = data_size_per_img * len(img_names)
+    data_size = data_size_per_img * len(img_path_list)
     env = lmdb.open(lmdb_path, map_size=data_size * 10)
 
-    # (read and) write data to lmdb
-
-    prog_bar = tqdm(total=len(img_names), ncols=0)
+    # write data to lmdb
+    prog_bar = mmcv.ProgressBar(len(img_path_list))
     txn = env.begin(write=True)
-    txt_file = open(osp.join(lmdb_path, meta_name), 'w')
-    for idx, img_name in enumerate(img_names):
-        key = osp.join(lmdb_path, img_name)
+    txt_file = open(osp.join(lmdb_path, 'meta_info.txt'), 'w')
+    for idx, (path, key) in enumerate(zip(img_path_list, keys)):
+        prog_bar.update()
+        key_byte = key.encode('ascii')
         if multiprocessing_read:
             img_byte = dataset[key]
+            h, w, c = shapes[key]
         else:
-            img_path = osp.join(data_path, img_name)
-            img_byte, _ = read_img(img_path, compress_level, key)
+            _, img_byte, img_shape = read_img_worker(osp.join(data_path, path),
+                                                     key, compress_level)
+            h, w, c = img_shape
 
-        key_byte = key.encode('ascii')
         txn.put(key_byte, img_byte)
         # write meta information
-        txt_file.write(f'{img_name}\n')
+        txt_file.write(f'{key}.png ({h},{w},{c}) {compress_level}\n')
         if idx % batch == 0:
             txn.commit()
             txn = env.begin(write=True)
-
-        prog_bar.update()
     txn.commit()
     env.close()
     txt_file.close()
-    prog_bar.close()
+    print('\nFinish writing lmdb.')
+
+
+def read_img_worker(path, key, compress_level):
+    """Read image worker.
+
+    Args:
+        path (str): Image path.
+        key (str): Image key.
+        compress_level (int): Compress level when encoding images.
+
+    Returns:
+        str: Image key.
+        byte: Image byte.
+        tuple[int]: Image shape.
+    """
+    img = mmcv.imread(path, flag='unchanged')
+    if img.ndim == 2:
+        h, w = img.shape
+        c = 1
+    else:
+        h, w, c = img.shape
+    _, img_byte = cv2.imencode('.png', img,
+                               [cv2.IMWRITE_PNG_COMPRESSION, compress_level])
+    return (key, img_byte, (h, w, c))
 
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description='Prepare dataset',
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-    )
-    parser.add_argument('--no-patch',
-                        action='store_true',
-                        help='whether to crop image patches')
-    parser.add_argument('--no-lmdb',
-                        action='store_true',
-                        help='whether to generate lmdb')
-    parser.add_argument('--src',
-                        default='data/div2k/train',
-                        help='source path')
-    parser.add_argument('--anno-path', default='', help='annotation path')
-    parser.add_argument('--tmp',
-                        default='tmp/div2k_lmdb/train',
-                        help='temporal path')
-    parser.add_argument('--save',
-                        default='data/div2k_lmdb/train.lmdb',
-                        help='save path')
-    parser.add_argument('--nthreads',
-                        type=int,
-                        default=32,
-                        help='thread number for multiprocessing')
-    parser.add_argument('--compression-level',
-                        type=int,
-                        default=0,
-                        help='compression level when save png images')
-    parser.add_argument('--patch-size',
-                        type=int,
+        description='Prepare training patches and make LMDB',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('--dataset',
+                        help='dataset name',
+                        choices=['div2k'],
+                        required=True)
+    parser.add_argument('--crop-size',
+                        nargs='?',
                         default=128,
-                        help='cropped size for HR images')
-    parser.add_argument('--step', type=int, default=64, help='cropping step')
-    parser.add_argument('--thresh-size',
                         type=int,
+                        help='cropped size for HR images')
+    parser.add_argument('--step',
+                        nargs='?',
+                        default=64,
+                        type=int,
+                        help='step size for HR images')
+    parser.add_argument('--thresh-size',
+                        nargs='?',
                         default=0,
                         help='threshold size for HR images')
+    parser.add_argument('--compression-level',
+                        nargs='?',
+                        default=3,
+                        help='compression level when save png images')
+    parser.add_argument('--n-thread',
+                        nargs='?',
+                        default=8,
+                        type=int,
+                        help='thread number when using multiprocessing')
+    parser.add_argument('--no-lmdb',
+                        action='store_true',
+                        help='whether to prepare lmdb files')
+    parser.add_argument('--suffix',
+                        type=str,
+                        default='png',
+                        help='image suffix for reading images')
     args = parser.parse_args()
     return args
 
@@ -264,48 +325,35 @@ def parse_args():
 if __name__ == '__main__':
     args = parse_args()
 
-    assert not (args.no_patch and args.no_lmdb), 'Nothing to do.'
+    # If LQ scale is N, please decrease 'crop_size', 'step' and 'thresh_size'
+    # in opt by N
 
-    os.makedirs(args.save)
-
-    # list all images
-
-    if args.anno_path:
-        with open(args.anno_path, 'r') as f:
-            img_names = f.read().split('\n')
-        img_names = [
-            n.strip() for n in img_names if (n.strip() is not None and n != '')
+    if args.dataset == 'div2k':
+        opts = [
+            dict(n_thread=args.n_thread,
+                 compression_level=args.compression_level,
+                 input_folder='data/div2k/train',
+                 save_folder='data/div2k_patches/train',
+                 lmdb_folder='data/div2k_patches_lmdb/train.lmdb',
+                 crop_size=args.crop_size,
+                 step=args.step,
+                 thresh_size=args.thresh_size,
+                 suffix=args.suffix),
+            dict(n_thread=args.n_thread,
+                 compression_level=args.compression_level,
+                 input_folder='data/div2k_lq/bpg/qp37/train',
+                 save_folder='data/div2k_lq_patches/bpg/qp37/train',
+                 lmdb_folder='data/div2k_lq_patches_lmdb/bpg/qp37/train.lmdb',
+                 crop_size=args.crop_size,
+                 step=args.step,
+                 thresh_size=args.thresh_size,
+                 suffix=args.suffix),
         ]
-    else:
-        img_names = sorted(list(mmcv.scandir(args.src, recursive=False)))
 
-    # generate patches and create LMDB
+    for opt in opts:
+        # extract subimages
+        extract_subimages(opt)
 
-    if args.no_patch:
-        make_lmdb(data_path=args.src,
-                  lmdb_path=args.save,
-                  img_names=img_names,
-                  nthreads=args.nthreads)
-    else:
-        patch_cfg = dict(img_names=img_names,
-                         nthreads=args.nthreads,
-                         compression_level=args.compression_level,
-                         crop_size=args.patch_size,
-                         step=args.step,
-                         thresh_size=args.thresh_size)
-
-        if args.no_lmdb:
-            patch_cfg['input_folder'] = args.src
-            patch_cfg['save_folder'] = args.save
-            crop_patches(**patch_cfg)
-
-        else:
-            patch_cfg['input_folder'] = args.src
-            patch_cfg['save_folder'] = args.tmp
-            os.makedirs(args.tmp)
-            img_names = crop_patches(**patch_cfg)  # actually patch names
-
-            make_lmdb(data_path=args.tmp,
-                      lmdb_path=args.save,
-                      img_names=img_names,
-                      nthreads=args.nthreads)
+        # make LMDB
+        if not args.no_lmdb:
+            make_lmdb_for_datasets(opt)
