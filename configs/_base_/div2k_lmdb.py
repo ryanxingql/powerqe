@@ -1,5 +1,3 @@
-import os.path as osp
-
 _base_ = ['div2k.py']
 
 train_lq_folder = 'data/div2k_lq_lmdb/bpg/qp37/train.lmdb'
@@ -28,8 +26,9 @@ train_pipeline = [
     dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path'])
 ]
 
-data = dict(train=dict(
-    dataset=dict(lq_folder=train_lq_folder,
-                 gt_folder=train_gt_folder,
-                 pipeline=train_pipeline,
-                 ann_file=osp.join(train_lq_folder, 'meta_info.txt'))))
+dataset_type = 'SRLmdbDataset'
+data = dict(train=dict(dataset=dict(type=dataset_type,
+                                    lq_folder=train_lq_folder,
+                                    gt_folder=train_gt_folder,
+                                    pipeline=train_pipeline,
+                                    scale=1)))
