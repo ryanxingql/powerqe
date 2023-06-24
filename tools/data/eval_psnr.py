@@ -1,6 +1,7 @@
 import argparse
 import math
 import os
+import os.path as osp
 from glob import glob
 
 import cv2
@@ -14,18 +15,11 @@ def parse_args():
     parser.add_argument('--dataset',
                         type=str,
                         required=True,
-                        choices=['div2k', 'flickr2k', 'vimeo90k'])
-    parser.add_argument('--gt', type=str, default='data/div2k/valid')
-    parser.add_argument('--out',
-                        type=str,
-                        default='data/div2k_lq/bpg/qp37/valid')
-    parser.add_argument('--if-lq', action='store_false')
-    parser.add_argument('--lq',
-                        type=str,
-                        default='data/div2k_lq/bpg/qp37/valid')
-    parser.add_argument('--anno',
-                        type=str,
-                        default='data/vimeo_septuplet/sep_testlist.txt')
+                        choices=[
+                            'div2k', 'flickr2k', 'vimeo90k-triplet',
+                            'vimeo90k-septuplet'
+                        ])
+    parser.add_argument('--out-dir', type=str, required=True)
     parser.add_argument('--crop-boarder', type=int, default=0)
     args = parser.parse_args()
     return args
@@ -33,39 +27,73 @@ def parse_args():
 
 args = parse_args()
 
-tars = dict(out=args.out)
-if args.if_lq:
-    tars['lq'] = args.lq
+# Collect image paths
 
 if args.dataset == 'div2k':
-    for tar_name, tar in tars.items():
-        results = []
-        for idx in tqdm(range(100), ncols=0):
-            src_img = cv2.imread(os.path.join(args.gt, f'{idx+801:04d}.png'))
-            tar_img = cv2.imread(os.path.join(tar, f'{idx+801:04d}.png'))
-            psnr = cal_psnr(src_img, tar_img, crop_border=args.crop_boarder)
-            results.append(psnr)
-        print(f'ave. PSNR ({tar_name}): {sum(results) / len(results):.4f} dB')
-
-elif args.dataset == 'vimeo90k':
+    gt_dir = 'data/div2k/valid'
+    lq_dir = 'data/div2k_lq/bpg/qp37/valid'
+    imgs_paths = [
+        dict(gt_path=osp.join(gt_dir, f'{idx:04d}.png'),
+             lq_path=osp.join(lq_dir, f'{idx:04d}.png'),
+             out_path=osp.join(args.out_dir, f'{idx:04d}.png'))
+        for idx in range(801, 901)
+    ]
+if args.dataset == 'flickr2k':
     keys = []
-    with open(args.anno, 'r') as f:
+    with open('data/flickr2k_lq/bpg/qp37/test.txt', 'r') as f:
         for line in f:
             line = line.strip()
             if not line:
                 continue
-            # print(line)
             keys.append(line)
+    gt_dir = 'data/flickr2k'
+    lq_dir = 'data/flickr2k_lq/bpg/qp37'
+    imgs_paths = [
+        dict(gt_path=osp.join(gt_dir, key),
+             lq_path=osp.join(lq_dir, key),
+             out_path=osp.join(args.out_dir, key)) for key in keys
+    ]
+if args.dataset == 'vimeo90k-triplet':
+    keys = []
+    with open('data/vimeo_triplet/tri_testlist.txt', 'r') as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            keys.append(line)
+    gt_dir = 'data/vimeo_triplet/sequences'
+    lq_dir = 'data/vimeo_triplet_lq/hm18.0/ldp/qp37'
+    seqs_paths = [
+        dict(gt_path=osp.join(gt_dir, key),
+             lq_path=osp.join(lq_dir, key),
+             out_path=osp.join(args.out_dir, key)) for key in keys
+    ]
+if args.dataset == 'vimeo90k-septuplet':
+    keys = []
+    with open('data/vimeo_septuplet/sep_testlist.txt', 'r') as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            keys.append(line)
+    gt_dir = 'data/vimeo_septuplet/sequences'
+    lq_dir = 'data/vimeo_septuplet_lq/hm18.0/ldp/qp37'
+    seqs_paths = [
+        dict(gt_path=osp.join(gt_dir, key),
+             lq_path=osp.join(lq_dir, key),
+             out_path=osp.join(args.out_dir, key)) for key in keys
+    ]
 
-    for tar_name, tar in tars.items():
-        # record
+# Calculate PSNR
+
+if 'vimeo90k' in args.dataset:
+    for tag in ['out', 'lq']:
+        # Record frame-wise PSNR
+
         nfrms_bk = 0
-        for key in tqdm(keys, ncols=0):
-            src_seq_dir = os.path.join(args.gt, key)
-            tar_seq_dir = os.path.join(tar, key)
-
-            # check sequence length
-            nfrms = len(glob(os.path.join(src_seq_dir, 'im*.png')))
+        for seq_paths in tqdm(seqs_paths, ncols=0):
+            # Check sequence length
+            nfrms = len(glob(os.path.join(seq_paths['gt_dir'], 'im*.png')))
             if not nfrms_bk:
                 assert nfrms == 3 or nfrms == 7
                 nfrms_bk = nfrms
@@ -74,17 +102,17 @@ elif args.dataset == 'vimeo90k':
                     results[idx] = []
             assert nfrms == nfrms_bk
 
+            # Calculate frame-wise PSNR
+
             for idx in range(nfrms):
-                src_img = cv2.imread(
-                    os.path.join(src_seq_dir, f'im{idx+1}.png'))
-                tar_img = cv2.imread(
-                    os.path.join(tar_seq_dir, f'im{idx+1}.png'))
-                psnr = cal_psnr(src_img,
-                                tar_img,
-                                crop_border=args.crop_boarder)
+                src = cv2.imread(
+                    osp.join(seq_paths['gt_dir'], f'im{idx+1}.png'))
+                tar = cv2.imread(
+                    osp.join(seq_paths[f'{tag}_dir'], f'im{idx+1}.png'))
+                psnr = cal_psnr(src, tar, crop_border=args.crop_boarder)
                 results[idx].append(psnr)
 
-        # calculate
+        # Summarize
 
         inf_seq = 0
         inf_frm = 0
@@ -99,12 +127,22 @@ elif args.dataset == 'vimeo90k':
                 inf_seq += 1
                 inf_frm += len(result_ori) - len(result)
         ave = np.mean(ave)
-        print(tar_name + f': {ave:.4f} dB')
+        print(f'{tag}: {ave:.4f} dB')
 
         for idx in range(nfrms):
             result = [r for r in results[idx] if not math.isinf(r)]
             print(f'* im{idx+1}: {np.mean(result):.4f} dB')
 
         if inf_frm:
-            print(f'(ignore {inf_frm} frame(s) in {inf_seq} sequence(s)'
-                  ' with inf PSNR)')
+            print(f'Ignored {inf_frm} frame(s) in {inf_seq} sequence(s)'
+                  ' with inf PSNR.')
+
+else:
+    for tag in ['out', 'lq']:
+        results = []
+        for img_paths in tqdm(imgs_paths, ncols=0):
+            src = cv2.imread(img_paths['gt_path'])
+            tar = cv2.imread(img_paths[f'{tag}_path'])
+            psnr = cal_psnr(src, tar, crop_border=args.crop_boarder)
+            results.append(psnr)
+        print(f'ave. PSNR ({tag}): {sum(results) / len(results):.4f} dB')
