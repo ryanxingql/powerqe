@@ -6,7 +6,7 @@ import os.path as osp
 import mmcv
 import numpy as np
 import torch
-from mmedit.core import psnr, ssim, tensor2img
+from mmedit.core import tensor2img
 from mmedit.models import BasicRestorer
 
 from ..registry import MODELS
@@ -18,9 +18,8 @@ class BasicQERestorer(BasicRestorer):
     """Basic restorer for quality enhancement.
 
     Differences to BasicRestorer:
-        Support LQ vs. GT evaluation. See evaluate.
-        Support saving GT and LQ. See forward_test.
         Support unfolding testing. See forward_test.
+        Support de-normalization for image saving.
 
     Args:
         generator (dict): Config for the generator structure.
@@ -29,7 +28,6 @@ class BasicQERestorer(BasicRestorer):
         test_cfg (dict): Config for testing. Default: None.
         pretrained (str): Path for pretrained model. Default: None.
     """
-    supported_metrics = {'PSNR': psnr, 'SSIM': ssim}
 
     def __init__(self,
                  generator,
@@ -42,38 +40,6 @@ class BasicQERestorer(BasicRestorer):
                          train_cfg=train_cfg,
                          test_cfg=test_cfg,
                          pretrained=pretrained)
-
-    def evaluate(self, metrics, output, gt, lq):
-        """Evaluation.
-
-        Args:
-            metrics (list): List of evaluation metrics.
-            output (Tensor): Model output with the shape of (N=1, C, H, W).
-            gt (Tensor): GT image with the shape of (N=1, C, H, W).
-            lq (Tensor): LQ image with the shape of (N=1, C, H, W).
-
-        Returns:
-            dict: Evaluation results.
-        """
-        crop_border = self.test_cfg.get('crop_border', 0)
-
-        output = tensor2img(output)
-        gt = tensor2img(gt)
-        lq = tensor2img(lq)
-
-        eval_result = dict()
-        for metric in metrics:
-            if metric not in self.supported_metrics:
-                raise ValueError(
-                    f'Supported metrics include "{self.supported_metrics}";'
-                    f' received "{metric}".')
-
-            eval_result[metric] = self.supported_metrics[metric](output, gt,
-                                                                 crop_border)
-            eval_result[metric + '_baseline'] = self.supported_metrics[metric](
-                lq, gt, crop_border)
-
-        return eval_result
 
     def forward_test(self,
                      lq,
@@ -148,7 +114,7 @@ class BasicQERestorer(BasicRestorer):
         else:
             output = self.generator(lq)
 
-        # denormalize before image saving and evaluation
+        # de-normalize before image saving and evaluation
         if 'denormalize' in self.test_cfg:
             device = output.device
             mean = torch.tensor(self.test_cfg['denormalize']['mean']).view(
@@ -156,7 +122,6 @@ class BasicQERestorer(BasicRestorer):
             std = torch.tensor(self.test_cfg['denormalize']['std']).view(
                 1, -1, 1, 1).to(device)
             output = output * std + mean
-            lq = lq * std + mean
             gt = gt * std + mean
 
         # save image
@@ -168,41 +133,22 @@ class BasicQERestorer(BasicRestorer):
             lq_name = osp.splitext(osp.basename(lq_path))[0]
             save_subpath = lq_name + '.png'
 
-            save_gt_lq = self.test_cfg.get('save_gt_lq', True)
             if isinstance(iteration, numbers.Number):  # val during training
-                if not save_gt_lq:
-                    save_path_output = osp.join(save_path, f'{iteration + 1}',
-                                                save_subpath)
-                else:
-                    save_path_output = osp.join(save_path, f'{iteration + 1}',
-                                                'output', save_subpath)
-                    save_path_lq = osp.join(save_path, f'{iteration + 1}',
-                                            'lq', save_subpath)
-                    save_path_gt = osp.join(save_path, f'{iteration + 1}',
-                                            'gt', save_subpath)
+                save_path = osp.join(save_path, f'{iteration + 1}',
+                                     save_subpath)
             elif iteration is None:  # testing
-                if not save_gt_lq:
-                    save_path_output = osp.join(save_path, save_subpath)
-                else:
-                    save_path_output = osp.join(save_path, 'output',
-                                                save_subpath)
-                    save_path_lq = osp.join(save_path, 'lq', save_subpath)
-                    save_path_gt = osp.join(save_path, 'gt', save_subpath)
+                save_path = osp.join(save_path, save_subpath)
             else:
                 raise TypeError('"iteration" should be a number or None;'
                                 f' received "{type(iteration)}".')
 
-            mmcv.imwrite(tensor2img(output), save_path_output)
-            if save_gt_lq:
-                mmcv.imwrite(tensor2img(lq), save_path_lq)
-                mmcv.imwrite(tensor2img(gt), save_path_gt)
+            mmcv.imwrite(tensor2img(output), save_path)
 
         # evaluation
         if 'metrics' not in self.test_cfg:
             raise ValueError(
                 'metrics should be provided in test_cfg for evaluation.')
-        results = dict(eval_result=self.evaluate(
-            metrics=self.test_cfg['metrics'], output=output, gt=gt, lq=lq))
+        results = dict(eval_result=self.evaluate(output=output, gt=gt))
         return results
 
 
@@ -211,7 +157,6 @@ class BasicVQERestorer(BasicRestorer):
     """Basic restorer for video quality enhancement.
 
     Differences to BasicRestorer:
-        Support LQ vs. GT testing.
         Support sequence LQ and sequence/center GT. See forward_test.
         Support parameter fix for some iters. See train_step.
 
@@ -224,7 +169,6 @@ class BasicVQERestorer(BasicRestorer):
         center_gt (bool): Only the center GT is provided and evaluated.
             Default: False.
     """
-    supported_metrics = {'PSNR': psnr, 'SSIM': ssim}
 
     def __init__(self,
                  generator,
@@ -279,7 +223,7 @@ class BasicVQERestorer(BasicRestorer):
 
         return outputs
 
-    def evaluate(self, metrics, output, gt, lq):
+    def evaluate(self, metrics, output, gt):
         """Evaluation.
 
         Args:
@@ -288,12 +232,11 @@ class BasicVQERestorer(BasicRestorer):
                 or (C, H, W).
             gt (Tensor): GT images with the shape of (T!=1, C, H, W)
                 or (C, H, W).
-            lq (Tensor): LQ images with the shape of (T, C, H, W).
 
         Returns:
             dict: Evaluation results.
         """
-        T = lq.shape[0]
+        T = gt.shape[0]
         if self.center_gt and (T % 2 == 0):
             raise ValueError('Number of output frames should be odd.')
 
@@ -301,13 +244,13 @@ class BasicVQERestorer(BasicRestorer):
         eval_result = dict()
 
         for metric in metrics:
-            if metric not in self.supported_metrics:
+            if metric not in self.allowed_metrics:
                 raise ValueError(
-                    f'Supported metrics include "{self.supported_metrics}";'
+                    f'Supported metrics include "{self.allowed_metrics}";'
                     f' received "{metric}".')
-            eval_func = self.supported_metrics[metric]
+            eval_func = self.allowed_metrics[metric]
 
-            results = dict(lq=[], output=[])
+            results = []
             for it in range(T):
                 if self.center_gt and (it != (T // 2)):
                     continue
@@ -318,16 +261,10 @@ class BasicVQERestorer(BasicRestorer):
                 else:
                     gt_it = tensor2img(gt[it])
                     output_it = tensor2img(output[it])
-                lq_it = tensor2img(lq[it])
 
                 result = eval_func(output_it, gt_it, crop_border)
-                results['output'].append(result)
-
-                result = eval_func(lq_it, gt_it, crop_border)
-                results['lq'].append(result)
-
-            eval_result[metric] = np.mean(results['output'])
-            eval_result[metric + '_baseline'] = np.mean(results['lq'])
+                results.append(result)
+            eval_result[metric] = np.mean(results)
 
         return eval_result
 
@@ -382,7 +319,6 @@ class BasicVQERestorer(BasicRestorer):
 
         assert lq.shape[0] == 1, ('Only one sample is allowed per batch to'
                                   ' squeeze the first dim.')
-        lq = lq.squeeze(0)  # (T, C, H, W)
         gt = gt.squeeze(0)  # (T, C, H, W) or (C, H, W)
         output = output.squeeze(0)  # (T, C, H, W) or (C, H, W)
 
@@ -393,7 +329,6 @@ class BasicVQERestorer(BasicRestorer):
                 1, -1, 1, 1).to(device)
             std = torch.tensor(self.test_cfg['denormalize']['std']).view(
                 1, -1, 1, 1).to(device)
-            lq = lq * std + mean
             if gt.dim() == 3:
                 mean = torch.tensor(self.test_cfg['denormalize']['mean']).view(
                     -1, 1, 1).to(device)
@@ -414,7 +349,6 @@ class BasicVQERestorer(BasicRestorer):
                 save_dir = '/'.join(key.split('/')[:-1])
                 save_names = key.split('/')[-1].split(',')
 
-            save_gt_lq = self.test_cfg.get('save_gt_lq', True)
             for it in range(T):  # note: T is the input lq idx
                 if self.center_gt:  # save only the center frame
                     if it != (T // 2):
@@ -424,45 +358,23 @@ class BasicVQERestorer(BasicRestorer):
 
                 if isinstance(iteration,
                               numbers.Number):  # val during training
-                    if not save_gt_lq:
-                        save_path_output = osp.join(save_path,
-                                                    f'{iteration + 1}',
-                                                    save_subpath)
-                    else:
-                        save_path_output = osp.join(save_path,
-                                                    f'{iteration + 1}',
-                                                    'output', save_subpath)
-                        save_path_lq = osp.join(save_path, f'{iteration + 1}',
-                                                'lq', save_subpath)
-                        save_path_gt = osp.join(save_path, f'{iteration + 1}',
-                                                'gt', save_subpath)
+                    save_path = osp.join(save_path, f'{iteration + 1}',
+                                         save_subpath)
                 elif iteration is None:  # testing
-                    if not save_gt_lq:
-                        save_path_output = osp.join(save_path, save_subpath)
-                    else:
-                        save_path_output = osp.join(save_path, 'output',
-                                                    save_subpath)
-                        save_path_lq = osp.join(save_path, 'lq', save_subpath)
-                        save_path_gt = osp.join(save_path, 'gt', save_subpath)
+                    save_path = osp.join(save_path, save_subpath)
                 else:
                     raise TypeError('"iteration" should be a number or None;'
                                     f' received "{type(iteration)}".')
 
                 if self.center_gt:
-                    mmcv.imwrite(tensor2img(output), save_path_output)
+                    mmcv.imwrite(tensor2img(output), save_path)
                 else:
-                    mmcv.imwrite(tensor2img(output[it]), save_path_output)
-                if save_gt_lq:
-                    mmcv.imwrite(tensor2img(lq[it]), save_path_lq)
-                    if self.center_gt:
-                        mmcv.imwrite(tensor2img(gt), save_path_gt)
-                    else:
-                        mmcv.imwrite(tensor2img(gt[it]), save_path_gt)
+                    mmcv.imwrite(tensor2img(output[it]), save_path)
 
         # evaluation
         if 'metrics' not in self.test_cfg:
             raise ValueError(
                 'metrics should be provided in "test_cfg" for evaluation.')
         results = dict(eval_result=self.evaluate(
-            metrics=self.test_cfg['metrics'], output=output, gt=gt, lq=lq))
+            metrics=self.test_cfg['metrics'], output=output, gt=gt))
         return results

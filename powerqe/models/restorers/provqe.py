@@ -121,7 +121,6 @@ class ProVQERestorer(BasicVQERestorer):
         # inference
         output = self.generator(lq, key_frms)
 
-        lq = lq.squeeze(0)  # (T, C, H, W)
         gt = gt.squeeze(0)  # (T, C, H, W) or (C, H, W)
         output = output.squeeze(0)  # (T, C, H, W) or (C, H, W)
 
@@ -137,7 +136,6 @@ class ProVQERestorer(BasicVQERestorer):
                 save_dir = '/'.join(key.split('/')[:-1])
                 save_names = key.split('/')[-1].split(',')
 
-            save_gt_lq = self.test_cfg.get('save_gt_lq', True)
             for it in range(T):  # note: T is the input lq idx
                 if self.center_gt:  # save only the center frame
                     if it != (T // 2):
@@ -147,45 +145,23 @@ class ProVQERestorer(BasicVQERestorer):
 
                 if isinstance(iteration,
                               numbers.Number):  # val during training
-                    if not save_gt_lq:
-                        save_path_output = osp.join(save_path,
-                                                    f'{iteration + 1}',
-                                                    save_subpath)
-                    else:
-                        save_path_output = osp.join(save_path,
-                                                    f'{iteration + 1}',
-                                                    'output', save_subpath)
-                        save_path_lq = osp.join(save_path, f'{iteration + 1}',
-                                                'lq', save_subpath)
-                        save_path_gt = osp.join(save_path, f'{iteration + 1}',
-                                                'gt', save_subpath)
+                    save_path = osp.join(save_path, f'{iteration + 1}',
+                                         save_subpath)
                 elif iteration is None:  # testing
-                    if not save_gt_lq:
-                        save_path_output = osp.join(save_path, save_subpath)
-                    else:
-                        save_path_output = osp.join(save_path, 'output',
-                                                    save_subpath)
-                        save_path_lq = osp.join(save_path, 'lq', save_subpath)
-                        save_path_gt = osp.join(save_path, 'gt', save_subpath)
+                    save_path = osp.join(save_path, save_subpath)
                 else:
                     raise TypeError('"iteration" should be a number or None;'
                                     f' received "{type(iteration)}".')
 
                 if self.center_gt:
-                    mmcv.imwrite(tensor2img(output), save_path_output)
+                    mmcv.imwrite(tensor2img(output), save_path)
                 else:
-                    mmcv.imwrite(tensor2img(output[it]), save_path_output)
-                if save_gt_lq:
-                    mmcv.imwrite(tensor2img(lq[it]), save_path_lq)
-                    if self.center_gt:
-                        mmcv.imwrite(tensor2img(gt), save_path_gt)
-                    else:
-                        mmcv.imwrite(tensor2img(gt[it]), save_path_gt)
+                    mmcv.imwrite(tensor2img(output[it]), save_path)
 
         # evaluation
         if 'metrics' not in self.test_cfg:
             raise ValueError(
                 'metrics should be provided in "test_cfg" for evaluation.')
         results = dict(eval_result=self.evaluate(
-            metrics=self.test_cfg['metrics'], output=output, gt=gt, lq=lq))
+            metrics=self.test_cfg['metrics'], output=output, gt=gt))
         return results

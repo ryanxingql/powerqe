@@ -24,13 +24,18 @@ norm_cfg = dict(mean=[0, 0, 0], std=[1, 1, 1])
 test_cfg = dict(denormalize=norm_cfg)
 
 train_pipeline = [
-    dict(type='LoadImageFromFileListMultiKeys',
+    dict(type='LoadImageFromFileList',
          io_backend='disk',
-         keys=['lq', 'gt'],
+         key='lq',
+         channel_order='rgb'),
+    dict(type='LoadImageFromFileList',
+         io_backend='disk',
+         key='gt',
          channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
     dict(type='Normalize', keys=['lq', 'gt'], **norm_cfg),
-    dict(type='PairedRandomCropQE', patch_size=128, keys=['lq', 'gt']),
+    dict(type='PairedRandomCrop',
+         gt_patch_size=256),  # keys must be 'lq' and 'gt'
     dict(type='Flip',
          keys=['lq', 'gt'],
          flip_ratio=0.5,
@@ -41,9 +46,13 @@ train_pipeline = [
     dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path'])
 ]
 test_pipeline = [
-    dict(type='LoadImageFromFileListMultiKeys',
+    dict(type='LoadImageFromFileList',
          io_backend='disk',
-         keys=['lq', 'gt'],
+         key='lq',
+         channel_order='rgb'),
+    dict(type='LoadImageFromFileList',
+         io_backend='disk',
+         key='gt',
          channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
     dict(type='Normalize', keys=['lq', 'gt'], **norm_cfg),

@@ -2,12 +2,13 @@
 import os
 import os.path as osp
 
-from .paired_same_size_image_dataset import PairedSameSizeImageDataset
+from mmedit.datasets import SRFolderDataset
+
 from .registry import DATASETS
 
 
 @DATASETS.register_module()
-class PairedSameSizeVideoDataset(PairedSameSizeImageDataset):
+class PairedSameSizeVideoDataset(SRFolderDataset):
     """Paired video dataset. GT and LQ are with the same size.
 
     Differences to PairedSameSizeImageDataset:
