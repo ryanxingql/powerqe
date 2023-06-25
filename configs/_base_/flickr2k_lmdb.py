@@ -1,7 +1,7 @@
 _base_ = ['flickr2k.py']
 
-train_lq_folder = 'data/flickr2k_lq_train_patches_lmdb/bpg/qp37.lmdb'
-train_gt_folder = 'data/flickr2k_train_patches.lmdb'
+train_lq_folder = 'data/flickr2k_lq_patches_lmdb/bpg/qp37/train.lmdb'
+train_gt_folder = 'data/flickr2k_patches_lmdb/train.lmdb'
 
 train_pipeline = [
     dict(type='LoadImageFromFile',

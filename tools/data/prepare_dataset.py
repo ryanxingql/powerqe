@@ -369,8 +369,8 @@ if __name__ == '__main__':
             dict(n_thread=args.n_thread,
                  compression_level=args.compression_level,
                  img_list=gt_list,
-                 save_folder='data/flickr2k_train_patches',
-                 lmdb_folder='data/flickr2k_train_patches.lmdb',
+                 save_folder='data/flickr2k_patches/train',
+                 lmdb_folder='data/flickr2k_patches_lmdb/train.lmdb',
                  crop_size=args.crop_size,
                  step=args.step,
                  thresh_size=args.thresh_size,
@@ -378,9 +378,9 @@ if __name__ == '__main__':
             dict(n_thread=args.n_thread,
                  compression_level=args.compression_level,
                  img_list=lq_list,
-                 save_folder='data/flickr2k_lq_train_patches/bpg/qp37',
-                 lmdb_folder=('data/flickr2k_lq_train_patches_lmdb/bpg'
-                              '/qp37.lmdb'),
+                 save_folder='data/flickr2k_lq_patches/bpg/qp37/train',
+                 lmdb_folder=('data/flickr2k_lq_patches_lmdb/bpg/qp37'
+                              '/train.lmdb'),
                  crop_size=args.crop_size,
                  step=args.step,
                  thresh_size=args.thresh_size,
