@@ -1,4 +1,6 @@
-# RyanXingQL @2022
+"""
+Author: RyanXingQL
+"""
 from .builder import build_dataset
 from .paired_same_size_video_dataset import (
     PairedSameSizeVideoDataset, PairedSameSizeVideoKeyAnnotationsDataset,

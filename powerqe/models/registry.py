@@ -1,4 +1,6 @@
-# RyanXingQL @2022
+"""
+Author: RyanXingQL
+"""
 from mmedit.models import MODELS as MMEDIT_MODELS
 
 MODELS = MMEDIT_MODELS

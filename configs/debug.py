@@ -1,4 +1,4 @@
-_base_ = ['san_div2k.py']
+_base_ = ['rbqe_non_blind_flickr2k_lmdb.py']
 
 exp_name = 'debug'
 

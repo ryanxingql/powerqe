@@ -1,4 +1,6 @@
-# RyanXingQL @2023
+"""
+Author: RyanXingQL
+"""
 import torch
 import torch.nn as nn
 from mmedit.models.backbones.sr_backbones.basicvsr_net import SPyNet

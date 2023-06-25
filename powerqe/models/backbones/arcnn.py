@@ -1,4 +1,6 @@
-# RyanXingQL @2022
+"""
+Author: RyanXingQL
+"""
 import torch.nn as nn
 
 from ..registry import BACKBONES

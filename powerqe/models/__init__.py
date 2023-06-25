@@ -1,4 +1,6 @@
-# RyanXingQL @2022
+"""
+Author: RyanXingQL
+"""
 from .backbones import (ARCNN, DCAD, RBQE, RDNQE, SAN, CBDNet, DnCNN,
                         EDVRNetQE, MFQEv2, MPRNet, RRDBNetQE, STDFNet, UNet)
 from .builder import build_backbone, build_component, build_loss, build_model

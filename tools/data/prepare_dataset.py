@@ -220,7 +220,7 @@ def make_lmdb(data_path,
                              callback=callback)
         pool.close()
         pool.join()
-        print(f'Finish reading {len(img_path_list)} images.')
+        print(f'\nFinish reading {len(img_path_list)} images.')
 
     # create lmdb environment
     # obtain data size for one image

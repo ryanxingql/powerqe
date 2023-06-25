@@ -1,5 +1,8 @@
-# Copyright (c) OpenMMLab. All rights reserved.
-# Modified by RyanXingQL @2022
+"""Copyright (c) OpenMMLab.
+
+All rights reserved.
+Author: RyanXingQL
+"""
 import numbers
 import os.path as osp
 

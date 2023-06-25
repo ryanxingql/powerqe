@@ -1,5 +1,7 @@
-# mmediting/configs/restorers/basicvsr_plusplus/
-# basicvsr_plusplus_c64n7_8x1_600k_reds4
+"""
+Ref: mmediting/configs/restorers/basicvsr_plusplus
+/basicvsr_plusplus_c64n7_8x1_600k_reds4.py
+"""
 _base_ = ['_base_/runtime.py', '_base_/vimeo90k_septuplet.py']
 
 exp_name = 'basicvsr_plus_plus_vimeo90k_septuplet'

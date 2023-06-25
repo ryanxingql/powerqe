@@ -1,4 +1,6 @@
-# RyanXingQL @2023
+"""
+Author: RyanXingQL
+"""
 import argparse
 import multiprocessing as mp
 import os

@@ -1,4 +1,7 @@
-# RyanXingQL @2023
+"""
+Author: RyanXingQL
+"""
+
 import os
 import os.path as osp
 

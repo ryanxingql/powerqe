@@ -1,4 +1,6 @@
-# RyanXingQL @2023
+"""
+Author: RyanXingQL
+"""
 import torch
 import torch.nn.functional as F
 from mmedit.models import BasicVSRPlusPlus

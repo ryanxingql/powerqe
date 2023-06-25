@@ -1,14 +1,16 @@
-# Ref: "https://github.com/daitao/SAN/blob/master/TestCode/code/model/san.py"
-# Modified by RyanXingQL @2022
-#
-# Part of this code:
-# @file: MPNCOV.py
-# @author: Jiangtao Xie
-# @author: Peihua Li
+"""
+Source: https://github.com/daitao/SAN/blob/master/TestCode/code/model/san.py
+Author: RyanXingQL
 
-# Copyright (C) 2018 Peihua Li and Jiangtao Xie
+Part of this code:
+@file: MPNCOV.py
+@author: Jiangtao Xie
+@author: Peihua Li
 
-# All rights reserved.
+Copyright (C) 2018 Peihua Li and Jiangtao Xie
+
+All rights reserved.
+"""
 import math
 
 import torch
