@@ -1,8 +1,9 @@
-# RyanXingQL @2022
-from .backbones import (ARCNN, DCAD, RBQE, RDNQE, SAN, CBDNet, DnCNN,
-                        EDVRNetQE, MFQEv2, MPRNet, RRDBNetQE, STDFNet, UNet)
+"""
+Author: RyanXingQL
+"""
+from .backbones import *  # noqa: F401, F403
 from .builder import build_backbone, build_component, build_loss, build_model
-from .losses import PerceptualLossGray
+from .losses import *  # noqa: F401, F403
 from .registry import BACKBONES, COMPONENTS, LOSSES, MODELS
 from .restorers import (BasicQERestorer, BasicVQERestorer, ESRGANRestorer,
                         ProVQERestorer)
@@ -16,22 +17,8 @@ __all__ = [
     'COMPONENTS',
     'LOSSES',
     'MODELS',
-    'ARCNN',
-    'CBDNet',
-    'DCAD',
-    'DnCNN',
-    'EDVRNetQE',
-    'MFQEv2',
-    'MPRNet',
-    'RBQE',
-    'RDNQE',
-    'RRDBNetQE',
-    'SAN',
-    'STDFNet',
-    'UNet',
     'BasicQERestorer',
     'BasicVQERestorer',
     'ESRGANRestorer',
     'ProVQERestorer',
-    'PerceptualLossGray',
 ]

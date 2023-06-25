@@ -1,10 +1,15 @@
 train_pipeline = [
-    dict(type='LoadImageFromFileMultiKeys',
+    dict(type='LoadImageFromFile',
          io_backend='disk',
-         keys=['lq', 'gt'],
+         key='lq',
+         channel_order='rgb'),
+    dict(type='LoadImageFromFile',
+         io_backend='disk',
+         key='gt',
          channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
-    dict(type='PairedRandomCropQE', patch_size=128, keys=['lq', 'gt']),
+    dict(type='PairedRandomCrop',
+         gt_patch_size=128),  # keys must be 'lq' and 'gt'
     dict(type='Flip',
          keys=['lq', 'gt'],
          flip_ratio=0.5,
@@ -15,9 +20,13 @@ train_pipeline = [
     dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path'])
 ]
 test_pipeline = [
-    dict(type='LoadImageFromFileMultiKeys',
+    dict(type='LoadImageFromFile',
          io_backend='disk',
-         keys=['lq', 'gt'],
+         key='lq',
+         channel_order='rgb'),
+    dict(type='LoadImageFromFile',
+         io_backend='disk',
+         key='gt',
          channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
     dict(type='ImageToTensor', keys=['lq', 'gt']),
@@ -29,7 +38,8 @@ ngpus = 1
 assert batchsize % ngpus == 0, ('Samples in a batch should better be evenly'
                                 ' distributed among all GPUs.')
 batchsize_gpu = batchsize // ngpus
-dataset_type = 'PairedSameSizeImageDataset'
+
+dataset_type = 'SRAnnotationDataset'
 data = dict(workers_per_gpu=batchsize_gpu,
             train_dataloader=dict(samples_per_gpu=batchsize_gpu,
                                   drop_last=True),
@@ -41,18 +51,21 @@ data = dict(workers_per_gpu=batchsize_gpu,
                            type=dataset_type,
                            lq_folder='data/flickr2k_lq/bpg/qp37',
                            gt_folder='data/flickr2k',
-                           pipeline=train_pipeline,
                            ann_file='data/flickr2k_lq/bpg/qp37/train.txt',
+                           pipeline=train_pipeline,
+                           scale=1,
                            test_mode=False)),
             val=dict(type=dataset_type,
                      lq_folder='data/flickr2k_lq/bpg/qp37',
                      gt_folder='data/flickr2k',
-                     pipeline=test_pipeline,
                      ann_file='data/flickr2k_lq/bpg/qp37/test.txt',
+                     pipeline=test_pipeline,
+                     scale=1,
                      test_mode=True),
             test=dict(type=dataset_type,
                       lq_folder='data/flickr2k_lq/bpg/qp37',
                       gt_folder='data/flickr2k',
-                      pipeline=test_pipeline,
                       ann_file='data/flickr2k_lq/bpg/qp37/test.txt',
+                      pipeline=test_pipeline,
+                      scale=1,
                       test_mode=True))

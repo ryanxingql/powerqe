@@ -1,5 +1,8 @@
-# Copyright (c) OpenMMLab. All rights reserved.
-# Modified by RyanXingQL @2023
+"""Copyright (c) OpenMMLab.
+
+All rights reserved.
+Author: RyanXingQL
+"""
 import torch
 from mmedit.models import EDVRNet
 

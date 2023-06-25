@@ -1,5 +1,8 @@
-# Copyright (c) OpenMMLab. All rights reserved.
-# RyanXingQL @2022
+"""Copyright (c) OpenMMLab.
+
+All rights reserved.
+Author: RyanXingQL
+"""
 from .perceptual_loss import PerceptualLossGray
 
 __all__ = [

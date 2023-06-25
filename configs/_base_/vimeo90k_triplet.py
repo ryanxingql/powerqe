@@ -1,10 +1,15 @@
 train_pipeline = [
-    dict(type='LoadImageFromFileListMultiKeys',
+    dict(type='LoadImageFromFileList',
          io_backend='disk',
-         keys=['lq', 'gt'],
+         key='lq',
+         channel_order='rgb'),
+    dict(type='LoadImageFromFileList',
+         io_backend='disk',
+         key='gt',
          channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
-    dict(type='PairedRandomCropQE', patch_size=256, keys=['lq', 'gt']),
+    dict(type='PairedRandomCrop',
+         gt_patch_size=256),  # keys must be 'lq' and 'gt'
     dict(type='Flip',
          keys=['lq', 'gt'],
          flip_ratio=0.5,
@@ -15,9 +20,13 @@ train_pipeline = [
     dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path'])
 ]
 test_pipeline = [
-    dict(type='LoadImageFromFileListMultiKeys',
+    dict(type='LoadImageFromFileList',
          io_backend='disk',
-         keys=['lq', 'gt'],
+         key='lq',
+         channel_order='rgb'),
+    dict(type='LoadImageFromFileList',
+         io_backend='disk',
+         key='gt',
          channel_order='rgb'),
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
     dict(type='FramesToTensor', keys=['lq', 'gt']),
@@ -32,8 +41,7 @@ assert batchsize % ngpus == 0, ('Samples in a batch should better be evenly'
                                 ' distributed among all GPUs.')
 batchsize_gpu = batchsize // ngpus
 
-dataset_type = 'PairedSameSizeVideoDataset'
-center_gt = True
+dataset_type = 'PairedVideoDataset'
 
 dataset_gt_root = 'data/vimeo_triplet'
 dataset_lq_folder = 'data/vimeo_triplet_lq/hm18.0/ldp/qp37'
@@ -54,25 +62,22 @@ data = dict(workers_per_gpu=batchsize_gpu,
                            gt_folder=f'{dataset_gt_root}/sequences',
                            ann_file=f'{dataset_gt_root}/tri_trainlist.txt',
                            pipeline=train_pipeline,
-                           samp_len=-1,
-                           edge_padding=True,
-                           center_gt=center_gt,
-                           test_mode=False)),
+                           scale=1,
+                           test_mode=False,
+                           edge_padding=True)),
             val=dict(type=dataset_type,
                      lq_folder=f'{dataset_lq_folder}',
                      gt_folder=f'{dataset_gt_root}/sequences',
                      ann_file=f'{dataset_gt_root}/tri_validlist.txt',
                      pipeline=test_pipeline,
-                     samp_len=-1,
-                     edge_padding=True,
-                     center_gt=center_gt,
-                     test_mode=True),
+                     scale=1,
+                     test_mode=True,
+                     edge_padding=True),
             test=dict(type=dataset_type,
                       lq_folder=f'{dataset_lq_folder}',
                       gt_folder=f'{dataset_gt_root}/sequences',
                       ann_file=f'{dataset_gt_root}/tri_testlist.txt',
                       pipeline=test_pipeline,
-                      samp_len=-1,
-                      edge_padding=True,
-                      center_gt=center_gt,
-                      test_mode=True))
+                      scale=1,
+                      test_mode=True,
+                      edge_padding=True))

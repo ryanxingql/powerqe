@@ -1,5 +1,7 @@
-# Ref: "https://github.com/swz30/MPRNet/blob/main/Deblurring/MPRNet.py"
-# Modified by RyanXingQL @2022
+"""
+Source: https://github.com/swz30/MPRNet/blob/main/Deblurring/MPRNet.py
+Author: RyanXingQL
+"""
 import torch
 import torch.nn as nn
 import torch.nn.functional as F

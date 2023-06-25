@@ -1,4 +1,6 @@
-# RyanXingQL @2022
+"""
+Author: RyanXingQL
+"""
 from .basic_restorer import BasicQERestorer, BasicVQERestorer
 from .esrgan import ESRGANRestorer
 from .provqe import ProVQERestorer

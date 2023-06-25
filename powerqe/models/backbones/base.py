@@ -1,4 +1,6 @@
-# RyanXingQL @2023
+"""
+Author: RyanXingQL
+"""
 import torch.nn as nn
 from mmcv.runner import load_checkpoint
 from mmedit.utils import get_root_logger

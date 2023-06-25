@@ -1,17 +1,16 @@
-# RyanXingQL @2022
+"""
+Author: RyanXingQL
+"""
 from .builder import build_dataset
-from .paired_same_size_image_dataset import PairedSameSizeImageDataset
-from .paired_same_size_video_dataset import (
-    PairedSameSizeVideoDataset, PairedSameSizeVideoKeyAnnotationsDataset,
-    PairedSameSizeVideoKeyFramesDataset)
-from .registry import DATASETS, PIPELINES
+from .paired_video_dataset import (PairedVideoDataset,
+                                   PairedVideoKeyFramesAnnotationDataset,
+                                   PairedVideoKeyFramesDataset)
+from .registry import DATASETS
 
 __all__ = [
     'DATASETS',
-    'PIPELINES',
     'build_dataset',
-    'PairedSameSizeImageDataset',
-    'PairedSameSizeVideoDataset',
-    'PairedSameSizeVideoKeyFramesDataset',
-    'PairedSameSizeVideoKeyAnnotationsDataset',
+    'PairedVideoDataset',
+    'PairedVideoKeyFramesDataset',
+    'PairedVideoKeyFramesAnnotationDataset',
 ]

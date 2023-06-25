@@ -14,19 +14,20 @@ model = dict(
     pixel_loss=dict(type='CharbonnierLoss', loss_weight=1.0, reduction='mean'),
     center_gt=center_gt)
 
-train_cfg = dict(_delete_=True, fix_iter=5000, fix_module=['spynet'])
+train_cfg = dict(_delete_=True, fix_iter=5000,
+                 fix_module=['spynet'])  # set "_delete_=True" to replace None
 
-dataset_type = 'PairedSameSizeVideoKeyFramesDataset'
+dataset_type = 'PairedVideoKeyFramesDataset'
 key_frames = [1, 0, 1]
 
 data = dict(train=dict(dataset=dict(
-    type=dataset_type, key_frames=key_frames, center_gt=center_gt)),
+    type=dataset_type, center_gt=center_gt, key_frames=key_frames)),
             val=dict(type=dataset_type,
-                     key_frames=key_frames,
-                     center_gt=center_gt),
+                     center_gt=center_gt,
+                     key_frames=key_frames),
             test=dict(type=dataset_type,
-                      key_frames=key_frames,
-                      center_gt=center_gt))
+                      center_gt=center_gt,
+                      key_frames=key_frames))
 
 work_dir = f'work_dirs/{exp_name}'
 find_unused_parameters = True  # for spynet pre-training
