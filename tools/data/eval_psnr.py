@@ -42,7 +42,7 @@ if args.dataset == 'flickr2k':
     keys = []
     with open('data/flickr2k_lq/bpg/qp37/test.txt', 'r') as f:
         for line in f:
-            line = line.strip()
+            line = line.split(' ')[0]
             if not line:
                 continue
             keys.append(line)
