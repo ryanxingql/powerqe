@@ -2,16 +2,7 @@ _base_ = ['_base_/runtime.py', '_base_/div2k.py']
 
 exp_name = 'san_div2k'
 
-params = dict(batchsize=16,
-              ngpus=1,
-              patchsize=48,
-              kiters=300,
-              nchannels=[3, 64],
-              reduction=16,
-              nblocks=10,
-              ngroups=20,
-              kernelsize=3,
-              resscale=1)
+patch_size = 48
 
 model = dict(type='BasicQERestorer',
              generator=dict(type='SAN',
@@ -28,6 +19,31 @@ model = dict(type='BasicQERestorer',
                              loss_weight=1.0,
                              reduction='mean'))
 
-test_cfg = dict(unfolding=dict(patchsize=48, splits=16))  # to save memory
+test_cfg = dict(unfolding=dict(patchsize=patch_size,
+                               splits=16))  # to save memory
+
+train_pipeline = [
+    dict(type='LoadImageFromFile',
+         io_backend='disk',
+         key='lq',
+         channel_order='rgb'),
+    dict(type='LoadImageFromFile',
+         io_backend='disk',
+         key='gt',
+         channel_order='rgb'),
+    dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
+    dict(type='PairedRandomCrop',
+         gt_patch_size=patch_size),  # keys must be 'lq' and 'gt'
+    dict(type='Flip',
+         keys=['lq', 'gt'],
+         flip_ratio=0.5,
+         direction='horizontal'),
+    dict(type='Flip', keys=['lq', 'gt'], flip_ratio=0.5, direction='vertical'),
+    dict(type='RandomTransposeHW', keys=['lq', 'gt'], transpose_ratio=0.5),
+    dict(type='ImageToTensor', keys=['lq', 'gt']),
+    dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path'])
+]
+
+data = dict(train=dict(dataset=dict(pipeline=train_pipeline)))
 
 work_dir = f'work_dirs/{exp_name}'

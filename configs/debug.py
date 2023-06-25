@@ -1,4 +1,4 @@
-_base_ = ['arcnn_flickr2k_lmdb.py']
+_base_ = ['san_div2k.py']
 
 exp_name = 'debug'
 
