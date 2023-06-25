@@ -1,6 +1,6 @@
-# Copyright (c) OpenMMLab. All rights reserved.
-# Modified by RyanXingQL @2022
-"""According to SRLmdbDataset, each line in the meta should be like:
+"""Prepare training patches and make LMDB for multiple datasets.
+
+According to SRLmdbDataset, each line in the meta should be like:
 `baboon.png (120,125,3) 1`, which means: 1) image name (with extension):
 baboon.png; 2) image shape: (120,125,3); and 3) compression level: 1. Also, it
 records the image name without extension as the 'lq_path', which is used in
@@ -9,6 +9,10 @@ should be image names without extension.
 
 Each line in the txt file records 1)image name (with extension), 2)image shape,
 and 3)compression level, separated by a white space.
+
+Source: mmediting/tools/data/super-resolution/div2k/preprocess_div2k_dataset.py
+Copyright (c) OpenMMLab. All rights reserved.
+Modified by RyanXingQL @2022.
 """
 import argparse
 import os
@@ -282,7 +286,8 @@ def read_img_worker(path, key, compress_level):
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description='Prepare training patches and make LMDB',
+        description=('Prepare training patches and make LMDB'
+                     ' for multiple datasets.'),
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--dataset',
                         help='dataset name',
