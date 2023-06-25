@@ -19,7 +19,9 @@ model = dict(
     pixel_loss=dict(type='CharbonnierLoss', loss_weight=1.0, reduction='mean'),
     center_gt=center_gt)
 
-train_cfg = dict(_delete_=True, fix_iter=5000, fix_module=['edvr', 'spynet'])
+train_cfg = dict(_delete_=True, fix_iter=5000,
+                 fix_module=['edvr',
+                             'spynet'])  # set "_delete_=True" to replace None
 
 data = dict(train=dict(dataset=dict(edge_padding=False, center_gt=center_gt)),
             val=dict(edge_padding=False, center_gt=center_gt),

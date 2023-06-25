@@ -19,7 +19,7 @@ class ProVQERestorer(BasicVQERestorer):
     """ProVQE restorer.
 
     Differences to BasicVQERestorer:
-        Require key_frms in meta. See forward.
+        Require "key_frms" in meta. See forward.
 
     Args:
         generator (dict): Config for the generator structure.

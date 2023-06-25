@@ -26,9 +26,11 @@ train_pipeline = [
     dict(type='Collect', keys=['lq', 'gt'], meta_keys=['lq_path', 'gt_path'])
 ]
 
-dataset_type = 'SRLmdbDataset'
-data = dict(train=dict(dataset=dict(type=dataset_type,
-                                    lq_folder=train_lq_folder,
-                                    gt_folder=train_gt_folder,
-                                    pipeline=train_pipeline,
-                                    scale=1)))
+data = dict(train=dict(dataset=dict(
+    _delete_=True,  # to remove "ann_file"
+    type='SRLmdbDataset',
+    lq_folder=train_lq_folder,
+    gt_folder=train_gt_folder,
+    pipeline=train_pipeline,
+    scale=1,
+    test_mode=False)))
