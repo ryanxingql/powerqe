@@ -2,15 +2,15 @@
 Author: RyanXingQL
 """
 from .builder import build_dataset
-from .paired_same_size_video_dataset import (
-    PairedSameSizeVideoDataset, PairedSameSizeVideoKeyAnnotationsDataset,
-    PairedSameSizeVideoKeyFramesDataset)
+from .paired_video_dataset import (PairedVideoDataset,
+                                   PairedVideoKeyFramesAnnotationDataset,
+                                   PairedVideoKeyFramesDataset)
 from .registry import DATASETS
 
 __all__ = [
     'DATASETS',
     'build_dataset',
-    'PairedSameSizeVideoDataset',
-    'PairedSameSizeVideoKeyFramesDataset',
-    'PairedSameSizeVideoKeyAnnotationsDataset',
+    'PairedVideoDataset',
+    'PairedVideoKeyFramesDataset',
+    'PairedVideoKeyFramesAnnotationDataset',
 ]

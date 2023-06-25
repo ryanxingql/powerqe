@@ -43,7 +43,7 @@ test_pipeline = [
          meta_keys=['lq_path', 'gt_path', 'key', 'key_frms'])
 ]
 
-dataset_type = 'PairedSameSizeVideoKeyAnnotationsDataset'
+dataset_type = 'PairedVideoKeyFramesAnnotationDataset'
 key_frames = [1, 0, 1]
 data = dict(train=dict(dataset=dict(
     type=dataset_type, pipeline=train_pipeline, key_frames=key_frames)),

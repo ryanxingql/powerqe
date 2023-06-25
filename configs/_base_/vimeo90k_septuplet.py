@@ -41,48 +41,39 @@ assert batchsize % ngpus == 0, ('Samples in a batch should better be evenly'
                                 ' distributed among all GPUs.')
 batchsize_gpu = batchsize // ngpus
 
-dataset_type = 'PairedSameSizeVideoDataset'
-center_gt = True
+dataset_type = 'PairedVideoDataset'
 
 dataset_gt_root = 'data/vimeo_septuplet'
 dataset_lq_folder = 'data/vimeo_septuplet_lq/hm18.0/ldp/qp37'
 
-# since there are only three frames in a sequence
-# two of which need padding in testing
-# training also use padding
-data = dict(
-    workers_per_gpu=batchsize_gpu,
-    train_dataloader=dict(samples_per_gpu=batchsize_gpu, drop_last=True),
-    val_dataloader=dict(samples_per_gpu=1),
-    test_dataloader=dict(samples_per_gpu=1),
-    train=dict(
-        type='RepeatDataset',
-        times=1000,
-        dataset=dict(
-            type=dataset_type,
-            lq_folder=f'{dataset_lq_folder}',
-            gt_folder=f'{dataset_gt_root}/sequences',
-            ann_file=f'{dataset_gt_root}/sep_trainlist.txt',
-            pipeline=train_pipeline,
-            samp_len=-1,
-            edge_padding=False,  # no need to pad with abundant data
-            center_gt=center_gt,
-            test_mode=False)),
-    val=dict(type=dataset_type,
-             lq_folder=f'{dataset_lq_folder}',
-             gt_folder=f'{dataset_gt_root}/sequences',
-             ann_file=f'{dataset_gt_root}/sep_validlist.txt',
-             pipeline=test_pipeline,
-             samp_len=-1,
-             edge_padding=True,
-             center_gt=center_gt,
-             test_mode=True),
-    test=dict(type=dataset_type,
-              lq_folder=f'{dataset_lq_folder}',
-              gt_folder=f'{dataset_gt_root}/sequences',
-              ann_file=f'{dataset_gt_root}/sep_testlist.txt',
-              pipeline=test_pipeline,
-              samp_len=-1,
-              edge_padding=True,
-              center_gt=center_gt,
-              test_mode=True))
+data = dict(workers_per_gpu=batchsize_gpu,
+            train_dataloader=dict(samples_per_gpu=batchsize_gpu,
+                                  drop_last=True),
+            val_dataloader=dict(samples_per_gpu=1),
+            test_dataloader=dict(samples_per_gpu=1),
+            train=dict(type='RepeatDataset',
+                       times=1000,
+                       dataset=dict(
+                           type=dataset_type,
+                           lq_folder=f'{dataset_lq_folder}',
+                           gt_folder=f'{dataset_gt_root}/sequences',
+                           ann_file=f'{dataset_gt_root}/sep_trainlist.txt',
+                           pipeline=train_pipeline,
+                           scale=1,
+                           test_mode=False)),
+            val=dict(type=dataset_type,
+                     lq_folder=f'{dataset_lq_folder}',
+                     gt_folder=f'{dataset_gt_root}/sequences',
+                     ann_file=f'{dataset_gt_root}/sep_validlist.txt',
+                     pipeline=test_pipeline,
+                     scale=1,
+                     test_mode=True,
+                     edge_padding=True),
+            test=dict(type=dataset_type,
+                      lq_folder=f'{dataset_lq_folder}',
+                      gt_folder=f'{dataset_gt_root}/sequences',
+                      ann_file=f'{dataset_gt_root}/sep_testlist.txt',
+                      pipeline=test_pipeline,
+                      scale=1,
+                      test_mode=True,
+                      edge_padding=True))

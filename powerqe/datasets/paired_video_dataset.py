@@ -5,31 +5,24 @@ Author: RyanXingQL
 import os
 import os.path as osp
 
-from mmedit.datasets import SRFolderDataset
+from mmedit.datasets import SRAnnotationDataset
 
 from .registry import DATASETS
 
 
 @DATASETS.register_module()
-class PairedSameSizeVideoDataset(SRFolderDataset):
-    """Paired video dataset. GT and LQ are with the same size.
+class PairedVideoDataset(SRAnnotationDataset):
+    """Paired video dataset with an annotation file.
 
-    Differences to PairedSameSizeImageDataset:
-        Support video loading. See arguments.
+    Differences to SRAnnotationDataset:
+        Support versatile video loading. See arguments.
 
     Suppose the video sequences are stored as:
 
     powerqe
-    `-- gt_folder
-    `   `-- 001
-    `   `   `-- im1.png
-    `   `   `-- im2.png
-    `   `   `-- ...
-    `   `   `-- im7.png
-    `   `-- 002
-    `   `-- ...
-    `   `-- 100
-    `-- lq_folder
+    `-- {gt,lq}_folder
+        `-- {001,002,...,100}
+            `-- im{1,2,...,7}.png
 
     Then the annotation file should be:
 
@@ -41,20 +34,10 @@ class PairedSameSizeVideoDataset(SRFolderDataset):
     Suppose the video sequences are stored as:
 
     powerqe
-    `-- gt_folder
-    `   `-- 001
-    `   `   `-- 0001
-    `   `   `   `-- im1.png
-    `   `   `   `-- im2.png
-    `   `   `   `-- ...
-    `   `   `   `-- im7.png
-    `   `   `-- 0002
-    `   `   `-- ...
-    `   `   `-- 1000
-    `   `-- 002
-    `   `-- ...
-    `   `-- 100
-    `-- lq_folder
+    `-- {gt,lq}_folder
+        `-- {001,002,...,100}
+            `-- {0001,0002,...,1000}
+                `-- im{1,2,...,7}.png
 
     Then the annotation file should be:
 
@@ -67,11 +50,14 @@ class PairedSameSizeVideoDataset(SRFolderDataset):
     100/1000
 
     Args:
-        gt_folder (str | :obj:Path): GT folder.
         lq_folder (str | :obj:Path): LQ folder.
+        gt_folder (str | :obj:Path): GT folder.
         ann_file (str | :obj:Path): Path to the annotation file.
             Each line records a sequence path relative to the GT/LQ folder.
         pipeline (List[dict | callable]): A list of data transformations.
+        scale (int): Upsampling scale ratio.
+        test_mode (bool): Store True when building test dataset.
+            Default: False.
         samp_len (int): Sample length.
             The default value -1 corresponds to the sequence length.
             Default: -1.
@@ -81,22 +67,18 @@ class PairedSameSizeVideoDataset(SRFolderDataset):
         center_gt (bool): If True, only the center frame is recorded in GT.
             The samp_len is required to be odd.
             Note that gt_path is always a list. Default: False.
-        test_mode (bool): Store True when building test dataset.
-            Default: False.
     """
 
     def __init__(self,
-                 gt_folder,
                  lq_folder,
+                 gt_folder,
                  ann_file,
                  pipeline,
+                 scale,
+                 test_mode=False,
                  samp_len=-1,
                  edge_padding=False,
-                 center_gt=False,
-                 test_mode=False):
-        # must be defined before super().__init__(...)
-        # for load_annotations in super().__init__(...)
-        self.ann_file = ann_file
+                 center_gt=False):
         self.samp_len = samp_len
         self.edge_padding = edge_padding
         self.center_gt = center_gt
@@ -105,6 +87,7 @@ class PairedSameSizeVideoDataset(SRFolderDataset):
                          gt_folder=gt_folder,
                          ann_file=ann_file,
                          pipeline=pipeline,
+                         scale=scale,
                          test_mode=test_mode)
 
     def find_neighboring_frames(self, center_idx, nfrms_left, nfrms_right):
@@ -137,11 +120,14 @@ class PairedSameSizeVideoDataset(SRFolderDataset):
         001/1000/{im1,im2,im3,im4,im5,im6,im7}.png
         ...
 
+        See the image saving function in BasicVQERestorer for reasons.
+
         Returns:
             list[dict]: Each dict records the information for a sub-sequence to
                 serve as a sample in training or testing.
         """
-        # get keys
+        # Get sequence names (keys)
+
         with open(self.ann_file, 'r') as f:
             keys = f.read().split('\n')
             keys = [
@@ -149,9 +135,12 @@ class PairedSameSizeVideoDataset(SRFolderDataset):
             ]
         keys = [key.replace('/', os.sep) for key in keys]
 
+        # Collect sample paths according to the sequence names
+
         data_infos = []
         for key in keys:
-            # get frames (sorted)
+            # Get frame paths (sorted)
+
             gt_seq = osp.join(self.gt_folder, key)
             lq_seq = osp.join(self.lq_folder, key)
             gt_paths = self.scan_folder(gt_seq)
@@ -174,14 +163,17 @@ class PairedSameSizeVideoDataset(SRFolderDataset):
                         f'Cannot find "{lq_path}" in "{lq_seq}".')
                 gt_names.append(gt_name)
 
-            # check
+            # Check
+
             if self.samp_len == -1:
                 self.samp_len = len(
                     gt_paths)  # take the whole sequence as a sample
+
             if self.samp_len > len(gt_paths):
                 raise ValueError(
                     f'The sample length ({self.samp_len}) should not be'
                     f' larger than the sequence length ({len(gt_paths)}).')
+
             if hasattr(self, 'seq_len'):
                 if len(gt_paths) != self.seq_len:
                     raise ValueError(
@@ -190,12 +182,14 @@ class PairedSameSizeVideoDataset(SRFolderDataset):
                         f' {self.seq_len} images.')
             else:
                 self.seq_len = len(gt_paths)  # init
+
             if self.center_gt and (self.samp_len % 2 == 0):
                 raise ValueError(
                     f'The sample length ({self.samp_len}) should be odd'
                     ' when requiring center GT.')
 
-            # record samples
+            # Record samples
+
             idxs = list(range(self.seq_len))
             nfrms_left = self.samp_len // 2
             nfrms_right = self.samp_len - nfrms_left - 1
@@ -203,6 +197,7 @@ class PairedSameSizeVideoDataset(SRFolderDataset):
                 center_idxs = idxs
             else:
                 center_idxs = idxs[nfrms_left:(-nfrms_right)]
+
             for center_idx in center_idxs:
                 lq_idxs = self.find_neighboring_frames(center_idx, nfrms_left,
                                                        nfrms_right)
@@ -210,6 +205,7 @@ class PairedSameSizeVideoDataset(SRFolderDataset):
                     gt_idxs = [center_idx]
                 else:
                     gt_idxs = lq_idxs
+
                 samp_gt_paths = [gt_paths[idx] for idx in gt_idxs]
                 samp_lq_paths = [
                     osp.join(lq_seq, gt_names[idx]) for idx in lq_idxs
@@ -225,27 +221,20 @@ class PairedSameSizeVideoDataset(SRFolderDataset):
 
 
 @DATASETS.register_module()
-class PairedSameSizeVideoKeyFramesDataset(PairedSameSizeVideoDataset):
-    """Paired video dataset with neighboring key frames. GT and LQ are with the
-    same size.
+class PairedVideoKeyFramesDataset(PairedVideoDataset):
+    """Paired video dataset with an annotation file. Return the paths of
+    neighboring key frames.
 
-    Differences to PairedSameSizeVideoDataset:
+    Differences to PairedVideoAnnotationDataset:
         Use high-quality key frames instead of neighboring frames.
-            See load_annotations.
+            See "find_neighboring_frames".
 
     Suppose the video sequences are stored as:
 
     powerqe
-    `-- gt_folder
-    `   `-- 001
-    `   `   `-- im1.png
-    `   `   `-- im2.png
-    `   `   `-- ...
-    `   `   `-- im7.png
-    `   `-- 002
-    `   `-- ...
-    `   `-- 100
-    `-- lq_folder
+    `-- {gt,lq}_folder
+        `-- {001,002,...,100}
+            `-- im{1,2,...,7}.png
 
     Then the annotation file should be:
 
@@ -257,20 +246,10 @@ class PairedSameSizeVideoKeyFramesDataset(PairedSameSizeVideoDataset):
     Suppose the video sequences are stored as:
 
     powerqe
-    `-- gt_folder
-    `   `-- 001
-    `   `   `-- 0001
-    `   `   `   `-- im1.png
-    `   `   `   `-- im2.png
-    `   `   `   `-- ...
-    `   `   `   `-- im7.png
-    `   `   `-- 0002
-    `   `   `-- ...
-    `   `   `-- 1000
-    `   `-- 002
-    `   `-- ...
-    `   `-- 100
-    `-- lq_folder
+    `-- {gt,lq}_folder
+        `-- {001,002,...,100}
+            `-- {0001,0002,...,1000}
+                `-- im{1,2,...,7}.png
 
     Then the annotation file should be:
 
@@ -283,11 +262,14 @@ class PairedSameSizeVideoKeyFramesDataset(PairedSameSizeVideoDataset):
     100/1000
 
     Args:
-        gt_folder (str | :obj:Path): GT folder.
         lq_folder (str | :obj:Path): LQ folder.
+        gt_folder (str | :obj:Path): GT folder.
         ann_file (str | :obj:Path): Path to the annotation file.
             Each line records a sequence path relative to the GT/LQ folder.
         pipeline (List[dict | callable]): A list of data transformations.
+        scale (int): Upsampling scale ratio.
+        test_mode (bool): Store True when building test dataset.
+            Default: False.
         samp_len (int): Sample length.
             The default value -1 corresponds to the sequence length.
             Default: -1.
@@ -298,41 +280,42 @@ class PairedSameSizeVideoKeyFramesDataset(PairedSameSizeVideoDataset):
             The samp_len is required to be odd.
             Note that gt_path is always a list. Default: False.
         key_frames (list): Key-frame annotation for a sequence.
-            1 denotes key frames; 0 denotes non-key frames.
+            "1" denotes key frames; "0" denotes non-key frames.
             See the document for more details.
-        test_mode (bool): Store True when building test dataset.
-            Default: False.
     """
 
     def __init__(self,
-                 gt_folder,
                  lq_folder,
+                 gt_folder,
                  ann_file,
                  pipeline,
+                 scale,
+                 test_mode=False,
                  samp_len=-1,
                  edge_padding=False,
                  center_gt=False,
-                 key_frames=[1, 0, 1, 0, 1, 0, 1],
-                 test_mode=False):
-        # Must be defined before super().__init__(...)
-        # for load_annotations in super().__init__(...).
+                 key_frames=[1, 0, 1, 0, 1, 0, 1]):
         self.key_frames = key_frames
-        super().__init__(gt_folder=gt_folder,
-                         lq_folder=lq_folder,
+        super().__init__(lq_folder=lq_folder,
+                         gt_folder=gt_folder,
                          ann_file=ann_file,
                          pipeline=pipeline,
+                         scale=scale,
+                         test_mode=test_mode,
                          samp_len=samp_len,
                          edge_padding=edge_padding,
-                         center_gt=center_gt,
-                         test_mode=test_mode)
+                         center_gt=center_gt)
 
     def find_neighboring_frames(self, center_idx, nfrms_left, nfrms_right):
-        # check
+        # Check
+
         if len(self.key_frames) != self.seq_len:
             raise ValueError(
                 f'The sequence length ({self.seq_len}) should be equal to'
                 ' that of the key-frame annotation'
                 f' ({len(self.key_frames)}).')
+
+        # Find neighboring key frames
 
         key_idxs = [
             idx for idx in range(len(self.key_frames)) if self.key_frames[idx]
@@ -362,26 +345,19 @@ class PairedSameSizeVideoKeyFramesDataset(PairedSameSizeVideoDataset):
 
 
 @DATASETS.register_module()
-class PairedSameSizeVideoKeyAnnotationsDataset(PairedSameSizeVideoDataset):
-    """Paired video dataset with key-frame annotation. GT and LQ are with the
-    same size.
+class PairedVideoKeyFramesAnnotationDataset(PairedVideoDataset):
+    """Paired video dataset with an annotation file. Return the annotation of
+    key frames in each sample.
 
-    Differences to PairedSameSizeVideoDataset:
-        Return key-frame annotation.
+    Differences to PairedVideoAnnotationDataset:
+        Return key-frame annotation. See "load_annotations".
 
     Suppose the video sequences are stored as:
 
     powerqe
-    `-- gt_folder
-    `   `-- 001
-    `   `   `-- im1.png
-    `   `   `-- im2.png
-    `   `   `-- ...
-    `   `   `-- im7.png
-    `   `-- 002
-    `   `-- ...
-    `   `-- 100
-    `-- lq_folder
+    `-- {gt,lq}_folder
+        `-- {001,002,...,100}
+            `-- im{1,2,...,7}.png
 
     Then the annotation file should be:
 
@@ -393,20 +369,10 @@ class PairedSameSizeVideoKeyAnnotationsDataset(PairedSameSizeVideoDataset):
     Suppose the video sequences are stored as:
 
     powerqe
-    `-- gt_folder
-    `   `-- 001
-    `   `   `-- 0001
-    `   `   `   `-- im1.png
-    `   `   `   `-- im2.png
-    `   `   `   `-- ...
-    `   `   `   `-- im7.png
-    `   `   `-- 0002
-    `   `   `-- ...
-    `   `   `-- 1000
-    `   `-- 002
-    `   `-- ...
-    `   `-- 100
-    `-- lq_folder
+    `-- {gt,lq}_folder
+        `-- {001,002,...,100}
+            `-- {0001,0002,...,1000}
+                `-- im{1,2,...,7}.png
 
     Then the annotation file should be:
 
@@ -419,11 +385,14 @@ class PairedSameSizeVideoKeyAnnotationsDataset(PairedSameSizeVideoDataset):
     100/1000
 
     Args:
-        gt_folder (str | :obj:Path): GT folder.
         lq_folder (str | :obj:Path): LQ folder.
+        gt_folder (str | :obj:Path): GT folder.
         ann_file (str | :obj:Path): Path to the annotation file.
             Each line records a sequence path relative to the GT/LQ folder.
         pipeline (List[dict | callable]): A list of data transformations.
+        scale (int): Upsampling scale ratio.
+        test_mode (bool): Store True when building test dataset.
+            Default: False.
         samp_len (int): Sample length.
             The default value -1 corresponds to the sequence length.
             Default: -1.
@@ -434,33 +403,31 @@ class PairedSameSizeVideoKeyAnnotationsDataset(PairedSameSizeVideoDataset):
             The samp_len is required to be odd.
             Note that gt_path is always a list. Default: False.
         key_frames (list): Key-frame annotation for a sequence.
-            1 denotes key frames; 0 denotes non-key frames.
+            "1" denotes key frames; "0" denotes non-key frames.
             See the document for more details.
-        test_mode (bool): Store True when building test dataset.
-            Default: False.
     """
 
     def __init__(self,
-                 gt_folder,
                  lq_folder,
+                 gt_folder,
                  ann_file,
                  pipeline,
+                 scale,
+                 test_mode=False,
                  samp_len=-1,
                  edge_padding=False,
                  center_gt=False,
-                 key_frames=[1, 0, 1, 0, 1, 0, 1],
-                 test_mode=False):
-        # Must be defined before super().__init__(...)
-        # for load_annotations in super().__init__(...).
+                 key_frames=[1, 0, 1, 0, 1, 0, 1]):
         self.key_frames = key_frames
-        super().__init__(gt_folder=gt_folder,
-                         lq_folder=lq_folder,
+        super().__init__(lq_folder=lq_folder,
+                         gt_folder=gt_folder,
                          ann_file=ann_file,
                          pipeline=pipeline,
+                         scale=scale,
+                         test_mode=test_mode,
                          samp_len=samp_len,
                          edge_padding=edge_padding,
-                         center_gt=center_gt,
-                         test_mode=test_mode)
+                         center_gt=center_gt)
 
     def load_annotations(self):
         """Load sequences according to the annotation file.
@@ -486,11 +453,14 @@ class PairedSameSizeVideoKeyAnnotationsDataset(PairedSameSizeVideoDataset):
         001/1000/{im1,im2,im3,im4,im5,im6,im7}.png
         ...
 
+        See the image saving function in BasicVQERestorer for reasons.
+
         Returns:
             list[dict]: Each dict records the information for a sub-sequence to
                 serve as a sample in training or testing.
         """
-        # get keys
+        # Get sequence names (keys)
+
         with open(self.ann_file, 'r') as f:
             keys = f.read().split('\n')
             keys = [
@@ -498,9 +468,13 @@ class PairedSameSizeVideoKeyAnnotationsDataset(PairedSameSizeVideoDataset):
             ]
         keys = [key.replace('/', os.sep) for key in keys]
 
+        # Collect sample paths according to the sequence names
+        # also key-frame annotation
+
         data_infos = []
         for key in keys:
-            # get frames (sorted)
+            # Get frame paths (sorted)
+
             gt_seq = osp.join(self.gt_folder, key)
             lq_seq = osp.join(self.lq_folder, key)
             gt_paths = self.scan_folder(gt_seq)
@@ -523,7 +497,8 @@ class PairedSameSizeVideoKeyAnnotationsDataset(PairedSameSizeVideoDataset):
                         f'Cannot find "{lq_path}" in "{lq_seq}".')
                 gt_names.append(gt_name)
 
-            # check
+            # Check
+
             if self.samp_len == -1:
                 self.samp_len = len(
                     gt_paths)  # take the whole sequence as a sample
@@ -544,7 +519,8 @@ class PairedSameSizeVideoKeyAnnotationsDataset(PairedSameSizeVideoDataset):
                     f'The sample length ({self.samp_len}) should be odd'
                     ' when requiring center GT.')
 
-            # record samples
+            # Record samples
+
             idxs = list(range(self.seq_len))
             nfrms_left = self.samp_len // 2
             nfrms_right = self.samp_len - nfrms_left - 1
