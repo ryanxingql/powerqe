@@ -12,7 +12,8 @@ and 3)compression level, separated by a white space.
 
 Source: mmediting/tools/data/super-resolution/div2k/preprocess_div2k_dataset.py
 Copyright (c) OpenMMLab. All rights reserved.
-Modified by RyanXingQL @2022.
+
+Author: RyanXingQL
 """
 import argparse
 import os
@@ -32,11 +33,10 @@ def extract_subimages(opt):
 
     Args:
         opt (dict): Configuration dict. It contains:
-            input_folder (str): Path to the input folder.
+            img_list (list[str]): List of image paths.
             save_folder (str): Path to save folder.
             n_thread (int): Thread number.
     """
-    input_folder = opt['input_folder']
     save_folder = opt['save_folder']
     if not osp.exists(save_folder):
         os.makedirs(save_folder)
@@ -45,8 +45,7 @@ def extract_subimages(opt):
         print(f'Folder {save_folder} already exists. Exit.')
         sys.exit(1)
 
-    img_list = list(mmcv.scandir(input_folder))
-    img_list = [osp.join(input_folder, v) for v in img_list]
+    img_list = opt['img_list']
 
     prog_bar = mmcv.ProgressBar(len(img_list))
     pool = Pool(opt['n_thread'])
@@ -56,7 +55,7 @@ def extract_subimages(opt):
                          callback=lambda _: prog_bar.update())
     pool.close()
     pool.join()
-    print('All processes done.')
+    print('\nAll processes done.')
 
 
 def worker(path, opt):
@@ -291,7 +290,7 @@ def parse_args():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--dataset',
                         help='dataset name',
-                        choices=['div2k'],
+                        choices=['div2k', 'flickr2k'],
                         required=True)
     parser.add_argument('--crop-size',
                         nargs='?',
@@ -334,10 +333,15 @@ if __name__ == '__main__':
     # in opt by N
 
     if args.dataset == 'div2k':
+        gt_list = [f'data/div2k/train/{idx:04d}.png' for idx in range(1, 801)]
+        lq_list = [
+            f'data/div2k_lq/bpg/qp37/train/{idx:04d}.png'
+            for idx in range(1, 801)
+        ]
         opts = [
             dict(n_thread=args.n_thread,
                  compression_level=args.compression_level,
-                 input_folder='data/div2k/train',
+                 img_list=gt_list,
                  save_folder='data/div2k_patches/train',
                  lmdb_folder='data/div2k_patches_lmdb/train.lmdb',
                  crop_size=args.crop_size,
@@ -346,9 +350,37 @@ if __name__ == '__main__':
                  suffix=args.suffix),
             dict(n_thread=args.n_thread,
                  compression_level=args.compression_level,
-                 input_folder='data/div2k_lq/bpg/qp37/train',
+                 img_list=lq_list,
                  save_folder='data/div2k_lq_patches/bpg/qp37/train',
                  lmdb_folder='data/div2k_lq_patches_lmdb/bpg/qp37/train.lmdb',
+                 crop_size=args.crop_size,
+                 step=args.step,
+                 thresh_size=args.thresh_size,
+                 suffix=args.suffix),
+        ]
+
+    if args.dataset == 'flickr2k':
+        gt_list = [f'data/flickr2k/{idx:06d}.png' for idx in range(1, 1989)]
+        lq_list = [
+            f'data/flickr2k_lq/bpg/qp37/{idx:06d}.png'
+            for idx in range(1, 1989)
+        ]
+        opts = [
+            dict(n_thread=args.n_thread,
+                 compression_level=args.compression_level,
+                 img_list=gt_list,
+                 save_folder='data/flickr2k_train_patches',
+                 lmdb_folder='data/flickr2k_train_patches.lmdb',
+                 crop_size=args.crop_size,
+                 step=args.step,
+                 thresh_size=args.thresh_size,
+                 suffix=args.suffix),
+            dict(n_thread=args.n_thread,
+                 compression_level=args.compression_level,
+                 img_list=lq_list,
+                 save_folder='data/flickr2k_lq_train_patches/bpg/qp37',
+                 lmdb_folder=('data/flickr2k_lq_train_patches_lmdb/bpg'
+                              '/qp37.lmdb'),
                  crop_size=args.crop_size,
                  step=args.step,
                  thresh_size=args.thresh_size,

@@ -38,7 +38,8 @@ ngpus = 1
 assert batchsize % ngpus == 0, ('Samples in a batch should better be evenly'
                                 ' distributed among all GPUs.')
 batchsize_gpu = batchsize // ngpus
-dataset_type = 'PairedSameSizeImageDataset'
+
+dataset_type = 'SRAnnotationDataset'
 data = dict(workers_per_gpu=batchsize_gpu,
             train_dataloader=dict(samples_per_gpu=batchsize_gpu,
                                   drop_last=True),
@@ -50,18 +51,21 @@ data = dict(workers_per_gpu=batchsize_gpu,
                            type=dataset_type,
                            lq_folder='data/flickr2k_lq/bpg/qp37',
                            gt_folder='data/flickr2k',
-                           pipeline=train_pipeline,
                            ann_file='data/flickr2k_lq/bpg/qp37/train.txt',
+                           pipeline=train_pipeline,
+                           scale=1,
                            test_mode=False)),
             val=dict(type=dataset_type,
                      lq_folder='data/flickr2k_lq/bpg/qp37',
                      gt_folder='data/flickr2k',
-                     pipeline=test_pipeline,
                      ann_file='data/flickr2k_lq/bpg/qp37/test.txt',
+                     pipeline=test_pipeline,
+                     scale=1,
                      test_mode=True),
             test=dict(type=dataset_type,
                       lq_folder='data/flickr2k_lq/bpg/qp37',
                       gt_folder='data/flickr2k',
-                      pipeline=test_pipeline,
                       ann_file='data/flickr2k_lq/bpg/qp37/test.txt',
+                      pipeline=test_pipeline,
+                      scale=1,
                       test_mode=True))

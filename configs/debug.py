@@ -1,8 +1,8 @@
-_base_ = ['arcnn_div2k.py']
+_base_ = ['arcnn_flickr2k_lmdb.py']
 
 exp_name = 'debug'
 
-val_inter = 100
+val_inter = 150
 checkpoint_config = dict(interval=val_inter,
                          save_optimizer=True,
                          by_epoch=False)
