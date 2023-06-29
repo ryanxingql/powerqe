@@ -1,11 +1,22 @@
 """Compress image datasets.
 
-Annotation files may also created for those datasets without splits.
-According to SRAnnotationDataset, each line in the annotation file contains the
-image names and image shape (usually for gt), separated by a white space.
-For instance: "0001_s001.png (480,480,3)"
+Annotation files may also created for those datasets without splits. According
+to SRAnnotationDataset, each line in the annotation file contains the image
+names and image shape (usually for gt), separated by a white space. For
+instance: "0001_s001.png (480,480,3).
 
-Author: RyanXingQL
+Copyright 2023 RyanXingQL
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+this file except in compliance with the License. You may obtain a copy of the
+License at
+https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 """
 import argparse
 import multiprocessing as mp

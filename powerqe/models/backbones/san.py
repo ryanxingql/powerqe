@@ -1,6 +1,5 @@
 """
 Source: https://github.com/daitao/SAN/blob/master/TestCode/code/model/san.py
-Author: RyanXingQL
 
 Part of this code:
 @file: MPNCOV.py

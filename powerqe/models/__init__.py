@@ -1,6 +1,3 @@
-"""
-Author: RyanXingQL
-"""
 from .backbones import *  # noqa: F401, F403
 from .builder import build_backbone, build_component, build_loss, build_model
 from .losses import *  # noqa: F401, F403

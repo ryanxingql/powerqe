@@ -1,6 +1,3 @@
-"""
-Author: RyanXingQL
-"""
 from .builder import build_dataset
 from .paired_video_dataset import (PairedVideoDataset,
                                    PairedVideoKeyFramesAnnotationDataset,

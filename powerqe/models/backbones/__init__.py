@@ -1,6 +1,3 @@
-"""
-Author: RyanXingQL
-"""
 from .arcnn import ARCNN
 from .cbdnet import CBDNet
 from .dcad import DCAD

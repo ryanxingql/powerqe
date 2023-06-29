@@ -1,8 +1,4 @@
-"""Copyright (c) OpenMMLab.
-
-All rights reserved.
-Author: RyanXingQL
-"""
+# Copyright (c) OpenMMLab. All rights reserved.
 import argparse
 import os
 

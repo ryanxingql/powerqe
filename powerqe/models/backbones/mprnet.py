@@ -1,6 +1,5 @@
 """
 Source: https://github.com/swz30/MPRNet/blob/main/Deblurring/MPRNet.py
-Author: RyanXingQL
 """
 import torch
 import torch.nn as nn
