@@ -132,10 +132,7 @@ if __name__ == '__main__':
             enc_cmd = f'{BPGENC_PATH} -o {path["bpg"]} -q {QP} {path["src"]}'
             dec_cmd = f'{BPGDEC_PATH} -o {path["tar"]} {path["bpg"]}'
             pool.apply_async(func=bpg_compress,
-                             args=(
-                                 enc_cmd,
-                                 dec_cmd,
-                             ),
+                             args=(enc_cmd, dec_cmd),
                              callback=lambda _: pbar.update())
         pool.close()
         pool.join()

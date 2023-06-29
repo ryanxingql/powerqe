@@ -56,13 +56,11 @@ class ESRGANRestorer(BasicQERestorer):
                  train_cfg=None,
                  test_cfg=None,
                  pretrained=None):
-        super().__init__(
-            generator=generator,
-            pixel_loss=pixel_loss,
-            train_cfg=train_cfg,
-            test_cfg=test_cfg,
-            pretrained=pretrained,
-        )
+        super().__init__(generator=generator,
+                         pixel_loss=pixel_loss,
+                         train_cfg=train_cfg,
+                         test_cfg=test_cfg,
+                         pretrained=pretrained)
 
         # generator is defined in the __init__() of BasicRestorer
 

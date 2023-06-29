@@ -140,10 +140,8 @@ def main():
     if cfg.checkpoint_config is not None:
         # save version, config file content and class names in
         # checkpoints as meta data
-        cfg.checkpoint_config.meta = dict(
-            mmedit_version=__version__,
-            config=cfg.text,
-        )
+        cfg.checkpoint_config.meta = dict(mmedit_version=__version__,
+                                          config=cfg.text)
 
     # meta information
     meta = dict()

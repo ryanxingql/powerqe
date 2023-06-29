@@ -74,11 +74,8 @@ def vimeo90k_write_ycbcr420(seq_path, tar_path, nfrms=3):
 
 def vimeo90k_read_ycbcr420(src_path, tar_dir, h=256, w=448, nfrms=3):
     ycbcr420_nfrms = read_planar(src_path,
-                                 fmt=(
-                                     (h, w),
-                                     (h // 2, w // 2),
-                                     (h // 2, w // 2),
-                                 ) * nfrms)
+                                 fmt=((h, w), (h // 2, w // 2),
+                                      (h // 2, w // 2)) * nfrms)
     for idx in range(nfrms):
         img_path = os.path.join(tar_dir, f'im{idx+1}.png')
         ycrcb = np.empty((h, w, 3), np.uint8)
@@ -153,10 +150,7 @@ if __name__ == '__main__':
             seq_name = seq_path.split('/')[-2]
             tar_path = os.path.join(tar_dir, seq_name + '.yuv')
             pool.apply_async(func=func_write,
-                             args=(
-                                 seq_path,
-                                 tar_path,
-                             ),
+                             args=(seq_path, tar_path),
                              callback=lambda x: print(x))
 
     pool.close()
@@ -213,10 +207,7 @@ if __name__ == '__main__':
             tar_dir = os.path.join(vid_dir, src_name)
             os.makedirs(tar_dir)
             pool.apply_async(func=func_read,
-                             args=(
-                                 src_path,
-                                 tar_dir,
-                             ),
+                             args=(src_path, tar_dir),
                              callback=lambda x: print(x))
 
     pool.close()

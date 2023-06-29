@@ -57,11 +57,9 @@ test_pipeline = [
     dict(type='RescaleToZeroOne', keys=['lq', 'gt']),
     dict(type='Normalize', keys=['lq', 'gt'], **norm_cfg),
     dict(type='FramesToTensor', keys=['lq', 'gt']),
-    dict(
-        type='Collect',
-        keys=['lq', 'gt'],
-        meta_keys=['lq_path', 'gt_path', 'key'],
-    )
+    dict(type='Collect',
+         keys=['lq', 'gt'],
+         meta_keys=['lq_path', 'gt_path', 'key'])
 ]
 
 data = dict(

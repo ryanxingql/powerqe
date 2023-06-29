@@ -504,8 +504,7 @@ class RBQE(BaseNet):
             self.in_conv_seq = nn.Sequential(
                 SeparableConv2d(nf_in=nf_io, nf_out=nf_base),
                 nn.ReLU(inplace=True),
-                SeparableConv2d(nf_in=nf_base, nf_out=nf_base),
-            )
+                SeparableConv2d(nf_in=nf_base, nf_out=nf_base))
         else:
             self.in_conv_seq = nn.Sequential(
                 nn.Conv2d(in_channels=nf_io,
@@ -618,10 +617,7 @@ class RBQE(BaseNet):
                     )  # append features from previous U-Nets at the same level
 
                 up = getattr(self, f'up_{idx_unet}_{idx_up}')
-                feat_up = up(
-                    feat_up_list[-1],
-                    *dense_inp_list,
-                )
+                feat_up = up(feat_up_list[-1], *dense_inp_list)
                 feat_up_list.append(feat_up)
 
             if idx_out in [-1, -2, idx_unet]:  # if go to the output side

@@ -21,13 +21,11 @@ model = dict(
         style_weight=0,
         norm_img=False,
         pretrained='https://download.pytorch.org/models/vgg19-dcbb9e9d.pth'),
-    gan_loss=dict(
-        type='GANLoss',
-        gan_type='vanilla',
-        loss_weight=5e-3,
-        real_label_val=1.0,
-        fake_label_val=0,
-    ),
+    gan_loss=dict(type='GANLoss',
+                  gan_type='vanilla',
+                  loss_weight=5e-3,
+                  real_label_val=1.0,
+                  fake_label_val=0),
     pretrained='work_dirs/esrgan_div2k_stage1/latest.pth')
 
 optimizers = dict(discriminator=dict(type='Adam', lr=1e-4, betas=(0.9, 0.999)))
