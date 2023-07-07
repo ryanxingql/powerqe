@@ -89,6 +89,23 @@ def vimeo90k_read_ycbcr420(src_path, tar_dir, h=256, w=448, nfrms=3):
     return tar_dir
 
 
+def mfqev2_read_ycbcr420(src_path, tar_dir, h, w, nfrms):
+    ycbcr420_nfrms = read_planar(src_path,
+                                 fmt=((h, w), (h // 2, w // 2),
+                                      (h // 2, w // 2)) * nfrms)
+    for idx in range(nfrms):
+        img_path = os.path.join(tar_dir, f'im{idx+1}.png')
+        ycrcb = np.empty((h, w, 3), np.uint8)
+        ycrcb[..., 0] = ycbcr420_nfrms[3 * idx]
+        ycrcb[..., 1] = cv2.resize(ycbcr420_nfrms[3 * idx + 2], (w, h),
+                                   interpolation=cv2.INTER_CUBIC)
+        ycrcb[..., 2] = cv2.resize(ycbcr420_nfrms[3 * idx + 1], (w, h),
+                                   interpolation=cv2.INTER_CUBIC)
+        bgr = cv2.cvtColor(ycrcb, cv2.COLOR_YCrCb2BGR)
+        cv2.imwrite(img_path, bgr)
+    return tar_dir
+
+
 def hm_encode(enc_cmd):
     os.system(enc_cmd)
     return enc_cmd
@@ -97,10 +114,11 @@ def hm_encode(enc_cmd):
 def parse_args():
     parser = argparse.ArgumentParser(description='Compress video dataset.')
     parser.add_argument('--max-nprocs', type=int, default=16)
-    parser.add_argument('--dataset',
-                        type=str,
-                        required=True,
-                        choices=['vimeo90k-triplet', 'vimeo90k-septuplet'])
+    parser.add_argument(
+        '--dataset',
+        type=str,
+        required=True,
+        choices=['vimeo90k-triplet', 'vimeo90k-septuplet', 'mfqev2'])
     parser.add_argument('--qp', type=int, default=37)
     args = parser.parse_args()
     return args
@@ -118,55 +136,66 @@ if __name__ == '__main__':
         COMP_PLANAR_DIR = 'tmp/vimeo_triplet_comp_planar/hm18.0/ldp/qp37'
         TAR_DIR = 'data/vimeo_triplet_lq/hm18.0/ldp/qp37'
 
-    elif args.dataset == 'vimeo90k-septuplet':
+    if args.dataset == 'vimeo90k-septuplet':
         SRC_DIR = 'data/vimeo_septuplet/sequences'
         PLANAR_DIR = 'tmp/vimeo_septuplet_planar'
         BIT_DIR = 'tmp/vimeo_septuplet_bit/hm18.0/ldp/qp37'
         COMP_PLANAR_DIR = 'tmp/vimeo_septuplet_comp_planar/hm18.0/ldp/qp37'
         TAR_DIR = 'data/vimeo_septuplet_lq/hm18.0/ldp/qp37'
 
+    if args.dataset == 'mfqev2':
+        PLANAR_DIR = 'data/mfqev2'
+        BIT_DIR = 'tmp/mfqev2_bit/hm18.0/ldp/qp37'
+        COMP_PLANAR_DIR = 'tmp/mfqev2_comp_planar/hm18.0/ldp/qp37'
+        TAR_DIR = 'data/mfqev2_lq/hm18.0/ldp/qp37'
+
     # img -> planar
     # according to the HM manual, HM accepts videos in raw 4:2:0
     # planar format (Y'CbCr)
 
-    if args.dataset == 'vimeo90k-triplet':
-        func_write = partial(vimeo90k_write_ycbcr420, nfrms=3)
-        func_read = partial(vimeo90k_read_ycbcr420, nfrms=3)
+    if args.dataset in ['vimeo90k-triplet', 'vimeo90k-septuplet']:
+        if args.dataset == 'vimeo90k-triplet':
+            func_write = partial(vimeo90k_write_ycbcr420, nfrms=3)
+        if args.dataset == 'vimeo90k-septuplet':
+            func_write = partial(vimeo90k_write_ycbcr420, nfrms=7)
 
-    elif args.dataset == 'vimeo90k-septuplet':
-        func_write = partial(vimeo90k_write_ycbcr420, nfrms=7)
-        func_read = partial(vimeo90k_read_ycbcr420, nfrms=7)
+        pool = mp.Pool(processes=args.max_nprocs)
 
-    pool = mp.Pool(processes=args.max_nprocs)
+        vid_paths = sorted(glob(os.path.join(SRC_DIR, '*/')))
+        for vid_path in vid_paths:
+            vid_name = vid_path.split('/')[-2]
+            tar_dir = os.path.join(PLANAR_DIR, vid_name)
+            os.makedirs(tar_dir)
 
-    vid_paths = sorted(glob(os.path.join(SRC_DIR, '*/')))
-    for vid_path in vid_paths:
-        vid_name = vid_path.split('/')[-2]
-        tar_dir = os.path.join(PLANAR_DIR, vid_name)
-        os.makedirs(tar_dir)
+            seq_paths = sorted(glob(os.path.join(vid_path, '*/')))
+            for seq_path in seq_paths:
+                seq_name = seq_path.split('/')[-2]
+                tar_path = os.path.join(tar_dir, seq_name + '.yuv')
+                pool.apply_async(func=func_write,
+                                 args=(seq_path, tar_path),
+                                 callback=lambda x: print(x))
 
-        seq_paths = sorted(glob(os.path.join(vid_path, '*/')))
-        for seq_path in seq_paths:
-            seq_name = seq_path.split('/')[-2]
-            tar_path = os.path.join(tar_dir, seq_name + '.yuv')
-            pool.apply_async(func=func_write,
-                             args=(seq_path, tar_path),
-                             callback=lambda x: print(x))
-
-    pool.close()
-    pool.join()
+        pool.close()
+        pool.join()
 
     # compress planar
 
-    enc_cmd_add = f' -wdt 448 -hgt 256 -q {args.qp} --Level=3.1 -fr 30'
+    enc_cmd_add = f' -q {args.qp} --Level=3.1 -fr 30'
     if args.dataset == 'vimeo90k-triplet':
-        enc_cmd_add += ' -f 3'
-    elif args.dataset == 'vimeo90k-septuplet':
-        enc_cmd_add += ' -f 7'
+        enc_cmd_add += ' -wdt 448 -hgt 256 -f 3'
+    if args.dataset == 'vimeo90k-septuplet':
+        enc_cmd_add += ' -wdt 448 -hgt 256 -f 7'
+
+    if args.dataset in ['vimeo90k-triplet', 'vimeo90k-septuplet']:
+        vid_paths = sorted(glob(os.path.join(PLANAR_DIR, '*/')))
+    if args.dataset == 'mfqev2':
+        vid_paths = [
+            os.path.join(PLANAR_DIR, 'train/'),
+            os.path.join(PLANAR_DIR, 'test/')
+        ]
 
     pool = mp.Pool(processes=args.max_nprocs)
 
-    vid_paths = sorted(glob(os.path.join(PLANAR_DIR, '*/')))
     for vid_path in vid_paths:
         vid_name = vid_path.split('/')[-2]
         bit_dir = os.path.join(BIT_DIR, vid_name)
@@ -182,6 +211,12 @@ if __name__ == '__main__':
             bit_path = os.path.join(bit_dir, src_name + '.bin')
             tar_path = os.path.join(tar_dir, src_name + '.yuv')
             log_path = os.path.join(tar_dir, src_name + '.log')
+
+            if args.dataset == 'mfqev2':
+                ori_name, res, nfrms = src_name.split('.')[0].split('_')
+                wdt, hgt = res.split('x')
+                enc_cmd_add += f' -wdt {wdt} -hgt {hgt} -f {nfrms}'
+
             enc_cmd = (f'{enc_path} -i {src_path} -c {cfg_path}'
                        f' -b {bit_path} -o {tar_path}'
                        f'{enc_cmd_add}'
@@ -195,6 +230,13 @@ if __name__ == '__main__':
 
     # planar -> img
 
+    if args.dataset == 'vimeo90k-triplet':
+        func_read = partial(vimeo90k_read_ycbcr420, nfrms=3)
+    if args.dataset == 'vimeo90k-septuplet':
+        func_read = partial(vimeo90k_read_ycbcr420, nfrms=7)
+    if args.dataset == 'mfqev2':
+        func_read = mfqev2_read_ycbcr420
+
     pool = mp.Pool(processes=args.max_nprocs)
 
     vid_paths = sorted(glob(os.path.join(COMP_PLANAR_DIR, '*/')))
@@ -206,8 +248,16 @@ if __name__ == '__main__':
             src_name = os.path.splitext(os.path.basename(src_path))[0]
             tar_dir = os.path.join(vid_dir, src_name)
             os.makedirs(tar_dir)
+
+            if args.dataset in ['vimeo90k-triplet', 'vimeo90k-septuplet']:
+                _args = (src_path, tar_dir)
+            if args.dataset == 'mfqev2':
+                ori_name, res, nfrms = src_name.split('.')[0].split('_')
+                wdt, hgt = res.split('x')
+                _args = (src_path, tar_dir, hgt, wdt, nfrms)
+
             pool.apply_async(func=func_read,
-                             args=(src_path, tar_dir),
+                             args=_args,
                              callback=lambda x: print(x))
 
     pool.close()
