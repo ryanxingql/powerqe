@@ -67,7 +67,8 @@ def extract_subimages(opt):
     for path in img_list:
         pool.apply_async(worker,
                          args=(path, opt),
-                         callback=lambda _: prog_bar.update())
+                         callback=lambda _: prog_bar.update(),
+                         error_callback=lambda err: print(err))
     pool.close()
     pool.join()
     print('\nAll processes done.')
@@ -232,7 +233,8 @@ def make_lmdb(data_path,
             pool.apply_async(read_img_worker,
                              args=(osp.join(data_path,
                                             path), key, compress_level),
-                             callback=callback)
+                             callback=callback,
+                             error_callback=lambda err: print(err))
         pool.close()
         pool.join()
         print(f'\nFinish reading {len(img_path_list)} images.')
