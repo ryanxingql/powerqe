@@ -50,8 +50,8 @@ if __name__ == '__main__':
     if args.codec == 'bpg':
         bpgEnc_path = osp.abspath('data/libbpg/bpgenc')
         bpgDec_path = osp.abspath('data/libbpg/bpgdec')
-
         paths = []
+
         if args.dataset == 'div2k':
             src_root = osp.abspath('data/div2k')
             tmp_root = osp.abspath(f'tmp/div2k_lq/bpg/qp{args.quality}')
@@ -83,7 +83,7 @@ if __name__ == '__main__':
                          bpg=osp.join(tmp_dir, f'{idx:04d}.bpg'),
                          tar=osp.join(tar_dir, f'{idx:04d}.png')))
 
-        elif args.dataset == 'flickr2k':
+        if args.dataset == 'flickr2k':
             src_dir = osp.abspath('data/flickr2k')
             tmp_dir = osp.abspath(f'tmp/flickr2k_lq/bpg/qp{args.quality}')
             tar_dir = osp.abspath(f'data/flickr2k_lq/bpg/qp{args.quality}')

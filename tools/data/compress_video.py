@@ -15,7 +15,7 @@ limitations under the License.
 import argparse
 import multiprocessing as mp
 import os
-from functools import partial
+import os.path as osp
 from glob import glob
 
 import cv2
@@ -54,16 +54,18 @@ def read_planar(planar_path, fmt=((1080, 1920), (1080, 1920), (1080, 1920))):
     return img
 
 
-def vimeo90k_write_ycbcr420(seq_path, tar_path, nfrms=3):
+def write_ycbcr420(src_paths, tar_path, wdt, hgt):
     ycbcr420 = []
-    for idx in range(1, nfrms + 1):
-        img_path = os.path.join(seq_path, f'im{idx}.png')
-        bgr = cv2.imread(img_path)
-        h, w = bgr.shape[:2]
+    for src_path in src_paths:
+        bgr = cv2.imread(src_path)
+
+        _hgt, _wdt = bgr.shape[:2]
+        assert _hgt == hgt and _wdt == wdt
+
         ycrcb = cv2.cvtColor(bgr, cv2.COLOR_BGR2YCrCb)
-        cr_sub = cv2.resize(ycrcb[..., 1], (w // 2, h // 2),
+        cr_sub = cv2.resize(ycrcb[..., 1], (wdt // 2, hgt // 2),
                             interpolation=cv2.INTER_AREA)
-        cb_sub = cv2.resize(ycrcb[..., 2], (w // 2, h // 2),
+        cb_sub = cv2.resize(ycrcb[..., 2], (wdt // 2, hgt // 2),
                             interpolation=cv2.INTER_AREA)
         ycbcr420.append(ycrcb[..., 0])
         ycbcr420.append(cb_sub)  # cb before cr
@@ -72,43 +74,96 @@ def vimeo90k_write_ycbcr420(seq_path, tar_path, nfrms=3):
     return tar_path
 
 
-def vimeo90k_read_ycbcr420(src_path, tar_dir, h=256, w=448, nfrms=3):
+def read_ycbcr420(src_path, tar_paths, wdt, hgt, printDir):
     ycbcr420_nfrms = read_planar(src_path,
-                                 fmt=((h, w), (h // 2, w // 2),
-                                      (h // 2, w // 2)) * nfrms)
-    for idx in range(nfrms):
-        img_path = os.path.join(tar_dir, f'im{idx+1}.png')
-        ycrcb = np.empty((h, w, 3), np.uint8)
+                                 fmt=((hgt, wdt), (hgt // 2, wdt // 2),
+                                      (hgt // 2, wdt // 2)) * nfrms)
+    for idx, tar_path in enumerate(tar_paths):
+        ycrcb = np.empty((hgt, wdt, 3), np.uint8)
         ycrcb[..., 0] = ycbcr420_nfrms[3 * idx]
-        ycrcb[..., 1] = cv2.resize(ycbcr420_nfrms[3 * idx + 2], (w, h),
+        ycrcb[..., 1] = cv2.resize(ycbcr420_nfrms[3 * idx + 2], (wdt, hgt),
                                    interpolation=cv2.INTER_CUBIC)
-        ycrcb[..., 2] = cv2.resize(ycbcr420_nfrms[3 * idx + 1], (w, h),
+        ycrcb[..., 2] = cv2.resize(ycbcr420_nfrms[3 * idx + 1], (wdt, hgt),
                                    interpolation=cv2.INTER_CUBIC)
         bgr = cv2.cvtColor(ycrcb, cv2.COLOR_YCrCb2BGR)
-        cv2.imwrite(img_path, bgr)
-    return tar_dir
+        cv2.imwrite(tar_path, bgr)
+    return printDir
 
 
-def mfqev2_read_ycbcr420(src_path, tar_dir, h, w, nfrms):
-    ycbcr420_nfrms = read_planar(src_path,
-                                 fmt=((h, w), (h // 2, w // 2),
-                                      (h // 2, w // 2)) * nfrms)
-    for idx in range(nfrms):
-        img_path = os.path.join(tar_dir, f'im{idx+1}.png')
-        ycrcb = np.empty((h, w, 3), np.uint8)
-        ycrcb[..., 0] = ycbcr420_nfrms[3 * idx]
-        ycrcb[..., 1] = cv2.resize(ycbcr420_nfrms[3 * idx + 2], (w, h),
-                                   interpolation=cv2.INTER_CUBIC)
-        ycrcb[..., 2] = cv2.resize(ycbcr420_nfrms[3 * idx + 1], (w, h),
-                                   interpolation=cv2.INTER_CUBIC)
-        bgr = cv2.cvtColor(ycrcb, cv2.COLOR_YCrCb2BGR)
-        cv2.imwrite(img_path, bgr)
-    return tar_dir
+def run_and_ret_cmd(cmd):
+    os.system(cmd)
+    return cmd
 
 
-def hm_encode(enc_cmd):
-    os.system(enc_cmd)
-    return enc_cmd
+def img2planar(vids):
+    """According to the HM manual, HM accepts videos in raw 4:2:0 planar format
+    (Y'CbCr)."""
+    pool = mp.Pool(processes=args.max_nprocs)
+
+    for vid in vids:
+        pool.apply_async(func=write_ycbcr420,
+                         args=(vid['src_paths'], vid['planar_path'],
+                               vid['wdt'], vid['hgt']),
+                         callback=lambda x: print(x),
+                         error_callback=lambda err: print(err))
+
+    pool.close()
+    pool.join()
+
+
+def compress_planar(vids):
+    pool = mp.Pool(processes=args.max_nprocs)
+
+    for vid in vids:
+        enc_cmd = (f'{enc_path} -i {vid["planar_path"]} -c {cfg_path}'
+                   f' -b {vid["bit_path"]} -o {vid["comp_planar_path"]}')
+        if vid['wdt'] % 8 != 0 or vid['hgt'] % 8 != 0:
+            enc_cmd += ' --ConformanceWindowMode=1'
+        enc_cmd += (f' -q {args.qp} --Level=3.1 -fr 30'
+                    f' -wdt {vid["wdt"]} -hgt {vid["hgt"]} -f {vid["nfrms"]}'
+                    f' > {vid["log_path"]}')
+
+        pool.apply_async(func=run_and_ret_cmd,
+                         args=(enc_cmd, ),
+                         callback=lambda x: print(x),
+                         error_callback=lambda err: print(err))
+
+    pool.close()
+    pool.join()
+
+
+def planar2img(vids):
+    pool = mp.Pool(processes=args.max_nprocs)
+
+    for vid in vids:
+        _dir = osp.dirname(vid['tar_paths'][0])
+        os.makedirs(_dir)
+
+        pool.apply_async(func=read_ycbcr420,
+                         args=(vid['comp_planar_path'], vid['tar_paths'],
+                               vid['wdt'], vid['hgt'], _dir),
+                         callback=lambda x: print(x),
+                         error_callback=lambda err: print(err))
+
+    pool.close()
+    pool.join()
+
+
+def planar2img_mfqev2(vids):
+    pool = mp.Pool(processes=args.max_nprocs)
+
+    for vid in vids:
+        _dir = osp.dirname(vid['tar_paths'][0])
+        os.makedirs(_dir)
+
+        pool.apply_async(func=read_ycbcr420,
+                         args=(vid['planar_path'], vid['src_paths'],
+                               vid['wdt'], vid['hgt'], _dir),
+                         callback=lambda x: print(x),
+                         error_callback=lambda err: print(err))
+
+    pool.close()
+    pool.join()
 
 
 def parse_args():
@@ -124,143 +179,175 @@ def parse_args():
 
 
 if __name__ == '__main__':
-    HM_DIR = 'data/hm18.0'
-
     args = parse_args()
 
+    hm_dir = 'data/hm18.0'
+    enc_path = osp.join(hm_dir, 'bin/TAppEncoderStatic')
+    cfg_path = osp.join(hm_dir, 'cfg/encoder_lowdelay_P_main.cfg')
+
+    # Record video information
+
     if args.dataset == 'vimeo-triplet':
-        SRC_DIR = 'data/vimeo_triplet/sequences'
-        PLANAR_DIR = 'tmp/vimeo_triplet_planar'
-        BIT_DIR = 'tmp/vimeo_triplet_bit/hm18.0/ldp/qp37'
-        COMP_PLANAR_DIR = 'tmp/vimeo_triplet_comp_planar/hm18.0/ldp/qp37'
-        TAR_DIR = 'data/vimeo_triplet_lq/hm18.0/ldp/qp37'
+        src_root = 'data/vimeo_triplet/sequences'
+
+        subdirs = sorted(glob(os.path.join(src_root, '*/')))
+        subdirs = [subdir.split('/')[-2] for subdir in subdirs]
+
+        vids = []
+        for subdir in subdirs:
+            src_dir = osp.join(src_root, subdir)
+            planar_dir = osp.join('tmp/vimeo_triplet_planar', subdir)
+            bit_dir = osp.join('tmp/vimeo_triplet_bit/hm18.0/ldp/qp37', subdir)
+            log_dir = bit_dir
+            comp_planar_dir = osp.join(
+                'tmp/vimeo_triplet_comp_planar/hm18.0/ldp/qp37', subdir)
+            tar_dir = osp.join('data/vimeo_triplet_lq/hm18.0/ldp/qp37', subdir)
+
+            os.makedirs(planar_dir)
+            os.makedirs(bit_dir)
+            # os.makedirs(log_dir)
+            os.makedirs(comp_planar_dir)
+
+            vidNames = sorted(glob(os.path.join(src_dir, '*/')))
+            vidNames = [vidName.split('/')[-2] for vidName in vidNames]
+
+            for vidName in vidNames:
+                wdt = 448
+                hgt = 256
+                nfrms = 3
+                src_paths = [
+                    osp.join(src_dir, vidName, f'im{iImg}.png')
+                    for iImg in range(1, 4)
+                ]
+                planar_path = osp.join(planar_dir, vidName + '.yuv')
+                bit_path = osp.join(bit_dir, vidName + '.bin')
+                log_path = osp.join(log_dir, vidName + '.log')
+                comp_planar_path = osp.join(comp_planar_dir, vidName + '.yuv')
+                tar_paths = [
+                    osp.join(tar_dir, vidName, f'im{iImg}.png')
+                    for iImg in range(1, 4)
+                ]
+
+                vids.append(
+                    dict(wdt=wdt,
+                         hgt=hgt,
+                         nfrms=nfrms,
+                         src_paths=src_paths,
+                         planar_path=planar_path,
+                         bit_path=bit_path,
+                         log_path=log_path,
+                         comp_planar_path=comp_planar_path,
+                         tar_paths=tar_paths))
 
     if args.dataset == 'vimeo-septuplet':
-        SRC_DIR = 'data/vimeo_septuplet/sequences'
-        PLANAR_DIR = 'tmp/vimeo_septuplet_planar'
-        BIT_DIR = 'tmp/vimeo_septuplet_bit/hm18.0/ldp/qp37'
-        COMP_PLANAR_DIR = 'tmp/vimeo_septuplet_comp_planar/hm18.0/ldp/qp37'
-        TAR_DIR = 'data/vimeo_septuplet_lq/hm18.0/ldp/qp37'
+        src_root = 'data/vimeo_septuplet/sequences'
+
+        subdirs = sorted(glob(os.path.join(src_root, '*/')))
+        subdirs = [subdir.split('/')[-2] for subdir in subdirs]
+
+        vids = []
+        for subdir in subdirs:
+            src_dir = osp.join(src_root, subdir)
+            planar_dir = osp.join('tmp/vimeo_septuplet_planar', subdir)
+            bit_dir = osp.join('tmp/vimeo_septuplet_bit/hm18.0/ldp/qp37',
+                               subdir)
+            log_dir = bit_dir
+            comp_planar_dir = osp.join(
+                'tmp/vimeo_septuplet_comp_planar/hm18.0/ldp/qp37', subdir)
+            tar_dir = osp.join('data/vimeo_septuplet_lq/hm18.0/ldp/qp37',
+                               subdir)
+
+            os.makedirs(planar_dir)
+            os.makedirs(bit_dir)
+            # os.makedirs(log_dir)
+            os.makedirs(comp_planar_dir)
+
+            vidNames = sorted(glob(os.path.join(src_dir, '*/')))
+            vidNames = [vidName.split('/')[-2] for vidName in vidNames]
+
+            for vidName in vidNames:
+                wdt = 448
+                hgt = 256
+                nfrms = 7
+                src_paths = [
+                    osp.join(src_dir, vidName, f'im{iImg}.png')
+                    for iImg in range(1, 8)
+                ]
+                planar_path = osp.join(planar_dir, vidName + '.yuv')
+                bit_path = osp.join(bit_dir, vidName + '.bin')
+                log_path = osp.join(log_dir, vidName + '.log')
+                comp_planar_path = osp.join(comp_planar_dir, vidName + '.yuv')
+                tar_paths = [
+                    osp.join(tar_dir, vidName, f'im{iImg}.png')
+                    for iImg in range(1, 8)
+                ]
+
+                vids.append(
+                    dict(wdt=wdt,
+                         hgt=hgt,
+                         nfrms=nfrms,
+                         src_paths=src_paths,
+                         planar_path=planar_path,
+                         bit_path=bit_path,
+                         log_path=log_path,
+                         comp_planar_path=comp_planar_path,
+                         tar_paths=tar_paths))
 
     if args.dataset == 'mfqev2':
-        PLANAR_DIR = 'data/mfqev2'
-        BIT_DIR = 'tmp/mfqev2_bit/hm18.0/ldp/qp37'
-        COMP_PLANAR_DIR = 'tmp/mfqev2_comp_planar/hm18.0/ldp/qp37'
-        TAR_DIR = 'data/mfqev2_lq/hm18.0/ldp/qp37'
+        vids = []
+        for subdir in ['train', 'test']:
+            src_dir = osp.join('data/mfqev2', subdir)
+            planar_dir = osp.join('data/mfqev2_planar', subdir)
+            bit_dir = osp.join('tmp/mfqev2_bit/hm18.0/ldp/qp37', subdir)
+            log_dir = bit_dir
+            comp_planar_dir = osp.join(
+                'tmp/mfqev2_comp_planar/hm18.0/ldp/qp37', subdir)
+            tar_dir = osp.join('data/mfqev2_lq/hm18.0/ldp/qp37', subdir)
 
-    # img -> planar
-    # according to the HM manual, HM accepts videos in raw 4:2:0
-    # planar format (Y'CbCr)
+            os.makedirs(bit_dir)
+            # os.makedirs(log_dir)
+            os.makedirs(comp_planar_dir)
 
-    if args.dataset in ['vimeo-triplet', 'vimeo-septuplet']:
-        if args.dataset == 'vimeo-triplet':
-            func_write = partial(vimeo90k_write_ycbcr420, nfrms=3)
-        if args.dataset == 'vimeo-septuplet':
-            func_write = partial(vimeo90k_write_ycbcr420, nfrms=7)
-
-        pool = mp.Pool(processes=args.max_nprocs)
-
-        vid_paths = sorted(glob(os.path.join(SRC_DIR, '*/')))
-        for vid_path in vid_paths:
-            vid_name = vid_path.split('/')[-2]
-            tar_dir = os.path.join(PLANAR_DIR, vid_name)
-            os.makedirs(tar_dir)
-
-            seq_paths = sorted(glob(os.path.join(vid_path, '*/')))
-            for seq_path in seq_paths:
-                seq_name = seq_path.split('/')[-2]
-                tar_path = os.path.join(tar_dir, seq_name + '.yuv')
-                pool.apply_async(func=func_write,
-                                 args=(seq_path, tar_path),
-                                 callback=lambda x: print(x),
-                                 error_callback=lambda err: print(err))
-
-        pool.close()
-        pool.join()
-
-    # compress planar
-
-    enc_cmd_add = f' -q {args.qp} --Level=3.1 -fr 30'
-    if args.dataset == 'vimeo-triplet':
-        enc_cmd_add += ' -wdt 448 -hgt 256 -f 3'
-    if args.dataset == 'vimeo-septuplet':
-        enc_cmd_add += ' -wdt 448 -hgt 256 -f 7'
-
-    if args.dataset in ['vimeo-triplet', 'vimeo-septuplet']:
-        vid_paths = sorted(glob(os.path.join(PLANAR_DIR, '*/')))
-    if args.dataset == 'mfqev2':
-        vid_paths = [
-            os.path.join(PLANAR_DIR, 'train/'),
-            os.path.join(PLANAR_DIR, 'test/')
-        ]
-
-    pool = mp.Pool(processes=args.max_nprocs)
-
-    for vid_path in vid_paths:
-        vid_name = vid_path.split('/')[-2]
-        bit_dir = os.path.join(BIT_DIR, vid_name)
-        tar_dir = os.path.join(COMP_PLANAR_DIR, vid_name)
-        os.makedirs(bit_dir)
-        os.makedirs(tar_dir)
-
-        src_paths = sorted(glob(os.path.join(vid_path, '*.yuv')))
-        for src_path in src_paths:
-            src_name = os.path.splitext(os.path.basename(src_path))[0]
-            enc_path = os.path.join(HM_DIR, 'bin/TAppEncoderStatic')
-            cfg_path = os.path.join(HM_DIR, 'cfg/encoder_lowdelay_P_main.cfg')
-            bit_path = os.path.join(bit_dir, src_name + '.bin')
-            tar_path = os.path.join(tar_dir, src_name + '.yuv')
-            log_path = os.path.join(tar_dir, src_name + '.log')
-
-            if args.dataset == 'mfqev2':
-                ori_name, res, nfrms = src_name.split('.')[0].split('_')
+            planar_paths = sorted(glob(os.path.join(planar_dir, '*.yuv')))
+            for planar_path in planar_paths:
+                vidName = planar_path.split('/')[-1].split('.')[0]
+                res, nfrms = vidName.split('_')[-2:]
                 wdt, hgt = res.split('x')
-                enc_cmd_add += f' -wdt {wdt} -hgt {hgt} -f {nfrms}'
+                wdt, hgt, nfrms = int(wdt), int(hgt), int(nfrms)
 
-            enc_cmd = (f'{enc_path} -i {src_path} -c {cfg_path}'
-                       f' -b {bit_path} -o {tar_path}'
-                       f'{enc_cmd_add}'
-                       f' > {log_path}')
-            pool.apply_async(func=hm_encode,
-                             args=(enc_cmd, ),
-                             callback=lambda x: print(x),
-                             error_callback=lambda err: print(err))
+                bit_path = osp.join(bit_dir, vidName + '.bin')
+                log_path = osp.join(log_dir, vidName + '.log')
+                comp_planar_path = osp.join(comp_planar_dir, vidName + '.yuv')
+                tar_paths = [
+                    osp.join(tar_dir, vidName, f'{iImg}.png')
+                    for iImg in range(1, nfrms + 1)
+                ]
+                src_paths = [
+                    osp.join(src_dir, vidName, f'{iImg}.png')
+                    for iImg in range(1, nfrms + 1)
+                ]
 
-    pool.close()
-    pool.join()
+                vids.append(
+                    dict(wdt=wdt,
+                         hgt=hgt,
+                         nfrms=nfrms,
+                         src_paths=src_paths,
+                         planar_path=planar_path,
+                         bit_path=bit_path,
+                         log_path=log_path,
+                         comp_planar_path=comp_planar_path,
+                         tar_paths=tar_paths))
 
-    # planar -> img
+    # Img -> Planar
+    if args.dataset != 'mfqev2':
+        img2planar(vids)
 
-    if args.dataset == 'vimeo-triplet':
-        func_read = partial(vimeo90k_read_ycbcr420, nfrms=3)
-    if args.dataset == 'vimeo-septuplet':
-        func_read = partial(vimeo90k_read_ycbcr420, nfrms=7)
+    # Compress planar
+    compress_planar(vids)
+
+    # Planar -> Img
+    planar2img(vids)
+
+    # Planar -> Img for GT
     if args.dataset == 'mfqev2':
-        func_read = mfqev2_read_ycbcr420
-
-    pool = mp.Pool(processes=args.max_nprocs)
-
-    vid_paths = sorted(glob(os.path.join(COMP_PLANAR_DIR, '*/')))
-    for vid_path in vid_paths:
-        vid_name = vid_path.split('/')[-2]
-        vid_dir = os.path.join(TAR_DIR, vid_name)
-        src_paths = sorted(glob(os.path.join(vid_path, '*.yuv')))
-        for src_path in src_paths:
-            src_name = os.path.splitext(os.path.basename(src_path))[0]
-            tar_dir = os.path.join(vid_dir, src_name)
-            os.makedirs(tar_dir)
-
-            if args.dataset in ['vimeo-triplet', 'vimeo-septuplet']:
-                _args = (src_path, tar_dir)
-            if args.dataset == 'mfqev2':
-                ori_name, res, nfrms = src_name.split('.')[0].split('_')
-                wdt, hgt = res.split('x')
-                _args = (src_path, tar_dir, hgt, wdt, nfrms)
-
-            pool.apply_async(func=func_read,
-                             args=_args,
-                             callback=lambda x: print(x),
-                             error_callback=lambda err: print(err))
-
-    pool.close()
-    pool.join()
+        planar2img_mfqev2(vids)
