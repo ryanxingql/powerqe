@@ -11,7 +11,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
 import numbers
 import os.path as osp
 
@@ -99,7 +98,7 @@ class BasicQERestorer(BasicRestorer):
                 ' (2) evaluate image metrics;'
                 ' (3) extract the image name for image saving (optional).')
 
-        # inference
+        # Inference
         if 'unfolding' in self.test_cfg:
             _cfg = self.test_cfg['unfolding']
             lq_pad, pad_info = pad_img(lq, _cfg['patchsize'])
@@ -126,7 +125,7 @@ class BasicQERestorer(BasicRestorer):
         else:
             output = self.generator(lq)
 
-        # de-normalize before image saving and evaluation
+        # De-normalize before image saving and evaluation
         if 'denormalize' in self.test_cfg:
             device = output.device
             mean = torch.tensor(self.test_cfg['denormalize']['mean']).view(
@@ -136,7 +135,7 @@ class BasicQERestorer(BasicRestorer):
             output = output * std + mean
             gt = gt * std + mean
 
-        # save image
+        # Save image
         if save_image:
             if len(meta) != 1:
                 raise ValueError('Only one sample is allowed per batch to'
@@ -156,7 +155,7 @@ class BasicQERestorer(BasicRestorer):
 
             mmcv.imwrite(tensor2img(output), save_path)
 
-        # evaluation
+        # Evaluation
         if 'metrics' not in self.test_cfg:
             raise ValueError(
                 'metrics should be provided in test_cfg for evaluation.')
@@ -195,19 +194,19 @@ class BasicVQERestorer(BasicRestorer):
                          test_cfg=test_cfg,
                          pretrained=pretrained)
 
-        # for evaluation
+        # For evaluation
         self.center_gt = center_gt
 
-        # fix pre-trained networks
+        # Fix pre-trained networks
         self.fix_iter = train_cfg.get('fix_iter', 0) if train_cfg else 0
         self.fix_module = train_cfg.get('fix_module', []) if train_cfg else []
         self.is_weight_fixed = False
 
-        # count training steps
+        # Count training steps
         self.register_buffer('step_counter', torch.zeros(1))
 
     def train_step(self, data_batch, optimizer):
-        # parameter fix
+        # Fix parameter
         if self.step_counter < self.fix_iter:
             if not self.is_weight_fixed:
                 self.is_weight_fixed = True
@@ -217,14 +216,14 @@ class BasicVQERestorer(BasicRestorer):
                             v.requires_grad_(False)
                             break
         elif self.step_counter == self.fix_iter:
-            # train all the parameters
+            # Train all the parameters
             self.generator.requires_grad_(True)
 
-        # inference
+        # Inference
         outputs = self(**data_batch, test_mode=False)
         loss, log_vars = self.parse_losses(outputs.pop('losses'))
 
-        # optimize
+        # Optimize
         optimizer['generator'].zero_grad()
         loss.backward()
         optimizer['generator'].step()
@@ -326,7 +325,7 @@ class BasicVQERestorer(BasicRestorer):
             raise ValueError('Number of input frames should be odd'
                              ' when "center_gt" is True.')
 
-        # inference
+        # Inference
         output = self.generator(lq)
 
         assert lq.shape[0] == 1, ('Only one sample is allowed per batch to'
@@ -334,7 +333,7 @@ class BasicVQERestorer(BasicRestorer):
         gt = gt.squeeze(0)  # (T, C, H, W) or (C, H, W)
         output = output.squeeze(0)  # (T, C, H, W) or (C, H, W)
 
-        # denormalize before image saving and evaluation
+        # Denormalize before image saving and evaluation
         if 'denormalize' in self.test_cfg:
             device = output.device
             mean = torch.tensor(self.test_cfg['denormalize']['mean']).view(
@@ -349,7 +348,7 @@ class BasicVQERestorer(BasicRestorer):
             gt = gt * std + mean
             output = output * std + mean
 
-        # save images
+        # Save images
         if save_image:
             if len(meta) != 1:
                 raise ValueError('Only one sample is allowed per batch to'
@@ -383,7 +382,7 @@ class BasicVQERestorer(BasicRestorer):
                 else:
                     mmcv.imwrite(tensor2img(output[it]), save_path)
 
-        # evaluation
+        # Evaluation
         if 'metrics' not in self.test_cfg:
             raise ValueError(
                 'metrics should be provided in "test_cfg" for evaluation.')

@@ -11,7 +11,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
 import argparse
 import multiprocessing as mp
 import os
@@ -90,7 +89,7 @@ def read_ycbcr420(src_path, tar_paths, wdt, hgt, printDir):
     return printDir
 
 
-def run_and_ret_cmd(cmd):
+def run_cmd(cmd):
     os.system(cmd)
     return cmd
 
@@ -123,7 +122,7 @@ def compress_planar(vids):
                     f' -wdt {vid["wdt"]} -hgt {vid["hgt"]} -f {vid["nfrms"]}'
                     f' > {vid["log_path"]}')
 
-        pool.apply_async(func=run_and_ret_cmd,
+        pool.apply_async(func=run_cmd,
                          args=(enc_cmd, ),
                          callback=lambda x: print(x),
                          error_callback=lambda err: print(err))
@@ -153,7 +152,7 @@ def planar2img_mfqev2(vids):
     pool = mp.Pool(processes=args.max_nprocs)
 
     for vid in vids:
-        _dir = osp.dirname(vid['tar_paths'][0])
+        _dir = osp.dirname(vid['src_paths'][0])
         os.makedirs(_dir)
 
         pool.apply_async(func=read_ycbcr420,
@@ -186,11 +185,10 @@ if __name__ == '__main__':
     cfg_path = osp.join(hm_dir, 'cfg/encoder_lowdelay_P_main.cfg')
 
     # Record video information
-
     if args.dataset == 'vimeo-triplet':
         src_root = 'data/vimeo_triplet/sequences'
 
-        subdirs = sorted(glob(os.path.join(src_root, '*/')))
+        subdirs = glob(os.path.join(src_root, '*/'))
         subdirs = [subdir.split('/')[-2] for subdir in subdirs]
 
         vids = []
@@ -208,7 +206,7 @@ if __name__ == '__main__':
             # os.makedirs(log_dir)
             os.makedirs(comp_planar_dir)
 
-            vidNames = sorted(glob(os.path.join(src_dir, '*/')))
+            vidNames = glob(os.path.join(src_dir, '*/'))
             vidNames = [vidName.split('/')[-2] for vidName in vidNames]
 
             for vidName in vidNames:
@@ -242,7 +240,7 @@ if __name__ == '__main__':
     if args.dataset == 'vimeo-septuplet':
         src_root = 'data/vimeo_septuplet/sequences'
 
-        subdirs = sorted(glob(os.path.join(src_root, '*/')))
+        subdirs = glob(os.path.join(src_root, '*/'))
         subdirs = [subdir.split('/')[-2] for subdir in subdirs]
 
         vids = []
@@ -262,7 +260,7 @@ if __name__ == '__main__':
             # os.makedirs(log_dir)
             os.makedirs(comp_planar_dir)
 
-            vidNames = sorted(glob(os.path.join(src_dir, '*/')))
+            vidNames = glob(os.path.join(src_dir, '*/'))
             vidNames = [vidName.split('/')[-2] for vidName in vidNames]
 
             for vidName in vidNames:
@@ -308,22 +306,27 @@ if __name__ == '__main__':
             # os.makedirs(log_dir)
             os.makedirs(comp_planar_dir)
 
-            planar_paths = sorted(glob(os.path.join(planar_dir, '*.yuv')))
+            planar_paths = glob(os.path.join(planar_dir, '*.yuv'))
             for planar_path in planar_paths:
                 vidName = planar_path.split('/')[-1].split('.')[0]
                 res, nfrms = vidName.split('_')[-2:]
                 wdt, hgt = res.split('x')
                 wdt, hgt, nfrms = int(wdt), int(hgt), int(nfrms)
+                nfrms = 300 if nfrms > 300 else nfrms
 
                 bit_path = osp.join(bit_dir, vidName + '.bin')
                 log_path = osp.join(log_dir, vidName + '.log')
                 comp_planar_path = osp.join(comp_planar_dir, vidName + '.yuv')
+                # Use '{iImg:04d}' instead of '{iImg}'
+                # because sorted is commonly used
+                # and '10.png' is ahead of '2.png'
+                # but '10.png' is behind '02.png'
                 tar_paths = [
-                    osp.join(tar_dir, vidName, f'{iImg}.png')
+                    osp.join(tar_dir, vidName, f'{iImg:04d}.png')
                     for iImg in range(1, nfrms + 1)
                 ]
                 src_paths = [
-                    osp.join(src_dir, vidName, f'{iImg}.png')
+                    osp.join(src_dir, vidName, f'{iImg:04d}.png')
                     for iImg in range(1, nfrms + 1)
                 ]
 

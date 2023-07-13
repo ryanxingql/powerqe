@@ -2,9 +2,9 @@
 Ref: mmediting/configs/restorers/basicvsr_plusplus
 /basicvsr_plusplus_c64n7_8x1_600k_reds4.py
 """
-_base_ = ['_base_/runtime.py', '_base_/vimeo90k_septuplet.py']
+_base_ = ['_base_/runtime.py', '_base_/mfqev2.py']
 
-exp_name = 'basicvsr_plus_plus_vimeo90k_septuplet'
+exp_name = 'basicvsr_plus_plus_mfqev2'
 
 center_gt = False
 model = dict(
@@ -23,7 +23,7 @@ train_cfg = dict(_delete_=True, fix_iter=5000,
                  fix_module=['edvr',
                              'spynet'])  # set "_delete_=True" to replace None
 
-data = dict(train=dict(dataset=dict(center_gt=center_gt)),
+data = dict(train=dict(dataset=dict(samp_len=7, center_gt=center_gt)),
             val=dict(edge_padding=False, center_gt=center_gt),
             test=dict(edge_padding=False, center_gt=center_gt))
 
