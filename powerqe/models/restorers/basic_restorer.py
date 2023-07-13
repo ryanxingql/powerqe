@@ -20,8 +20,9 @@ import torch
 from mmedit.core import tensor2img
 from mmedit.models import BasicRestorer
 
+from ...utils.unfolding import (combine_patches, crop_img, pad_img_min_sz,
+                                pad_img_sz_mul, unfold_img)
 from ..registry import MODELS
-from .script import combine_patches, crop_img, pad_img, unfold_img
 
 
 @MODELS.register_module()
@@ -29,6 +30,7 @@ class BasicQERestorer(BasicRestorer):
     """Basic restorer for quality enhancement.
 
     Differences to BasicRestorer:
+        Support padding testing. See forward_test.
         Support unfolding testing. See forward_test.
         Support de-normalization for image saving.
 
@@ -99,9 +101,13 @@ class BasicQERestorer(BasicRestorer):
                 ' (3) extract the image name for image saving (optional).')
 
         # Inference
+        if 'padding' in self.test_cfg:
+            _cfg = self.test_cfg['padding']
+            lq, pad_info = pad_img_min_sz(lq, _cfg['minSize'])
+
         if 'unfolding' in self.test_cfg:
             _cfg = self.test_cfg['unfolding']
-            lq_pad, pad_info = pad_img(lq, _cfg['patchsize'])
+            lq_pad, pad_info_unfold = pad_img_sz_mul(lq, _cfg['patchsize'])
             lq_patches, unfold_shape = unfold_img(lq_pad, _cfg['patchsize'])
 
             splits = _cfg['splits']
@@ -121,9 +127,12 @@ class BasicQERestorer(BasicRestorer):
             output_patches = torch.cat(output_patches, dim=0)
 
             output = combine_patches(output_patches, unfold_shape)
-            output = crop_img(output, pad_info)
+            output = crop_img(output, pad_info_unfold)
         else:
             output = self.generator(lq)
+
+        if 'padding' in self.test_cfg:
+            output = crop_img(output, pad_info)
 
         # De-normalize before image saving and evaluation
         if 'denormalize' in self.test_cfg:
@@ -168,6 +177,7 @@ class BasicVQERestorer(BasicRestorer):
     """Basic restorer for video quality enhancement.
 
     Differences to BasicRestorer:
+        Support padding testing. See forward_test.
         Support sequence LQ and sequence/center GT. See forward_test.
         Support parameter fix for some iters. See train_step.
 
@@ -326,7 +336,26 @@ class BasicVQERestorer(BasicRestorer):
                              ' when "center_gt" is True.')
 
         # Inference
-        output = self.generator(lq)
+        if 'padding' in self.test_cfg:
+            _cfg = self.test_cfg['padding']
+            _tensors = []
+            _pad_info = ()
+            for it in T:
+                _lq_it, pad_info = pad_img_min_sz(lq[:, it, ...],
+                                                  _cfg['minSize'])
+                _tensors.append(_lq_it)
+                if pad_info:
+                    assert pad_info == _pad_info
+                else:
+                    _pad_info = pad_info
+            _lq = torch.stack(_tensors, dim=1)
+            output = self.generator(_lq)
+            _tensors = []
+            for it in T:
+                _tensors.append(crop_img(output[:, it, ...], pad_info))
+            output = torch.stack(_tensors, dim=1)
+        else:
+            output = self.generator(lq)
 
         assert lq.shape[0] == 1, ('Only one sample is allowed per batch to'
                                   ' squeeze the first dim.')

@@ -312,6 +312,8 @@ if __name__ == '__main__':
                 res, nfrms = vidName.split('_')[-2:]
                 wdt, hgt = res.split('x')
                 wdt, hgt, nfrms = int(wdt), int(hgt), int(nfrms)
+                if wdt < 256 or hgt < 256:
+                    continue
                 nfrms = 300 if nfrms > 300 else nfrms
 
                 bit_path = osp.join(bit_dir, vidName + '.bin')

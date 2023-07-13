@@ -103,10 +103,11 @@ class PairedVideoDataset(SRAnnotationDataset):
                          scale=scale,
                          test_mode=test_mode)
 
-    def find_neighboring_frames(self, center_idx, nfrms_left, nfrms_right):
+    def find_neighboring_frames(self, seq_len, center_idx, nfrms_left,
+                                nfrms_right):
         idxs = list(
             range(center_idx - nfrms_left, center_idx + nfrms_right + 1))
-        idxs = [max(min(x, self.seq_len - 1), 0) for x in idxs]  # clip
+        idxs = [max(min(x, seq_len - 1), 0) for x in idxs]  # clip
         return idxs
 
     def load_annotations(self):
@@ -182,40 +183,31 @@ class PairedVideoDataset(SRAnnotationDataset):
                     raise FileNotFoundError(
                         f'Cannot find "{lq_path}" in "{lq_seq}".')
 
-            if self.samp_len == -1:  # take the whole sequence as a sample
-                self.samp_len = len(gt_paths)
+            samp_len = len(gt_paths) if self.samp_len == -1 else self.samp_len
 
-            if self.samp_len > len(gt_paths):
+            if samp_len > len(gt_paths):
                 raise ValueError(
-                    f'The sample length ({self.samp_len}) should not be'
+                    f'The sample length ({samp_len}) should not be'
                     f' larger than the sequence length ({len(gt_paths)}).')
 
-            if hasattr(self, 'seq_len'):
-                if len(gt_paths) != self.seq_len:
-                    raise ValueError(
-                        'All sequences should have the same number of images;'
-                        f' found two sequences with {len(gt_paths)} and'
-                        f' {self.seq_len} images.')
-            else:
-                self.seq_len = len(gt_paths)  # init
-
-            if self.center_gt and (self.samp_len % 2 == 0):
+            if self.center_gt and (samp_len % 2 == 0):
                 raise ValueError(
-                    f'The sample length ({self.samp_len}) should be odd'
+                    f'The sample length ({samp_len}) should be odd'
                     ' when requiring center GT.')
 
             # Record samples
-            idxs = list(range(self.seq_len))
-            nfrms_left = self.samp_len // 2
-            nfrms_right = self.samp_len - nfrms_left - 1
-            if (self.samp_len == 1) or self.edge_padding:
+            seq_len = len(gt_paths)
+            idxs = list(range(seq_len))
+            nfrms_left = samp_len // 2
+            nfrms_right = samp_len - nfrms_left - 1
+            if (samp_len == 1) or self.edge_padding:
                 center_idxs = idxs
             else:
                 center_idxs = idxs[nfrms_left:(-nfrms_right)]
 
             for center_idx in center_idxs:
-                lq_idxs = self.find_neighboring_frames(center_idx, nfrms_left,
-                                                       nfrms_right)
+                lq_idxs = self.find_neighboring_frames(seq_len, center_idx,
+                                                       nfrms_left, nfrms_right)
                 if self.center_gt:
                     gt_idxs = [center_idx]
                 else:
@@ -325,19 +317,18 @@ class PairedVideoKeyFramesDataset(PairedVideoDataset):
                          edge_padding=edge_padding,
                          center_gt=center_gt)
 
-    def find_neighboring_frames(self, center_idx, nfrms_left, nfrms_right):
+    def find_neighboring_frames(self, seq_len, center_idx, nfrms_left,
+                                nfrms_right):
         # Check
-        if len(self.key_frames) < self.seq_len:
+        if len(self.key_frames) < seq_len:
             raise ValueError(
-                f'The sequence length ({self.seq_len}) should be larger than'
-                ' that of the key-frame annotation'
-                f' ({len(self.key_frames)}).')
-        self.key_frames = self.key_frames[:self.seq_len]
+                f'The length of the key-frame annotation ({self.key_frames})'
+                ' should be larger than that of the sequence'
+                f' ({len(seq_len)}).')
+        key_frames = self.key_frames[:seq_len]
 
         # Find neighboring key frames
-        key_idxs = [
-            idx for idx in range(len(self.key_frames)) if self.key_frames[idx]
-        ]
+        key_idxs = [idx for idx in range(len(key_frames)) if key_frames[idx]]
 
         key_idxs_left = [idx for idx in key_idxs if idx < center_idx]
         if len(key_idxs_left) == 0:  # if not found
@@ -358,7 +349,7 @@ class PairedVideoKeyFramesDataset(PairedVideoDataset):
             key_idxs_right = key_idxs_right[:nfrms_right]
 
         idxs = key_idxs_left + [center_idx] + key_idxs_right
-        idxs = [max(min(x, self.seq_len - 1), 0) for x in idxs]  # clip
+        idxs = [max(min(x, seq_len - 1), 0) for x in idxs]  # clip
         return idxs
 
 
@@ -495,7 +486,6 @@ class PairedVideoKeyFramesAnnotationDataset(PairedVideoDataset):
             keys = [subDir.split('/')[-2] for subDir in subDirs]
 
         # Collect sample paths according to the sequence names
-        # also key-frame annotation
         data_infos = []
         for key in keys:
             # Get frame paths
@@ -525,40 +515,31 @@ class PairedVideoKeyFramesAnnotationDataset(PairedVideoDataset):
                     raise FileNotFoundError(
                         f'Cannot find "{lq_path}" in "{lq_seq}".')
 
-            if self.samp_len == -1:  # take the whole sequence as a sample
-                self.samp_len = len(gt_paths)
+            samp_len = len(gt_paths) if self.samp_len == -1 else self.samp_len
 
-            if self.samp_len > len(gt_paths):
+            if samp_len > len(gt_paths):
                 raise ValueError(
-                    f'The sample length ({self.samp_len}) should not be'
+                    f'The sample length ({samp_len}) should not be'
                     f' larger than the sequence length ({len(gt_paths)}).')
 
-            if hasattr(self, 'seq_len'):
-                if len(gt_paths) != self.seq_len:
-                    raise ValueError(
-                        'All sequences should have the same number of images;'
-                        f' found two sequences with {len(gt_paths)} and'
-                        f' {self.seq_len} images.')
-            else:
-                self.seq_len = len(gt_paths)  # init
-
-            if self.center_gt and (self.samp_len % 2 == 0):
+            if self.center_gt and (samp_len % 2 == 0):
                 raise ValueError(
-                    f'The sample length ({self.samp_len}) should be odd'
+                    f'The sample length ({samp_len}) should be odd'
                     ' when requiring center GT.')
 
             # Record samples
-            idxs = list(range(self.seq_len))
-            nfrms_left = self.samp_len // 2
-            nfrms_right = self.samp_len - nfrms_left - 1
-            if (self.samp_len == 1) or self.edge_padding:
+            seq_len = len(gt_paths)
+            idxs = list(range(seq_len))
+            nfrms_left = samp_len // 2
+            nfrms_right = samp_len - nfrms_left - 1
+            if (samp_len == 1) or self.edge_padding:
                 center_idxs = idxs
             else:
                 center_idxs = idxs[nfrms_left:(-nfrms_right)]
 
             for center_idx in center_idxs:
-                lq_idxs = self.find_neighboring_frames(center_idx, nfrms_left,
-                                                       nfrms_right)
+                lq_idxs = self.find_neighboring_frames(seq_len, center_idx,
+                                                       nfrms_left, nfrms_right)
                 if self.center_gt:
                     gt_idxs = [center_idx]
                 else:

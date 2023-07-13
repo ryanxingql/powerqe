@@ -1,3 +1,16 @@
+"""Copyright 2023 RyanXingQL.
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+this file except in compliance with the License. You may obtain a copy of the
+License at
+https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
 import numpy as np
 import torch.nn.functional as F
 
@@ -7,7 +20,7 @@ def cal_diff(sz, sz_mul):
     return diff_sz
 
 
-def pad_img(img, sz_mul):
+def pad_img_sz_mul(img, sz_mul):
     """Image padding.
 
     Args:
@@ -24,6 +37,26 @@ def pad_img(img, sz_mul):
         raise ValueError(f'Height ({h}) and width ({w}) should not be smaller'
                          f' than the patch size ({sz_mul}).')
     diff_h, diff_w = cal_diff(h, sz_mul), cal_diff(w, sz_mul)
+    pad_info = ((diff_w // 2), (diff_w - diff_w // 2), (diff_h // 2),
+                (diff_h - diff_h // 2))
+    img_pad = F.pad(img, pad_info, mode='reflect')
+    return img_pad, pad_info
+
+
+def pad_img_min_sz(img, minSize):
+    """Image padding.
+
+    Args:
+        img (Tensor): Image with the shape of (N, C, H, W).
+        minSize (int): Minimum height and width of the padded image.
+
+    Returns:
+        Tensor: Padded image with the shape of (N, C, H, W).
+        Tuple: Padding information recorded as (left, right, top, bottom).
+    """
+    h, w = img.shape[2:]
+    diff_h = minSize - h if h < minSize else 0
+    diff_w = minSize - w if w < minSize else 0
     pad_info = ((diff_w // 2), (diff_w - diff_w // 2), (diff_h // 2),
                 (diff_h - diff_h // 2))
     img_pad = F.pad(img, pad_info, mode='reflect')
