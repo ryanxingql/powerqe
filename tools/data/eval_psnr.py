@@ -14,6 +14,7 @@ limitations under the License.
 import argparse
 import math
 import os.path as osp
+from glob import glob
 
 import cv2
 import numpy as np
@@ -23,11 +24,13 @@ from tqdm import tqdm
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Eval PSNR.')
-    parser.add_argument(
-        '--dataset',
-        type=str,
-        required=True,
-        choices=['div2k', 'flickr2k', 'vimeo-triplet', 'vimeo-septuplet'])
+    parser.add_argument('--dataset',
+                        type=str,
+                        required=True,
+                        choices=[
+                            'div2k', 'flickr2k', 'vimeo-triplet',
+                            'vimeo-septuplet', 'mfqev2'
+                        ])
     parser.add_argument('--outDir', type=str, default=None)
     parser.add_argument('--crop-boarder', type=int, default=0)
     args = parser.parse_args()
@@ -78,15 +81,16 @@ def cal_lq_out_psnr(gtDir, lqDir, imgNames, args):
         print(f'{nIgnore} frames are ignored.')
 
 
-def cal_videos_psnr(gtDir, lqDir, subdirs, imgNames, args):
+def cal_videos_psnr(gtDir, lqDir, subDirs, args):
+    """subDirs (list): list of dict with keys 'dirName' and 'imgNames'."""
     if args.outDir:
         results = []
         nIgnore_accm = 0
-        for subdir in tqdm(subdirs, ncols=0):
+        for subDir in tqdm(subDirs, ncols=0):
             imgInfos = [
-                dict(src=osp.join(gtDir, subdir, imgName),
-                     tar=osp.join(args.outDir, subdir, imgName))
-                for imgName in imgNames
+                dict(src=osp.join(gtDir, subDir['dirName'], imgName),
+                     tar=osp.join(args.outDir, subDir['dirName'], imgName))
+                for imgName in subDir['imgNames']
             ]
             psnr, nIgnore = cal_imgDir_psnr(imgInfos=imgInfos,
                                             silent=True,
@@ -100,10 +104,11 @@ def cal_videos_psnr(gtDir, lqDir, subdirs, imgNames, args):
 
     results = []
     nIgnore_accm = 0
-    for subdir in tqdm(subdirs, ncols=0):
+    for subDir in tqdm(subDirs, ncols=0):
         imgInfos = [
-            dict(src=osp.join(gtDir, subdir, imgName),
-                 tar=osp.join(lqDir, subdir, imgName)) for imgName in imgNames
+            dict(src=osp.join(gtDir, subDir['dirName'], imgName),
+                 tar=osp.join(lqDir, subDir['dirName'], imgName))
+            for imgName in subDir['imgNames']
         ]
         psnr, nIgnore = cal_imgDir_psnr(imgInfos=imgInfos,
                                         silent=True,
@@ -143,35 +148,42 @@ if args.dataset == 'vimeo-triplet':
     lqDir = 'data/vimeo_triplet_lq/hm18.0/ldp/qp37'
     imgNames = [f'im{iImg:d}.png' for iImg in range(1, 4)]
 
-    subdirs = []
+    subDirs = []
     with open('data/vimeo_triplet/tri_testlist.txt', 'r') as f:
         for line in f:
             line = line.strip()
             if not line:
                 continue
-            subdirs.append(line)
+            subDirs.append(dict(dirName=line, imgNames=imgNames))
 
-    cal_videos_psnr(gtDir=gtDir,
-                    lqDir=lqDir,
-                    subdirs=subdirs,
-                    imgNames=imgNames,
-                    args=args)
+    cal_videos_psnr(gtDir=gtDir, lqDir=lqDir, subDirs=subDirs, args=args)
 
 if args.dataset == 'vimeo-septuplet':
     gtDir = 'data/vimeo_septuplet/sequences'
     lqDir = 'data/vimeo_septuplet_lq/hm18.0/ldp/qp37'
     imgNames = [f'im{iImg:d}.png' for iImg in range(1, 8)]
 
-    subdirs = []
+    subDirs = []
     with open('data/vimeo_septuplet/sep_testlist.txt', 'r') as f:
         for line in f:
             line = line.strip()
             if not line:
                 continue
-            subdirs.append(line)
+            subDirs.append(dict(dirName=line, imgNames=imgNames))
 
-    cal_videos_psnr(gtDir=gtDir,
-                    lqDir=lqDir,
-                    subdirs=subdirs,
-                    imgNames=imgNames,
-                    args=args)
+    cal_videos_psnr(gtDir=gtDir, lqDir=lqDir, subDirs=subDirs, args=args)
+
+if args.dataset == 'mfqev2':
+    gtDir = 'data/mfqev2/test'
+    lqDir = 'data/mfqev2_lq/hm18.0/ldp/qp37/test'
+    dirPaths = glob(osp.join(gtDir, '*/'))
+    dirNames = [dirName.split('/')[-2] for dirName in dirPaths]
+
+    subDirs = []
+    for dirPath in dirPaths:
+        dirName = dirPath.split('/')[-2]
+        imgNames = glob(osp.join(dirPath, '*.png'))
+        imgNames = [osp.basename(imgName) for imgName in imgNames]
+        subDirs.append(dict(dirName=dirName, imgNames=imgNames))
+
+    cal_videos_psnr(gtDir=gtDir, lqDir=lqDir, subDirs=subDirs, args=args)

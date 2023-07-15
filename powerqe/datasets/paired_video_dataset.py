@@ -460,10 +460,10 @@ class PairedVideoKeyFramesAnnotationDataset(PairedVideoDataset):
 
         (2) center_gt is False:
 
-        001/0001/{im1,im2,im3,im4,im5,im6,im7}.png
-        001/0002/{im1,im2,im3,im4,im5,im6,im7}.png
+        001/0001/im1.png,im2.png,...,im7.png
+        001/0002/im1.png,im2.png,...,im7.png
         ...
-        001/1000/{im1,im2,im3,im4,im5,im6,im7}.png
+        001/1000/im1.png,im2.png,...,im7.png
         ...
 
         See the image saving function in BasicVQERestorer for reasons.

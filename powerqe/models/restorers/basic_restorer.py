@@ -340,18 +340,18 @@ class BasicVQERestorer(BasicRestorer):
             _cfg = self.test_cfg['padding']
             _tensors = []
             _pad_info = ()
-            for it in T:
+            for it in range(T):
                 _lq_it, pad_info = pad_img_min_sz(lq[:, it, ...],
                                                   _cfg['minSize'])
                 _tensors.append(_lq_it)
-                if pad_info:
+                if _pad_info:
                     assert pad_info == _pad_info
                 else:
                     _pad_info = pad_info
             _lq = torch.stack(_tensors, dim=1)
             output = self.generator(_lq)
             _tensors = []
-            for it in T:
+            for it in range(T):
                 _tensors.append(crop_img(output[:, it, ...], pad_info))
             output = torch.stack(_tensors, dim=1)
         else:
@@ -384,17 +384,26 @@ class BasicVQERestorer(BasicRestorer):
                                  ' extract the sequence name for saving.')
             key = meta[0]['key']  # sample id
             if self.center_gt:
-                save_subpath = key + '.png'
+                key_dir = osp.dirname(key)
+                key_stem = osp.splitext(osp.basename(key))[0]
+                save_subpath = osp.join(key_dir, key_stem + '.png')
             else:
-                save_dir = '/'.join(key.split('/')[:-1])
-                save_names = key.split('/')[-1].split(',')
+                key_dir = osp.dirname(key)
+                key_names = osp.basename(key).split(',')
+                key_stems = [
+                    osp.splitext(key_name)[0] for key_name in key_names
+                ]
+                save_subpaths = [
+                    osp.join(key_dir, key_stem + '.png')
+                    for key_stem in key_stems
+                ]
 
             for it in range(T):  # note: T is the input lq idx
                 if self.center_gt:  # save only the center frame
                     if it != (T // 2):
                         continue
                 else:  # save every output frame
-                    save_subpath = osp.join(save_dir, save_names[it] + '.png')
+                    save_subpath = save_subpaths[it]
 
                 if isinstance(iteration,
                               numbers.Number):  # val during training
