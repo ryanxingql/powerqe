@@ -19,7 +19,6 @@ train_cfg = dict(_delete_=True, fix_iter=5000,
 
 dataset_type = 'PairedVideoKeyFramesDataset'
 key_frames = [1] + [0, 1, 0, 1, 0, 1, 0, 1] * 40  # no more than 300 frames
-
 data = dict(train=dict(dataset=dict(
     type=dataset_type, samp_len=3, center_gt=center_gt,
     key_frames=key_frames)),
