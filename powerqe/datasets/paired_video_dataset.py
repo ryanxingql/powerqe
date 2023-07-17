@@ -184,7 +184,6 @@ class PairedVideoDataset(SRAnnotationDataset):
                         f'Cannot find "{lq_path}" in "{lq_seq}".')
 
             samp_len = len(gt_paths) if self.samp_len == -1 else self.samp_len
-
             if samp_len > len(gt_paths):
                 raise ValueError(
                     f'The sample length ({samp_len}) should not be'
@@ -516,7 +515,6 @@ class PairedVideoKeyFramesAnnotationDataset(PairedVideoDataset):
                         f'Cannot find "{lq_path}" in "{lq_seq}".')
 
             samp_len = len(gt_paths) if self.samp_len == -1 else self.samp_len
-
             if samp_len > len(gt_paths):
                 raise ValueError(
                     f'The sample length ({samp_len}) should not be'

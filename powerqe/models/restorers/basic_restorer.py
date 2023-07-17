@@ -89,6 +89,7 @@ class BasicQERestorer(BasicRestorer):
                 The key is eval_result;
                 the value is a dict of evaluation results.
         """
+        # Check
         if self.test_cfg is None:
             raise ValueError(
                 '"self.test_cfg" should be provided; received None.')
@@ -177,6 +178,7 @@ class BasicVQERestorer(BasicRestorer):
     """Basic restorer for video quality enhancement.
 
     Differences to BasicRestorer:
+        Support striding testing. See forward_test.
         Support padding testing. See forward_test.
         Support sequence LQ and sequence/center GT. See forward_test.
         Support parameter fix for some iters. See train_step.
@@ -316,6 +318,7 @@ class BasicVQERestorer(BasicRestorer):
                 The key is eval_result; the value is a dict of evaluation
                 results.
         """
+        # Check
         if self.test_cfg is None:
             raise ValueError(
                 '"self.test_cfg" should be provided; received None.')
@@ -336,29 +339,59 @@ class BasicVQERestorer(BasicRestorer):
                              ' when "center_gt" is True.')
 
         # Inference
-        if 'padding' in self.test_cfg:
-            _cfg = self.test_cfg['padding']
-            _tensors = []
-            _pad_info = ()
-            for it in range(T):
-                _lq_it, pad_info = pad_img_min_sz(lq[:, it, ...],
-                                                  _cfg['minSize'])
-                _tensors.append(_lq_it)
-                if _pad_info:
-                    assert pad_info == _pad_info
-                else:
-                    _pad_info = pad_info
-            _lq = torch.stack(_tensors, dim=1)
-            output = self.generator(_lq)
-            _tensors = []
-            for it in range(T):
-                _tensors.append(crop_img(output[:, it, ...], pad_info))
-            output = torch.stack(_tensors, dim=1)
+        if 'striding' in self.test_cfg and T > self.test_cfg['striding'][
+                'seqLen']:
+            _cfg = self.test_cfg['striding']
+            assert _cfg['seqLen'] >= _cfg['valid_frms']
+            valid_frms = _cfg['valid_frms']
+            left_frms = (_cfg['seqLen'] - _cfg['valid_frms']) // 2
+            stripe = valid_frms
+            lq_seqs = []
+            for i in range(0, T, stripe):
+                if i + _cfg['seqLen'] > T:
+                    break
+                lq_seqs.append(lq[:, i:i + _cfg['seqLen']])
         else:
-            output = self.generator(lq)
+            lq_seqs = [lq]
 
-        assert lq.shape[0] == 1, ('Only one sample is allowed per batch to'
-                                  ' squeeze the first dim.')
+        for iSeq, lq_seq in enumerate(lq_seqs):
+            if 'padding' in self.test_cfg:
+                _cfg = self.test_cfg['padding']
+                _tensors = []
+                _pad_info = ()
+                for it in range(lq_seq.shape[1]):
+                    _lq_it, pad_info = pad_img_min_sz(lq_seq[:, it],
+                                                      _cfg['minSize'])
+                    _tensors.append(_lq_it)
+                    if _pad_info:
+                        assert pad_info == _pad_info
+                    else:
+                        _pad_info = pad_info
+                _lq = torch.stack(_tensors, dim=1)
+
+                _output = self.generator(_lq)
+
+                _tensors = []
+                for it in range(lq_seq.shape[1]):
+                    _tensors.append(crop_img(_output[:, it], pad_info))
+                _output = torch.stack(_tensors, dim=1)
+            else:
+                _output = self.generator(lq_seq)
+
+            if iSeq == 0 and iSeq != (len(lq_seqs) - 1):
+                _output = _output[:, :left_frms + valid_frms]
+            elif iSeq != 0 and iSeq == (len(lq_seqs) - 1):
+                _output = _output[:, left_frms:]
+            elif iSeq > 0 and iSeq < (len(lq_seqs) - 1):
+                _output = _output[:, left_frms:left_frms + valid_frms]
+
+            if iSeq == 0:
+                output = _output
+            else:
+                output = torch.cat((output, _output), dim=1)
+            # print(iSeq, len(lq_seqs), output.shape)
+
+        # Squeeze
         gt = gt.squeeze(0)  # (T, C, H, W) or (C, H, W)
         output = output.squeeze(0)  # (T, C, H, W) or (C, H, W)
 

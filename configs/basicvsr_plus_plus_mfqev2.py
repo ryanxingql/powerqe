@@ -22,7 +22,8 @@ model = dict(
 train_cfg = dict(_delete_=True, fix_iter=5000,
                  fix_module=['edvr',
                              'spynet'])  # set "_delete_=True" to replace None
-test_cfg = dict(padding=dict(minSize=256))
+test_cfg = dict(padding=dict(minSize=256),
+                striding=dict(seqLen=7, valid_frms=3))
 
 data = dict(train=dict(dataset=dict(samp_len=7, center_gt=center_gt)),
             val=dict(edge_padding=False, center_gt=center_gt),
