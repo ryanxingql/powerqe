@@ -90,16 +90,16 @@ class BasicQERestorer(BasicRestorer):
                 the value is a dict of evaluation results.
         """
         # Check
-        if self.test_cfg is None:
-            raise ValueError(
-                '"self.test_cfg" should be provided; received None.')
+        assert self.test_cfg is not None, (
+            '"self.test_cfg" should be provided; received None.')
 
-        if len(lq) != 1:
-            raise ValueError(
-                'Only one sample is allowed per batch to'
-                ' (1) manage image unfolding (optional);'
-                ' (2) evaluate image metrics;'
-                ' (3) extract the image name for image saving (optional).')
+        assert len(lq) == 1, ('Only one sample is allowed per batch to'
+                              ' (1) manage image unfolding;'
+                              ' (2) extract image names for image saving;'
+                              ' (3) evaluate image metrics.')
+
+        assert 'metrics' in self.test_cfg, (
+            'metrics should be provided in test_cfg for evaluation.')
 
         # Inference
         if 'padding' in self.test_cfg:
@@ -147,28 +147,22 @@ class BasicQERestorer(BasicRestorer):
 
         # Save image
         if save_image:
-            if len(meta) != 1:
-                raise ValueError('Only one sample is allowed per batch to'
-                                 ' extract the image name for image saving.')
             lq_path = meta[0]['lq_path']
             lq_name = osp.splitext(osp.basename(lq_path))[0]
             save_subpath = lq_name + '.png'
 
             if isinstance(iteration, numbers.Number):  # val during training
-                save_path = osp.join(save_path, f'{iteration + 1}',
-                                     save_subpath)
+                _save_path = osp.join(save_path, f'{iteration + 1}',
+                                      save_subpath)
             elif iteration is None:  # testing
-                save_path = osp.join(save_path, save_subpath)
+                _save_path = osp.join(save_path, save_subpath)
             else:
                 raise TypeError('"iteration" should be a number or None;'
                                 f' received "{type(iteration)}".')
 
-            mmcv.imwrite(tensor2img(output), save_path)
+            mmcv.imwrite(tensor2img(output), _save_path)
 
         # Evaluation
-        if 'metrics' not in self.test_cfg:
-            raise ValueError(
-                'metrics should be provided in test_cfg for evaluation.')
         results = dict(eval_result=self.evaluate(output=output, gt=gt))
         return results
 
@@ -178,7 +172,6 @@ class BasicVQERestorer(BasicRestorer):
     """Basic restorer for video quality enhancement.
 
     Differences to BasicRestorer:
-        Support striding testing. See forward_test.
         Support padding testing. See forward_test.
         Support sequence LQ and sequence/center GT. See forward_test.
         Support parameter fix for some iters. See train_step.
@@ -319,79 +312,49 @@ class BasicVQERestorer(BasicRestorer):
                 results.
         """
         # Check
-        if self.test_cfg is None:
-            raise ValueError(
-                '"self.test_cfg" should be provided; received None.')
+        assert self.test_cfg is not None, ValueError(
+            '"self.test_cfg" should be provided; received None.')
 
-        if len(lq) != 1:
-            raise ValueError(
-                'Only one sample is allowed per batch to'
-                ' (1) evaluate per-image metrics;'
-                ' (2) extract the sequence name for saving (optional).')
+        assert len(lq) == 1, (
+            'Only one sample is allowed per batch to'
+            ' (1) extract image names from "meta" for image saving;'
+            ' (2) evaluate image metrics.')
 
         if 'unfolding' in self.test_cfg:
             raise NotImplementedError(
                 'Unfolding is not supported yet for video tensor.')
 
-        T = lq.shape[1]
-        if self.center_gt and (T % 2 == 0):
+        nfrms = lq.shape[1]
+        if self.center_gt and (nfrms % 2 == 0):
             raise ValueError('Number of input frames should be odd'
                              ' when "center_gt" is True.')
 
+        assert 'metrics' in self.test_cfg, (
+            'metrics should be provided in "test_cfg" for evaluation.')
+
         # Inference
-        if 'striding' in self.test_cfg and T > self.test_cfg['striding'][
-                'seqLen']:
-            _cfg = self.test_cfg['striding']
-            assert _cfg['seqLen'] >= _cfg['valid_frms']
-            valid_frms = _cfg['valid_frms']
-            left_frms = (_cfg['seqLen'] - _cfg['valid_frms']) // 2
-            stripe = valid_frms
-            lq_seqs = []
-            for i in range(0, T, stripe):
-                if i + _cfg['seqLen'] > T:
-                    break
-                lq_seqs.append(lq[:, i:i + _cfg['seqLen']])
+        if 'padding' in self.test_cfg:
+            _cfg = self.test_cfg['padding']
+            _tensors = []
+            _pad_info = ()
+            for it in range(nfrms):
+                _lq_it, pad_info = pad_img_min_sz(lq[:, it, ...],
+                                                  _cfg['minSize'])
+                _tensors.append(_lq_it)
+                if _pad_info:
+                    assert pad_info == _pad_info
+                else:
+                    _pad_info = pad_info
+            _lq = torch.stack(_tensors, dim=1)
+            output = self.generator(_lq)
+            _tensors = []
+            for it in range(nfrms):
+                _tensors.append(crop_img(output[:, it, ...], pad_info))
+            output = torch.stack(_tensors, dim=1)
         else:
-            lq_seqs = [lq]
+            output = self.generator(lq)
 
-        for iSeq, lq_seq in enumerate(lq_seqs):
-            if 'padding' in self.test_cfg:
-                _cfg = self.test_cfg['padding']
-                _tensors = []
-                _pad_info = ()
-                for it in range(lq_seq.shape[1]):
-                    _lq_it, pad_info = pad_img_min_sz(lq_seq[:, it],
-                                                      _cfg['minSize'])
-                    _tensors.append(_lq_it)
-                    if _pad_info:
-                        assert pad_info == _pad_info
-                    else:
-                        _pad_info = pad_info
-                _lq = torch.stack(_tensors, dim=1)
-
-                _output = self.generator(_lq)
-
-                _tensors = []
-                for it in range(lq_seq.shape[1]):
-                    _tensors.append(crop_img(_output[:, it], pad_info))
-                _output = torch.stack(_tensors, dim=1)
-            else:
-                _output = self.generator(lq_seq)
-
-            if iSeq == 0 and iSeq != (len(lq_seqs) - 1):
-                _output = _output[:, :left_frms + valid_frms]
-            elif iSeq != 0 and iSeq == (len(lq_seqs) - 1):
-                _output = _output[:, left_frms:]
-            elif iSeq > 0 and iSeq < (len(lq_seqs) - 1):
-                _output = _output[:, left_frms:left_frms + valid_frms]
-
-            if iSeq == 0:
-                output = _output
-            else:
-                output = torch.cat((output, _output), dim=1)
-            # print(iSeq, len(lq_seqs), output.shape)
-
-        # Squeeze
+        # Squeeze dim B
         gt = gt.squeeze(0)  # (T, C, H, W) or (C, H, W)
         output = output.squeeze(0)  # (T, C, H, W) or (C, H, W)
 
@@ -412,10 +375,7 @@ class BasicVQERestorer(BasicRestorer):
 
         # Save images
         if save_image:
-            if len(meta) != 1:
-                raise ValueError('Only one sample is allowed per batch to'
-                                 ' extract the sequence name for saving.')
-            key = meta[0]['key']  # sample id
+            key = meta[0]['key']
             if self.center_gt:
                 key_dir = osp.dirname(key)
                 key_stem = osp.splitext(osp.basename(key))[0]
@@ -431,32 +391,29 @@ class BasicVQERestorer(BasicRestorer):
                     for key_stem in key_stems
                 ]
 
-            for it in range(T):  # note: T is the input lq idx
+            for it in range(nfrms):  # note: T is the input lq idx
                 if self.center_gt:  # save only the center frame
-                    if it != (T // 2):
+                    if it != (nfrms // 2):
                         continue
                 else:  # save every output frame
                     save_subpath = save_subpaths[it]
 
                 if isinstance(iteration,
                               numbers.Number):  # val during training
-                    save_path = osp.join(save_path, f'{iteration + 1}',
-                                         save_subpath)
+                    _save_path = osp.join(save_path, f'{iteration + 1}',
+                                          save_subpath)
                 elif iteration is None:  # testing
-                    save_path = osp.join(save_path, save_subpath)
+                    _save_path = osp.join(save_path, save_subpath)
                 else:
                     raise TypeError('"iteration" should be a number or None;'
                                     f' received "{type(iteration)}".')
 
                 if self.center_gt:
-                    mmcv.imwrite(tensor2img(output), save_path)
+                    mmcv.imwrite(tensor2img(output), _save_path)
                 else:
-                    mmcv.imwrite(tensor2img(output[it]), save_path)
+                    mmcv.imwrite(tensor2img(output[it]), _save_path)
 
         # Evaluation
-        if 'metrics' not in self.test_cfg:
-            raise ValueError(
-                'metrics should be provided in "test_cfg" for evaluation.')
         results = dict(eval_result=self.evaluate(
             metrics=self.test_cfg['metrics'], output=output, gt=gt))
         return results

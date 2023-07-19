@@ -1,4 +1,4 @@
-_base_ = ['provqe_vimeo90k_septuplet.py']
+_base_ = ['provqe/vimeo90k_septuplet.py']
 
 # exp_name = 'debug'
 

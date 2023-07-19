@@ -5,7 +5,7 @@ This repository supports some quality enhancement approaches for compressed imag
 Image approaches:
 
 - [MPRNet @ CVPR'21](https://github.com/swz30/MPRNet): Multi-stage structure.
-- [RBQE @ ECCV'20](https://github.com/ryanxingql/rbqe): Multi-exit structure and early-exit mechanism. Non-blind model is implemented.
+- [RBQE @ ECCV'20](https://github.com/ryanxingql/rbqe): Multi-exit structure and early-exit mechanism.
 - [CBDNet @ CVPR'19](https://github.com/GuoShi28/CBDNet): Noise estimation. Originally for image denoising.
 - [SAN @ CVPR'19](https://github.com/daitao/SAN): Second-order attention. Originally for image super resolution.
 - [ESRGAN @ ECCVW'18](https://github.com/xinntao/ESRGAN): Relativistic discriminator. Originally for image super resolution. PIRM'18 winner.
@@ -17,7 +17,7 @@ Image approaches:
 
 Video approaches:
 
-- [ProVQE @ CVPRW'22](https://github.com/ryanxingql/winner-ntire22-vqe): Key-frame propagation. NTIRE'22 winner. Only the first-stage model is implemented.
+- [ProVQE @ CVPRW'22](https://github.com/ryanxingql/winner-ntire22-vqe): Key-frame propagation. NTIRE'22 winner.
 - [BasicVSR++ @ CVPR'22](https://github.com/ckkelvinchan/BasicVSR_PlusPlus): Flow-guided deformable alignment. Originally for video super resolution. NTIRE'21 winner.
 - [STDF @ AAAI'20](https://github.com/ryanxingql/stdf-pytorch): Deformable alignment.
 - [MFQEv2 @ TPAMI'19](https://github.com/ryanxingql/mfqev2.0): Key-frame alignment.
