@@ -15,9 +15,11 @@ import numbers
 import os.path as osp
 
 import mmcv
+import torch
 from mmcv.runner import auto_fp16
 from mmedit.core import tensor2img
 
+from ...utils.unfolding import crop_img, pad_img_min_sz
 from ..registry import MODELS
 from .basic_restorer import BasicVQERestorer
 
@@ -111,68 +113,94 @@ class ProVQERestorer(BasicVQERestorer):
                 The key is eval_result;
                 the value is a dict of evaluation results.
         """
-        if self.test_cfg is None:
-            raise ValueError('"test_cfg" should be provided; received None.')
+        # Check
+        assert self.test_cfg is not None, (
+            '"test_cfg" should be provided; received None.')
 
-        if len(lq) != 1:
-            raise ValueError(
-                'Only one sample is allowed per batch to'
-                ' (1) evaluate per-image metrics;'
-                ' (2) extract the sequence name for saving (optional).')
+        assert len(lq) == 1, (
+            'Only one sample is allowed per batch to'
+            ' (1) extract image names from "meta" for image saving;'
+            ' (2) evaluate image metrics.')
 
         if 'unfolding' in self.test_cfg:
             raise NotImplementedError(
                 'Unfolding is not supported yet for video tensor.')
 
-        T = lq.shape[1]
-        if self.center_gt and (T % 2 == 0):
+        nfrms = lq.shape[1]
+        if self.center_gt and (nfrms % 2 == 0):
             raise ValueError('Number of input frames should be odd'
                              ' when "center_gt" is True.')
 
-        # inference
-        output = self.generator(lq, key_frms)
+        assert 'metrics' in self.test_cfg, (
+            'metrics should be provided in "test_cfg" for evaluation.')
 
+        # Inference
+        if 'padding' in self.test_cfg:
+            _cfg = self.test_cfg['padding']
+            _tensors = []
+            _pad_info = ()
+            for it in range(nfrms):
+                _lq_it, pad_info = pad_img_min_sz(lq[:, it, ...],
+                                                  _cfg['minSize'])
+                _tensors.append(_lq_it)
+                if _pad_info:
+                    assert pad_info == _pad_info
+                else:
+                    _pad_info = pad_info
+            _lq = torch.stack(_tensors, dim=1)
+            output = self.generator(_lq, key_frms)
+            _tensors = []
+            for it in range(nfrms):
+                _tensors.append(crop_img(output[:, it, ...], pad_info))
+            output = torch.stack(_tensors, dim=1)
+        else:
+            output = self.generator(lq, key_frms)
+
+        # Squeeze dim B
         gt = gt.squeeze(0)  # (T, C, H, W) or (C, H, W)
         output = output.squeeze(0)  # (T, C, H, W) or (C, H, W)
 
-        # save images
+        # Save images
         if save_image:
-            if len(meta) != 1:
-                raise ValueError('Only one sample is allowed per batch to'
-                                 ' extract the sequence name for saving.')
-            key = meta[0]['key']  # sample id
+            key = meta[0]['key']
             if self.center_gt:
-                save_subpath = key + '.png'
+                key_dir = osp.dirname(key)
+                key_stem = osp.splitext(osp.basename(key))[0]
+                save_subpath = osp.join(key_dir, key_stem + '.png')
             else:
-                save_dir = '/'.join(key.split('/')[:-1])
-                save_names = key.split('/')[-1].split(',')
+                key_dir = osp.dirname(key)
+                key_names = osp.basename(key).split(',')
+                key_stems = [
+                    osp.splitext(key_name)[0] for key_name in key_names
+                ]
+                save_subpaths = [
+                    osp.join(key_dir, key_stem + '.png')
+                    for key_stem in key_stems
+                ]
 
-            for it in range(T):  # note: T is the input lq idx
+            for it in range(nfrms):  # note: T is the input lq idx
                 if self.center_gt:  # save only the center frame
-                    if it != (T // 2):
+                    if it != (nfrms // 2):
                         continue
                 else:  # save every output frame
-                    save_subpath = osp.join(save_dir, save_names[it] + '.png')
+                    save_subpath = save_subpaths[it]
 
                 if isinstance(iteration,
                               numbers.Number):  # val during training
-                    save_path = osp.join(save_path, f'{iteration + 1}',
-                                         save_subpath)
+                    _save_path = osp.join(save_path, f'{iteration + 1}',
+                                          save_subpath)
                 elif iteration is None:  # testing
-                    save_path = osp.join(save_path, save_subpath)
+                    _save_path = osp.join(save_path, save_subpath)
                 else:
                     raise TypeError('"iteration" should be a number or None;'
                                     f' received "{type(iteration)}".')
 
                 if self.center_gt:
-                    mmcv.imwrite(tensor2img(output), save_path)
+                    mmcv.imwrite(tensor2img(output), _save_path)
                 else:
-                    mmcv.imwrite(tensor2img(output[it]), save_path)
+                    mmcv.imwrite(tensor2img(output[it]), _save_path)
 
-        # evaluation
-        if 'metrics' not in self.test_cfg:
-            raise ValueError(
-                'metrics should be provided in "test_cfg" for evaluation.')
+        # Evaluation
         results = dict(eval_result=self.evaluate(
             metrics=self.test_cfg['metrics'], output=output, gt=gt))
         return results

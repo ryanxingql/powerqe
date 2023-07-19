@@ -1,4 +1,4 @@
-_base_ = ['basicvsr_plus_plus/mfqev2.py']
+_base_ = ['../basicvsr_plus_plus/mfqev2.py']
 
 exp_name = 'provqe_mfqev2'
 
