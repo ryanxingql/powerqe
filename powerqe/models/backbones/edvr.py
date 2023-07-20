@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import torch
+import torch.nn as nn
 from mmedit.models import EDVRNet
 
 from ..registry import BACKBONES
@@ -57,6 +58,10 @@ class EDVRNetQE(EDVRNet):
                          num_blocks_reconstruction=num_blocks_reconstruction,
                          center_frame_idx=center_frame_idx,
                          with_tsa=with_tsa)
+
+        # replace original layers
+        self.conv_hr = nn.Conv2d(mid_channels, mid_channels, 3, 1, 1)
+        self.conv_last = nn.Conv2d(mid_channels, io_channels, 3, 1, 1)
 
         # remove unused parameters
         delattr(self, 'upsample1')
