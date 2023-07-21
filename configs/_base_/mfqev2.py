@@ -44,7 +44,7 @@ batchsize_gpu = batchsize // ngpus
 dataset_type = 'PairedVideoDataset'
 
 dataset_gt_root = 'data/mfqev2'
-dataset_lq_folder = 'data/mfqev2_lq/hm18.0/ldp/qp37'
+dataset_lq_root = 'data/mfqev2_lq/hm18.0/ldp/qp37'
 
 data = dict(workers_per_gpu=batchsize_gpu,
             train_dataloader=dict(samples_per_gpu=batchsize_gpu,
@@ -54,7 +54,7 @@ data = dict(workers_per_gpu=batchsize_gpu,
             train=dict(type='RepeatDataset',
                        times=1000,
                        dataset=dict(type=dataset_type,
-                                    lq_folder=f'{dataset_lq_folder}/train',
+                                    lq_folder=f'{dataset_lq_root}/train',
                                     gt_folder=f'{dataset_gt_root}/train',
                                     pipeline=train_pipeline,
                                     ann_file='',
@@ -63,7 +63,7 @@ data = dict(workers_per_gpu=batchsize_gpu,
                                     padding=False,
                                     center_gt=False)),
             val=dict(type=dataset_type,
-                     lq_folder=f'{dataset_lq_folder}/test',
+                     lq_folder=f'{dataset_lq_root}/test',
                      gt_folder=f'{dataset_gt_root}/test',
                      pipeline=test_pipeline,
                      ann_file='',
@@ -72,7 +72,7 @@ data = dict(workers_per_gpu=batchsize_gpu,
                      padding=True,
                      center_gt=False),
             test=dict(type=dataset_type,
-                      lq_folder=f'{dataset_lq_folder}/test',
+                      lq_folder=f'{dataset_lq_root}/test',
                       gt_folder=f'{dataset_gt_root}/test',
                       pipeline=test_pipeline,
                       ann_file='',
