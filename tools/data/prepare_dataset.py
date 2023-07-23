@@ -67,7 +67,8 @@ def extract_subimages(opt):
     for path in img_list:
         pool.apply_async(worker,
                          args=(path, opt),
-                         callback=lambda _: prog_bar.update())
+                         callback=lambda _: prog_bar.update(),
+                         error_callback=lambda err: print(err))
     pool.close()
     pool.join()
     print('\nAll processes done.')
@@ -145,11 +146,9 @@ def prepare_keys(folder_path, suffix='png'):
         list[str]: Key list.
     """
     print('Reading image path list ...')
-    img_path_list = sorted(
-        list(mmcv.scandir(folder_path, suffix=suffix, recursive=False)))
-    keys = [
-        img_path.split(f'.{suffix}')[0] for img_path in sorted(img_path_list)
-    ]
+    img_path_list = list(
+        mmcv.scandir(folder_path, suffix=suffix, recursive=False))
+    keys = [img_path.split(f'.{suffix}')[0] for img_path in img_path_list]
 
     return img_path_list, keys
 
@@ -232,7 +231,8 @@ def make_lmdb(data_path,
             pool.apply_async(read_img_worker,
                              args=(osp.join(data_path,
                                             path), key, compress_level),
-                             callback=callback)
+                             callback=callback,
+                             error_callback=lambda err: print(err))
         pool.close()
         pool.join()
         print(f'\nFinish reading {len(img_path_list)} images.')

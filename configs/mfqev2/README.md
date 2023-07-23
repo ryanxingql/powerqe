@@ -1,0 +1,1 @@
+The key-frame annotation must encompass the entire sequence. In the MFQEv2 dataset, the sequences are restricted to a maximum of 300 frames, a constraint that we carefully handle during compression. Consequently, when specifying the `key_frames` in the configurations, we annotate no fewer than 300 frames.

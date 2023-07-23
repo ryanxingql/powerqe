@@ -27,9 +27,8 @@ import cv2
 from tqdm import tqdm
 
 
-def bpg_compress(enc_cmd, dec_cmd):
-    os.system(enc_cmd)
-    os.system(dec_cmd)
+def run_cmd(cmd):
+    os.system(cmd)
 
 
 def parse_args():
@@ -49,22 +48,19 @@ if __name__ == '__main__':
     args = parse_args()
 
     if args.codec == 'bpg':
-        BPGENC_PATH = osp.abspath('data/libbpg/bpgenc')
-        BPGDEC_PATH = osp.abspath('data/libbpg/bpgdec')
-        QP = args.quality
-
+        bpgEnc_path = osp.abspath('data/libbpg/bpgenc')
+        bpgDec_path = osp.abspath('data/libbpg/bpgdec')
         paths = []
 
         if args.dataset == 'div2k':
-            SRC_DIR = osp.abspath('data/div2k')
-            TMP_DIR = osp.abspath(f'tmp/div2k_lq/bpg/qp{args.quality}')
-            TAR_DIR = osp.abspath(f'data/div2k_lq/bpg/qp{args.quality}')
+            src_root = osp.abspath('data/div2k')
+            tmp_root = osp.abspath(f'tmp/div2k_lq/bpg/qp{args.quality}')
+            tar_root = osp.abspath(f'data/div2k_lq/bpg/qp{args.quality}')
 
-            # training set
-
-            src_dir = osp.join(SRC_DIR, 'train')
-            tmp_dir = osp.join(TMP_DIR, 'train')
-            tar_dir = osp.join(TAR_DIR, 'train')
+            # Training set
+            src_dir = osp.join(src_root, 'train')
+            tmp_dir = osp.join(tmp_root, 'train')
+            tar_dir = osp.join(tar_root, 'train')
             os.makedirs(tmp_dir)
             os.makedirs(tar_dir)
 
@@ -74,11 +70,10 @@ if __name__ == '__main__':
                          bpg=osp.join(tmp_dir, f'{idx:04d}.bpg'),
                          tar=osp.join(tar_dir, f'{idx:04d}.png')))
 
-            # validation set
-
-            src_dir = osp.join(SRC_DIR, 'valid')
-            tmp_dir = osp.join(TMP_DIR, 'valid')
-            tar_dir = osp.join(TAR_DIR, 'valid')
+            # Validation set
+            src_dir = osp.join(src_root, 'valid')
+            tmp_dir = osp.join(tmp_root, 'valid')
+            tar_dir = osp.join(tar_root, 'valid')
             os.makedirs(tmp_dir)
             os.makedirs(tar_dir)
 
@@ -88,52 +83,52 @@ if __name__ == '__main__':
                          bpg=osp.join(tmp_dir, f'{idx:04d}.bpg'),
                          tar=osp.join(tar_dir, f'{idx:04d}.png')))
 
-        elif args.dataset == 'flickr2k':
-            SRC_DIR = osp.abspath('data/flickr2k')
-            TMP_DIR = osp.abspath(f'tmp/flickr2k_lq/bpg/qp{args.quality}')
-            TAR_DIR = osp.abspath(f'data/flickr2k_lq/bpg/qp{args.quality}')
+        if args.dataset == 'flickr2k':
+            src_dir = osp.abspath('data/flickr2k')
+            tmp_dir = osp.abspath(f'tmp/flickr2k_lq/bpg/qp{args.quality}')
+            tar_dir = osp.abspath(f'data/flickr2k_lq/bpg/qp{args.quality}')
 
-            os.makedirs(TMP_DIR)
-            os.makedirs(TAR_DIR)
+            os.makedirs(tmp_dir)
+            os.makedirs(tar_dir)
 
             for idx in range(1, 2651):
                 paths.append(
-                    dict(src=osp.join(SRC_DIR, f'{idx:06d}.png'),
-                         bpg=osp.join(TMP_DIR, f'{idx:06d}.bpg'),
-                         tar=osp.join(TAR_DIR, f'{idx:06d}.png')))
+                    dict(src=osp.join(src_dir, f'{idx:06d}.png'),
+                         bpg=osp.join(tmp_dir, f'{idx:06d}.bpg'),
+                         tar=osp.join(tar_dir, f'{idx:06d}.png')))
 
-            # create meta
-
-            with open(osp.join(TAR_DIR, 'train.txt'), 'w') as file:
+            # Create meta
+            with open(osp.join(tar_dir, 'train.txt'), 'w') as file:
                 for idx in tqdm(range(1, 1989), ncols=0):
                     img_name = f'{idx:06d}.png'
-                    gt_path = osp.join(SRC_DIR, img_name)
+                    gt_path = osp.join(src_dir, img_name)
                     gt = cv2.imread(gt_path)
                     h, w, c = gt.shape
                     line = f'{img_name} ({h},{w},{c})\n'
                     file.write(line)
 
-            with open(osp.join(TAR_DIR, 'test.txt'), 'w') as file:
+            with open(osp.join(tar_dir, 'test.txt'), 'w') as file:
                 for idx in tqdm(range(1989, 2651), ncols=0):
                     img_name = f'{idx:06d}.png'
-                    gt_path = osp.join(SRC_DIR, img_name)
+                    gt_path = osp.join(src_dir, img_name)
                     gt = cv2.imread(gt_path)
                     h, w, c = gt.shape
                     line = f'{img_name} ({h},{w},{c})\n'
                     file.write(line)
 
-        # compression
-
+        # Compression
         pool = mp.Pool(processes=args.max_npro)
-
         pbar = tqdm(total=len(paths), ncols=0)
         for path in paths:
             src_path = path['src']
-            enc_cmd = f'{BPGENC_PATH} -o {path["bpg"]} -q {QP} {path["src"]}'
-            dec_cmd = f'{BPGDEC_PATH} -o {path["tar"]} {path["bpg"]}'
-            pool.apply_async(func=bpg_compress,
-                             args=(enc_cmd, dec_cmd),
-                             callback=lambda _: pbar.update())
+            enc_cmd = (f'{bpgEnc_path} -o {path["bpg"]} -q {args.quality}'
+                       f' {path["src"]}')
+            dec_cmd = f'{bpgDec_path} -o {path["tar"]} {path["bpg"]}'
+            cmd = f'{enc_cmd} && {dec_cmd}'
+            pool.apply_async(func=run_cmd,
+                             args=(cmd, ),
+                             callback=lambda _: pbar.update(),
+                             error_callback=lambda err: print(err))
         pool.close()
         pool.join()
         pbar.close()

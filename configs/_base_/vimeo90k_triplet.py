@@ -46,9 +46,9 @@ dataset_type = 'PairedVideoDataset'
 dataset_gt_root = 'data/vimeo_triplet'
 dataset_lq_folder = 'data/vimeo_triplet_lq/hm18.0/ldp/qp37'
 
-# since there are only three frames in a sequence
-# two of which need padding in testing
-# training also use padding
+# Since there are only three frames in a sequence,
+# two of which need padding in testing,
+# training also use padding.
 data = dict(workers_per_gpu=batchsize_gpu,
             train_dataloader=dict(samples_per_gpu=batchsize_gpu,
                                   drop_last=True),
@@ -60,24 +60,27 @@ data = dict(workers_per_gpu=batchsize_gpu,
                            type=dataset_type,
                            lq_folder=f'{dataset_lq_folder}',
                            gt_folder=f'{dataset_gt_root}/sequences',
-                           ann_file=f'{dataset_gt_root}/tri_trainlist.txt',
                            pipeline=train_pipeline,
-                           scale=1,
+                           ann_file=f'{dataset_gt_root}/tri_trainlist.txt',
                            test_mode=False,
-                           edge_padding=True)),
+                           samp_len=-1,
+                           padding=True,
+                           center_gt=False)),
             val=dict(type=dataset_type,
                      lq_folder=f'{dataset_lq_folder}',
                      gt_folder=f'{dataset_gt_root}/sequences',
-                     ann_file=f'{dataset_gt_root}/tri_validlist.txt',
                      pipeline=test_pipeline,
-                     scale=1,
+                     ann_file=f'{dataset_gt_root}/tri_validlist.txt',
                      test_mode=True,
-                     edge_padding=True),
+                     samp_len=-1,
+                     padding=True,
+                     center_gt=False),
             test=dict(type=dataset_type,
                       lq_folder=f'{dataset_lq_folder}',
                       gt_folder=f'{dataset_gt_root}/sequences',
-                      ann_file=f'{dataset_gt_root}/tri_testlist.txt',
                       pipeline=test_pipeline,
-                      scale=1,
+                      ann_file=f'{dataset_gt_root}/tri_testlist.txt',
                       test_mode=True,
-                      edge_padding=True))
+                      samp_len=-1,
+                      padding=True,
+                      center_gt=False))
