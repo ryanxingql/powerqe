@@ -140,6 +140,7 @@ def prepare_keys(folder_path, suffix='png'):
 
     Args:
         folder_path (str): Folder path.
+        suffix (str)
 
     Returns:
         list[str]: Image path list.
@@ -295,7 +296,7 @@ def read_img_worker(path, key, compress_level):
         h, w, c = img.shape
     _, img_byte = cv2.imencode('.png', img,
                                [cv2.IMWRITE_PNG_COMPRESSION, compress_level])
-    return (key, img_byte, (h, w, c))
+    return key, img_byte, (h, w, c)
 
 
 def parse_args():

@@ -12,7 +12,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 from mmcv.runner import load_checkpoint
-from mmedit.models import RRDBNet
+from mmedit.models.backbones import RRDBNet
 from mmedit.models.common import default_init_weights
 from mmedit.utils import get_root_logger
 
@@ -28,8 +28,7 @@ class RRDBNetQE(RRDBNet):
     Currently, it supports [x1/x2/x4] upsampling scale factor.
 
     Args:
-        in_channels (int): Channel number of inputs.
-        out_channels (int): Channel number of outputs.
+        io_channels (int): I/O channel number.
         mid_channels (int): Channel number of intermediate features.
         num_blocks (int): Block number in the trunk network.
         growth_channels (int): Channels for each growth.
@@ -49,10 +48,7 @@ class RRDBNetQE(RRDBNet):
                          growth_channels=growth_channels,
                          upscale_factor=upscale_factor)
 
-    def init_weights(self,
-                     pretrained=None,
-                     strict=True,
-                     revise_keys=[(r'^module\.', '')]):
+    def init_weights(self, pretrained=None, strict=True, revise_keys=None):
         """Init weights for models.
 
         Accept revise_keys for restorer ESRGANRestorer.
@@ -67,6 +63,8 @@ class RRDBNetQE(RRDBNet):
                 pair of the regular expression operations.
                 Default: strip the prefix 'module.' by [(r'^module\\.', '')].
         """
+        if revise_keys is None:
+            revise_keys = [(r'^module\.', '')]
         if isinstance(pretrained, str):
             logger = get_root_logger()
             load_checkpoint(self,

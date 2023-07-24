@@ -154,8 +154,8 @@ class PairedVideoDataset(SRAnnotationDataset):
                 ]
             keys = [key.replace('/', os.sep) for key in keys]
         else:
-            subDirs = glob(osp.join(self.gt_folder, '*/'))
-            keys = [subDir.split('/')[-2] for subDir in subDirs]
+            sub_dirs = glob(osp.join(self.gt_folder, '*/'))
+            keys = [sub_dir.split('/')[-2] for sub_dir in sub_dirs]
 
         # Collect sample paths according to the keys
         data_infos = []
@@ -311,7 +311,9 @@ class PairedVideoKeyFramesDataset(PairedVideoDataset):
                  stride=1,
                  padding=False,
                  center_gt=False,
-                 key_frames=[1, 0, 1, 0, 1, 0, 1]):
+                 key_frames=None):
+        if key_frames is None:
+            key_frames = [1, 0, 1, 0, 1, 0, 1]
         self.key_frames = key_frames
         super().__init__(lq_folder=lq_folder,
                          gt_folder=gt_folder,
@@ -439,7 +441,9 @@ class PairedVideoKeyFramesAnnotationDataset(PairedVideoDataset):
                  stride=1,
                  padding=False,
                  center_gt=False,
-                 key_frames=[1, 0, 1, 0, 1, 0, 1]):
+                 key_frames=None):
+        if key_frames is None:
+            key_frames = [1, 0, 1, 0, 1, 0, 1]
         self.key_frames = key_frames
         super().__init__(lq_folder=lq_folder,
                          gt_folder=gt_folder,
@@ -492,8 +496,8 @@ class PairedVideoKeyFramesAnnotationDataset(PairedVideoDataset):
                 ]
             keys = [key.replace('/', os.sep) for key in keys]
         else:
-            subDirs = glob(osp.join(self.gt_folder, '*/'))
-            keys = [subDir.split('/')[-2] for subDir in subDirs]
+            sub_dirs = glob(osp.join(self.gt_folder, '*/'))
+            keys = [sub_dir.split('/')[-2] for sub_dir in sub_dirs]
 
         # Collect sample paths according to the keys
         data_infos = []

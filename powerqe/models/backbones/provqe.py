@@ -12,8 +12,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import torch
-import torch.nn.functional as F
-from mmedit.models import BasicVSRPlusPlus
+import torch.nn.functional as nn_func
+from mmedit.models.backbones import BasicVSRPlusPlus
 from mmedit.models.common import flow_warp
 from mmedit.models.registry import BACKBONES
 
@@ -23,24 +23,6 @@ class ProVQE(BasicVSRPlusPlus):
     """ProVQE network structure.
 
     Support either x4 upsampling or same size output.
-
-    Args:
-        mid_channels (int, optional): Channel number of the intermediate
-            features. Default: 64.
-        num_blocks (int, optional): The number of residual blocks in each
-            propagation branch. Default: 7.
-        max_residue_magnitude (int): The maximum magnitude of the offset
-            residue (Eq. 6 in paper). Default: 10.
-        is_low_res_input (bool, optional): Whether the input is low-resolution
-            or not. If False, the output resolution is equal to the input
-            resolution. Default: True.
-        spynet_pretrained (str, optional): Pre-trained model path of SPyNet.
-            Default: None.
-        cpu_cache_length (int, optional): When the length of sequence is larger
-            than this value, the intermediate features are sent to CPU. This
-            saves GPU memory, but slows down the inference speed. You can
-            increase this number if you have a GPU with large memory.
-            Default: 100.
     """
 
     def propagate(self, feats, flows, module_name, key_frms):
@@ -60,16 +42,18 @@ class ProVQE(BasicVSRPlusPlus):
                 propagation branch, which is represented by a list of tensors.
         """
 
-        n, t, _, h, w = flows.size()  # (N, T-1, 2, H, W)
+        n, t, _, h, w = flows.size()  # (N, nfrms-1, 2, H, W)
 
-        T = t + 1
+        nfrms = t + 1
         if 'forward' in module_name:
-            frame_idx = range(0, T)  # 0, 1, ..., T-1
-            flow_idx = range(-1, T - 1)  # -1, 0, ..., T-2
+            frame_idx = range(0, nfrms)  # 0, 1, ..., nfrms-1
+            flow_idx = range(-1, nfrms - 1)  # -1, 0, ..., nfrms-2
         elif 'backward' in module_name:
-            frame_idx = range(T - 1, -1, -1)  # T-1, T-2, ..., 0
-            flow_idx = range(T - 1, -1, -1)  # T-1, T-2, ..., 0
+            frame_idx = range(nfrms - 1, -1, -1)  # nfrms-1, nfrms-2, ..., 0
+            flow_idx = range(nfrms - 1, -1, -1)  # nfrms-1, nfrms-2, ..., 0
             key_frms = [kfs[::-1] for kfs in key_frms]
+        else:
+            raise ValueError('"module_name" is invalid.')
 
         feat_prop = flows.new_zeros(n, self.mid_channels, h, w)
         for i, idx in enumerate(frame_idx):
@@ -183,10 +167,10 @@ class ProVQE(BasicVSRPlusPlus):
         if self.is_low_res_input:
             lqs_downsample = lqs.clone()
         else:
-            lqs_downsample = F.interpolate(lqs.view(-1, c, h, w),
-                                           scale_factor=0.25,
-                                           mode='bicubic').view(
-                                               n, t, c, h // 4, w // 4)
+            lqs_downsample = nn_func.interpolate(lqs.view(-1, c, h, w),
+                                                 scale_factor=0.25,
+                                                 mode='bicubic').view(
+                                                     n, t, c, h // 4, w // 4)
 
         # check whether the input is an extended sequence
         self.check_if_mirror_extended(lqs)

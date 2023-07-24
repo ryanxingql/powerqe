@@ -12,7 +12,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import numpy as np
-import torch.nn.functional as F
+import torch.nn.functional as nn_func
 
 
 def cal_diff(sz, sz_mul):
@@ -39,27 +39,27 @@ def pad_img_sz_mul(img, sz_mul):
     diff_h, diff_w = cal_diff(h, sz_mul), cal_diff(w, sz_mul)
     pad_info = ((diff_w // 2), (diff_w - diff_w // 2), (diff_h // 2),
                 (diff_h - diff_h // 2))
-    img_pad = F.pad(img, pad_info, mode='reflect')
+    img_pad = nn_func.pad(img, pad_info, mode='reflect')
     return img_pad, pad_info
 
 
-def pad_img_min_sz(img, minSize):
+def pad_img_min_sz(img, min_size):
     """Image padding.
 
     Args:
         img (Tensor): Image with the shape of (N, C, H, W).
-        minSize (int): Minimum height and width of the padded image.
+        min_size (int): Minimum height and width of the padded image.
 
     Returns:
         Tensor: Padded image with the shape of (N, C, H, W).
         Tuple: Padding information recorded as (left, right, top, bottom).
     """
     h, w = img.shape[2:]
-    diff_h = minSize - h if h < minSize else 0
-    diff_w = minSize - w if w < minSize else 0
+    diff_h = min_size - h if h < min_size else 0
+    diff_w = min_size - w if w < min_size else 0
     pad_info = ((diff_w // 2), (diff_w - diff_w // 2), (diff_h // 2),
                 (diff_h - diff_h // 2))
-    img_pad = F.pad(img, pad_info, mode='reflect')
+    img_pad = nn_func.pad(img, pad_info, mode='reflect')
     return img_pad, pad_info
 
 

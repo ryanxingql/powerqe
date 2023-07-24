@@ -15,7 +15,7 @@ limitations under the License.
 """
 import torch
 import torch.nn as nn
-from mmedit.models import EDVRNet
+from mmedit.models.backbones import EDVRNet
 
 from ..registry import BACKBONES
 

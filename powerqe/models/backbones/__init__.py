@@ -9,7 +9,6 @@ from .provqe import ProVQE
 from .rbqe import RBQE
 from .rdn import RDNQE
 from .rrdb_net import RRDBNetQE
-from .san import SAN
 from .stdf import STDFNet
 from .unet import UNet
 
@@ -25,7 +24,6 @@ __all__ = [
     'RBQE',
     'RDNQE',
     'RRDBNetQE',
-    'SAN',
     'STDFNet',
     'UNet',
 ]

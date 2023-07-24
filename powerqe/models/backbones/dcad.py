@@ -30,10 +30,8 @@ class DCAD(BaseNet):
     def __init__(self, io_channels=3, mid_channels=64, num_blocks=8):
         super().__init__()
 
-        layers = []
-
         # input conv
-        layers.append(nn.Conv2d(io_channels, mid_channels, 3, padding=1))
+        layers = [nn.Conv2d(io_channels, mid_channels, 3, padding=1)]
 
         # body
         for _ in range(num_blocks):

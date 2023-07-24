@@ -30,9 +30,9 @@ class ARCNN(BaseNet):
         mid_channels_3 (int): Channel number of the third intermediate
             features.
         in_kernel_size (int): Kernel size of the first convolution.
-        mid_kernel_size (int): Kernel size of the first intermediate
+        mid_kernel_size_1 (int): Kernel size of the first intermediate
             convolution.
-        mid_kernel_size (int): Kernel size of the second intermediate
+        mid_kernel_size_2 (int): Kernel size of the second intermediate
             convolution.
         out_kernel_size (int): Kernel size of the last convolution.
     """

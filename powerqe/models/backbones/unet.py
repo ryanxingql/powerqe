@@ -13,7 +13,7 @@ limitations under the License.
 """
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
+import torch.nn.functional as nn_func
 
 from ..registry import BACKBONES
 from .base import BaseNet
@@ -57,13 +57,13 @@ class Up(nn.Module):
         # only pad H and W; left (diff_w//2)
         # right remaining (diff_w - diff_w//2)
         # pad with constant 0
-        out_t = F.pad(input=feat,
-                      pad=[
-                          diff_w // 2, (diff_w - diff_w // 2), diff_h // 2,
-                          (diff_h - diff_h // 2)
-                      ],
-                      mode='constant',
-                      value=0)
+        out_t = nn_func.pad(input=feat,
+                            pad=[
+                                diff_w // 2, (diff_w - diff_w // 2),
+                                diff_h // 2, (diff_h - diff_h // 2)
+                            ],
+                            mode='constant',
+                            value=0)
 
         return out_t
 

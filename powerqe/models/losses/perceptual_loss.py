@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from mmedit.models import PerceptualLoss
+from mmedit.models.losses import PerceptualLoss
 
 from ..registry import LOSSES
 
@@ -22,36 +22,7 @@ from ..registry import LOSSES
 class PerceptualLossGray(PerceptualLoss):
     """Perceptual loss for gray-scale images.
 
-    Differences to PerceptualLoss:
-        Input x is a gray-scale image.
-
-    Args:
-        layers_weights (dict): The weight for each layer of vgg feature for
-            perceptual loss. Here is an example: {'4': 1., '9': 1., '18': 1.},
-            which means the 5th, 10th and 18th feature layer will be
-            extracted with weight 1.0 in calculating losses.
-        layers_weights_style (dict): The weight for each layer of vgg feature
-            for style loss. If set to None, the weights are set equal to
-            the weights for perceptual loss. Default: None.
-        vgg_type (str): The type of vgg network used as feature extractor.
-            Default: 'vgg19'.
-        use_input_norm (bool):  If True, normalize the input image in vgg.
-            Default: True.
-        perceptual_weight (float): If perceptual_weight > 0, the perceptual
-            loss will be calculated and the loss will be multiplied by the
-            weight. Default: 1.0.
-        style_weight (float): If style_weight > 0, the style loss will be
-            calculated and the loss will multiplied by the weight.
-            Default: 1.0.
-        norm_img (bool): If True, the image will be normed to [0, 1].
-            Note that this is different from the use_input_norm which norm the
-            input in forward function of vgg according to the statistics of
-            dataset. Importantly, the input image must be in range [-1, 1].
-            Default: True.
-        pretrained (str): Path for pretrained weights.
-            Default: 'torchvision://vgg19'.
-        criterion (str): Criterion type. Options are 'l1' and 'mse'.
-            Default: 'l1'.
+    Differences to PerceptualLoss: Input x is a gray-scale image.
     """
 
     def forward(self, x, gt):

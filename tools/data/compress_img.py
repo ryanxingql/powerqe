@@ -48,8 +48,8 @@ if __name__ == '__main__':
     args = parse_args()
 
     if args.codec == 'bpg':
-        bpgEnc_path = osp.abspath('data/libbpg/bpgenc')
-        bpgDec_path = osp.abspath('data/libbpg/bpgdec')
+        enc_path = osp.abspath('data/libbpg/bpgenc')
+        dec_path = osp.abspath('data/libbpg/bpgdec')
         paths = []
 
         if args.dataset == 'div2k':
@@ -121,9 +121,9 @@ if __name__ == '__main__':
         pbar = tqdm(total=len(paths), ncols=0)
         for path in paths:
             src_path = path['src']
-            enc_cmd = (f'{bpgEnc_path} -o {path["bpg"]} -q {args.quality}'
+            enc_cmd = (f'{enc_path} -o {path["bpg"]} -q {args.quality}'
                        f' {path["src"]}')
-            dec_cmd = f'{bpgDec_path} -o {path["tar"]} {path["bpg"]}'
+            dec_cmd = f'{dec_path} -o {path["tar"]} {path["bpg"]}'
             cmd = f'{enc_cmd} && {dec_cmd}'
             pool.apply_async(func=run_cmd,
                              args=(cmd, ),

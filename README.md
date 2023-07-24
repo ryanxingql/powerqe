@@ -7,7 +7,6 @@ Image approaches:
 - [MPRNet @ CVPR'21](https://github.com/swz30/MPRNet): Multi-stage structure.
 - [RBQE @ ECCV'20](https://github.com/ryanxingql/rbqe): Multi-exit structure and early-exit mechanism.
 - [CBDNet @ CVPR'19](https://github.com/GuoShi28/CBDNet): Noise estimation. Originally for image denoising.
-- [SAN @ CVPR'19](https://github.com/daitao/SAN): Second-order attention. Originally for image super resolution.
 - [ESRGAN @ ECCVW'18](https://github.com/xinntao/ESRGAN): Relativistic discriminator. Originally for image super resolution. PIRM'18 winner.
 - [RDN @ CVPR'18](https://github.com/yulunzhang/RDN): Residual dense network. Originally for image super resolution.
 - [DnCNN @ TIP'17](https://github.com/cszn/DnCNN): Pioneer of CNN-based image denoising.

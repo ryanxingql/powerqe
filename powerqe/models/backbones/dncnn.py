@@ -40,10 +40,8 @@ class DnCNN(BaseNet):
                  if_bn=False):
         super().__init__()
 
-        layers = []
-
         # input conv
-        layers.append(nn.Conv2d(io_channels, mid_channels, 3, padding=1))
+        layers = [nn.Conv2d(io_channels, mid_channels, 3, padding=1)]
 
         # body
         for _ in range(num_blocks):

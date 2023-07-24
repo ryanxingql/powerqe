@@ -244,16 +244,16 @@ class BasicVQERestorer(BasicRestorer):
 
         Args:
             metrics (list): List of evaluation metrics.
-            output (Tensor): Output images with the shape of (T!=1, C, H, W)
-                or (C, H, W).
-            gt (Tensor): GT images with the shape of (T!=1, C, H, W)
+            output (Tensor): Output images with the shape of
+                (nfrms!=1, C, H, W) or (C, H, W).
+            gt (Tensor): GT images with the shape of (nfrms!=1, C, H, W)
                 or (C, H, W).
 
         Returns:
             dict: Evaluation results.
         """
-        T = gt.shape[0]
-        if self.center_gt and (T % 2 == 0):
+        nfrms = gt.shape[0]
+        if self.center_gt and (nfrms % 2 == 0):
             raise ValueError('Number of output frames should be odd.')
 
         crop_border = self.test_cfg.get('crop_border', 0)
@@ -267,8 +267,8 @@ class BasicVQERestorer(BasicRestorer):
             eval_func = self.allowed_metrics[metric]
 
             results = []
-            for it in range(T):
-                if self.center_gt and (it != (T // 2)):
+            for it in range(nfrms):
+                if self.center_gt and (it != (nfrms // 2)):
                     continue
 
                 if self.center_gt:

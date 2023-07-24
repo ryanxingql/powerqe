@@ -54,8 +54,7 @@ class RDNQE(BaseNet):
         io_channels (int): Number of I/O channels.
         mid_channels (int): Channel number of intermediate features.
         num_blocks (int): Block number in the trunk network.
-        upscale_factor (int): Upsampling factor. Support 2^n and 3.
-        num_layer (int): Layer number in the Residual Dense Block.
+        num_layers (int): Layer number in the Residual Dense Block.
         channel_growth (int): Channels growth in each layer of RDB.
     """
 

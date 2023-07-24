@@ -3,7 +3,7 @@ Source: https://github.com/swz30/MPRNet/blob/main/Deblurring/MPRNet.py
 """
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
+import torch.nn.functional as nn_func
 
 from ..registry import BACKBONES
 from .base import BaseNet
@@ -45,10 +45,10 @@ class CAB(nn.Module):
     def __init__(self, n_feat, kernel_size, reduction, bias, act):
         super().__init__()
 
-        modules_body = []
-        modules_body.append(conv(n_feat, n_feat, kernel_size, bias=bias))
-        modules_body.append(act)
-        modules_body.append(conv(n_feat, n_feat, kernel_size, bias=bias))
+        modules_body = [
+            conv(n_feat, n_feat, kernel_size, bias=bias), act,
+            conv(n_feat, n_feat, kernel_size, bias=bias)
+        ]
 
         self.CA = CALayer(n_feat, reduction, bias=bias)
         self.body = nn.Sequential(*modules_body)
@@ -104,8 +104,8 @@ def pad_and_add(x, y):
         x_pads[0] = (-diff) // 2
         x_pads[1] = (-diff) - (-diff) // 2
 
-    x = F.pad(input=x, pad=x_pads, mode='constant', value=0)
-    y = F.pad(input=y, pad=y_pads, mode='constant', value=0)
+    x = nn_func.pad(input=x, pad=x_pads, mode='constant', value=0)
+    y = nn_func.pad(input=y, pad=y_pads, mode='constant', value=0)
     return x + y
 
 
@@ -313,7 +313,6 @@ class ORB(nn.Module):
     def __init__(self, n_feat, kernel_size, reduction, act, bias, num_cab):
         super().__init__()
 
-        modules_body = []
         modules_body = [
             CAB(n_feat, kernel_size, reduction, bias=bias, act=act)
             for _ in range(num_cab)
@@ -456,20 +455,20 @@ class MPRNet(BaseNet):
 
     def forward(self, x3_img):
         # Original-resolution Image for Stage 3
-        H = x3_img.size(2)
-        W = x3_img.size(3)
+        hgt = x3_img.size(2)
+        wdt = x3_img.size(3)
 
         # Multi-Patch Hierarchy: Split Image into four non-overlapping patches
 
         # Two Patches for Stage 2
-        x2top_img = x3_img[:, :, 0:int(H / 2), :]
-        x2bot_img = x3_img[:, :, int(H / 2):H, :]
+        x2top_img = x3_img[:, :, 0:int(hgt / 2), :]
+        x2bot_img = x3_img[:, :, int(hgt / 2):hgt, :]
 
         # Four Patches for Stage 1
-        x1ltop_img = x2top_img[:, :, :, 0:int(W / 2)]
-        x1rtop_img = x2top_img[:, :, :, int(W / 2):W]
-        x1lbot_img = x2bot_img[:, :, :, 0:int(W / 2)]
-        x1rbot_img = x2bot_img[:, :, :, int(W / 2):W]
+        x1ltop_img = x2top_img[:, :, :, 0:int(wdt / 2)]
+        x1rtop_img = x2top_img[:, :, :, int(wdt / 2):wdt]
+        x1lbot_img = x2bot_img[:, :, :, 0:int(wdt / 2)]
+        x1rbot_img = x2bot_img[:, :, :, int(wdt / 2):wdt]
 
         # Stage 1
 

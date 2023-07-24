@@ -71,15 +71,15 @@ def read_json(json_path):
         for line in file:
             data = json.loads(line)
             if 'mode' in data and data['mode'] == 'train':
-                iter = data['iter']
+                iters = data['iter']
                 loss = data['loss']
-                losses[iter] = loss
+                losses[iters] = loss
             if 'mode' in data and data['mode'] == 'val':
                 for metric in target_metrics:
                     if metric in data:
-                        iter = data['iter']
+                        iters = data['iter']
                         result = data[metric]
-                        metrics[metric][iter] = result
+                        metrics[metric][iters] = result
 
     return losses, metrics
 

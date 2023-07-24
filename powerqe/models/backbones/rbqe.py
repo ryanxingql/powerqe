@@ -16,7 +16,7 @@ import numbers
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
+import torch.nn.functional as nn_func
 
 from ..registry import BACKBONES
 from .base import BaseNet
@@ -123,11 +123,11 @@ class GaussianSmoothing(nn.Module):
         self.padding = padding
 
         if dim == 1:
-            self.conv = F.conv1d
+            self.conv = nn_func.conv1d
         elif dim == 2:
-            self.conv = F.conv2d
+            self.conv = nn_func.conv2d
         elif dim == 3:
-            self.conv = F.conv3d
+            self.conv = nn_func.conv3d
         else:
             raise ValueError('Data with 1/2/3 dimensions is supported;'
                              f' received {dim} dimensions.')
@@ -469,7 +469,7 @@ class Up(nn.Module):
             if dw < 0:
                 feat = feat[:, :, :, :w]
                 dw = 0
-            feat = F.pad(
+            feat = nn_func.pad(
                 input=feat,
                 pad=[dw // 2, (dw - dw // 2), dh // 2, (dh - dh // 2)],
                 mode='constant',

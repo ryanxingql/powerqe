@@ -82,7 +82,7 @@ class ESRGANRestorer(BasicQERestorer):
     def init_weights(self, pretrained=None):
         """Init the generator weights using the generator's method.
 
-        Therefore r'^generator.' must be removed.
+        Therefore, "r'^generator.'" must be removed.
 
         Args:
             pretrained (str, optional): Path for pretrained weights.

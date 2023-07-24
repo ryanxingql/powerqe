@@ -73,7 +73,7 @@ def write_ycbcr420(src_paths, tar_path, wdt, hgt):
     return tar_path
 
 
-def read_ycbcr420(src_path, tar_paths, wdt, hgt, printDir):
+def read_ycbcr420(src_path, tar_paths, wdt, hgt, print_dir):
     ycbcr420_nfrms = read_planar(src_path,
                                  fmt=((hgt, wdt), (hgt // 2, wdt // 2),
                                       (hgt // 2, wdt // 2)) * nfrms)
@@ -86,7 +86,7 @@ def read_ycbcr420(src_path, tar_paths, wdt, hgt, printDir):
                                    interpolation=cv2.INTER_CUBIC)
         bgr = cv2.cvtColor(ycrcb, cv2.COLOR_YCrCb2BGR)
         cv2.imwrite(tar_path, bgr)
-    return printDir
+    return print_dir
 
 
 def run_cmd(cmd):
@@ -206,24 +206,24 @@ if __name__ == '__main__':
             # os.makedirs(log_dir)
             os.makedirs(comp_planar_dir)
 
-            vidNames = glob(os.path.join(src_dir, '*/'))
-            vidNames = [vidName.split('/')[-2] for vidName in vidNames]
+            vid_names = glob(os.path.join(src_dir, '*/'))
+            vid_names = [vid_name.split('/')[-2] for vid_name in vid_names]
 
-            for vidName in vidNames:
+            for vid_name in vid_names:
                 wdt = 448
                 hgt = 256
                 nfrms = 3
                 src_paths = [
-                    osp.join(src_dir, vidName, f'im{iImg}.png')
-                    for iImg in range(1, 4)
+                    osp.join(src_dir, vid_name, f'im{idx_img}.png')
+                    for idx_img in range(1, 4)
                 ]
-                planar_path = osp.join(planar_dir, vidName + '.yuv')
-                bit_path = osp.join(bit_dir, vidName + '.bin')
-                log_path = osp.join(log_dir, vidName + '.log')
-                comp_planar_path = osp.join(comp_planar_dir, vidName + '.yuv')
+                planar_path = osp.join(planar_dir, vid_name + '.yuv')
+                bit_path = osp.join(bit_dir, vid_name + '.bin')
+                log_path = osp.join(log_dir, vid_name + '.log')
+                comp_planar_path = osp.join(comp_planar_dir, vid_name + '.yuv')
                 tar_paths = [
-                    osp.join(tar_dir, vidName, f'im{iImg}.png')
-                    for iImg in range(1, 4)
+                    osp.join(tar_dir, vid_name, f'im{idx_img}.png')
+                    for idx_img in range(1, 4)
                 ]
 
                 vids.append(
@@ -260,24 +260,24 @@ if __name__ == '__main__':
             # os.makedirs(log_dir)
             os.makedirs(comp_planar_dir)
 
-            vidNames = glob(os.path.join(src_dir, '*/'))
-            vidNames = [vidName.split('/')[-2] for vidName in vidNames]
+            vid_names = glob(os.path.join(src_dir, '*/'))
+            vid_names = [vid_name.split('/')[-2] for vid_name in vid_names]
 
-            for vidName in vidNames:
+            for vid_name in vid_names:
                 wdt = 448
                 hgt = 256
                 nfrms = 7
                 src_paths = [
-                    osp.join(src_dir, vidName, f'im{iImg}.png')
-                    for iImg in range(1, 8)
+                    osp.join(src_dir, vid_name, f'im{idx_img}.png')
+                    for idx_img in range(1, 8)
                 ]
-                planar_path = osp.join(planar_dir, vidName + '.yuv')
-                bit_path = osp.join(bit_dir, vidName + '.bin')
-                log_path = osp.join(log_dir, vidName + '.log')
-                comp_planar_path = osp.join(comp_planar_dir, vidName + '.yuv')
+                planar_path = osp.join(planar_dir, vid_name + '.yuv')
+                bit_path = osp.join(bit_dir, vid_name + '.bin')
+                log_path = osp.join(log_dir, vid_name + '.log')
+                comp_planar_path = osp.join(comp_planar_dir, vid_name + '.yuv')
                 tar_paths = [
-                    osp.join(tar_dir, vidName, f'im{iImg}.png')
-                    for iImg in range(1, 8)
+                    osp.join(tar_dir, vid_name, f'im{idx_img}.png')
+                    for idx_img in range(1, 8)
                 ]
 
                 vids.append(
@@ -308,8 +308,8 @@ if __name__ == '__main__':
 
             planar_paths = glob(os.path.join(planar_dir, '*.yuv'))
             for planar_path in planar_paths:
-                vidName = planar_path.split('/')[-1].split('.')[0]
-                res, nfrms = vidName.split('_')[-2:]
+                vid_name = planar_path.split('/')[-1].split('.')[0]
+                res, nfrms = vid_name.split('_')[-2:]
                 wdt, hgt = res.split('x')
                 wdt, hgt, nfrms = int(wdt), int(hgt), int(nfrms)
                 if wdt < 256 or hgt < 256:
@@ -318,20 +318,20 @@ if __name__ == '__main__':
                     continue
                 nfrms = 300 if nfrms > 300 else nfrms
 
-                bit_path = osp.join(bit_dir, vidName + '.bin')
-                log_path = osp.join(log_dir, vidName + '.log')
-                comp_planar_path = osp.join(comp_planar_dir, vidName + '.yuv')
-                # Use '{iImg:04d}' instead of '{iImg}'
+                bit_path = osp.join(bit_dir, vid_name + '.bin')
+                log_path = osp.join(log_dir, vid_name + '.log')
+                comp_planar_path = osp.join(comp_planar_dir, vid_name + '.yuv')
+                # Use '{idx_img:04d}' instead of '{idx_img}'
                 # because sorted is commonly used
                 # and '10.png' is ahead of '2.png'
                 # but '10.png' is behind '02.png'
                 tar_paths = [
-                    osp.join(tar_dir, vidName, f'{iImg:04d}.png')
-                    for iImg in range(1, nfrms + 1)
+                    osp.join(tar_dir, vid_name, f'{idx_img:04d}.png')
+                    for idx_img in range(1, nfrms + 1)
                 ]
                 src_paths = [
-                    osp.join(src_dir, vidName, f'{iImg:04d}.png')
-                    for iImg in range(1, nfrms + 1)
+                    osp.join(src_dir, vid_name, f'{idx_img:04d}.png')
+                    for idx_img in range(1, nfrms + 1)
                 ]
 
                 vids.append(
