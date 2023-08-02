@@ -49,10 +49,8 @@ Please refer to the document for [detailed installation](docs/v3.md#install-depe
 
 ## Prepare data
 
-Create a symbolic link to your data:
-
 ```bash
-ln -s <absolute-path-to-your-data> data
+mkdir data
 ```
 
 Place your data like this:
