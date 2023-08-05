@@ -14,12 +14,13 @@ limitations under the License.
 import argparse
 import json
 import os.path as osp
+from glob import glob
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 
-def read_json(json_path):
+def read_json(json_path, losses, metrics):
     """
     Examples:
         {
@@ -60,12 +61,6 @@ def read_json(json_path):
             }
         }
     """
-    target_metrics = ['PSNR', 'SSIM']
-
-    losses = dict()
-    metrics = dict()
-    for metric in target_metrics:
-        metrics[metric] = dict()
 
     with open(json_path, 'r') as file:
         for line in file:
@@ -75,7 +70,7 @@ def read_json(json_path):
                 loss = data['loss']
                 losses[iters] = loss
             if 'mode' in data and data['mode'] == 'val':
-                for metric in target_metrics:
+                for metric in metrics.keys():
                     if metric in data:
                         iters = data['iter']
                         result = data[metric]
@@ -119,11 +114,21 @@ def main():
 
     args = parser.parse_args()
 
+    if osp.isdir(args.json_path):
+        json_files = glob(osp.join(args.json_path, '*.json'))
+        sorted_json_files = sorted(json_files, key=lambda x: osp.getmtime(x))
+        print(f'{len(sorted_json_files)} json files are found.')
+    else:
+        sorted_json_files = [args.json_path]
+
     if not args.save_dir:
-        args.save_dir = osp.dirname(args.json_path)
+        args.save_dir = osp.dirname(sorted_json_files[0])
 
     # Read JSON
-    losses, metrics = read_json(args.json_path)
+    losses = dict()
+    metrics = dict(PSNR=dict(), SSIM=dict())
+    for json_file in sorted_json_files:
+        losses, metrics = read_json(json_file, losses=losses, metrics=metrics)
 
     # Plot
     save_path = osp.join(args.save_dir, 'losses.png')
