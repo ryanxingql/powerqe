@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import numpy as np
 from mmedit.models.losses import PerceptualLoss
 
 from ..registry import LOSSES
@@ -39,10 +40,9 @@ class PerceptualLossGray(PerceptualLoss):
 
         # calculate perceptual loss
         if self.perceptual_weight > 0:
-            percep_loss = 0
-            for k in x_features.keys():
-                percep_loss += self.criterion(
-                    x_features[k], gt_features[k]) * self.layer_weights[k]
+            percep_loss = np.dot([self.criterion(x_features[k], gt_features[k]) 
+                                  for k in x_features.keys()],[self.layer_weights[k]  
+                                                               for k in x_features.keys()])
             percep_loss *= self.perceptual_weight
         else:
             percep_loss = None
@@ -53,11 +53,9 @@ class PerceptualLossGray(PerceptualLoss):
                 x_features = self.vgg_style(x)
                 gt_features = self.vgg_style(gt.detach())
 
-            style_loss = 0
-            for k in x_features.keys():
-                style_loss += self.criterion(self._gram_mat(
-                    x_features[k]), self._gram_mat(
-                        gt_features[k])) * self.layer_weights_style[k]
+            style_loss = np.dot([self.criterion(self._gram_mat(x_features[k]), 
+                                                self._gram_mat(gt_features[k])) for k in x_features.keys()], 
+                                [self.layer_weights_style[k] for k in x_features.keys()])
             style_loss *= self.style_weight
         else:
             style_loss = None
