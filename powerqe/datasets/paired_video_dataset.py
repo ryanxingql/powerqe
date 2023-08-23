@@ -84,33 +84,35 @@ class PairedVideoDataset(SRAnnotationDataset):
             Note that gt_path is always a list. Default: False.
     """
 
-    def __init__(self,
-                 lq_folder,
-                 gt_folder,
-                 pipeline,
-                 ann_file='',
-                 scale=1,
-                 test_mode=False,
-                 samp_len=-1,
-                 stride=1,
-                 padding=False,
-                 center_gt=False):
+    def __init__(
+        self,
+        lq_folder,
+        gt_folder,
+        pipeline,
+        ann_file="",
+        scale=1,
+        test_mode=False,
+        samp_len=-1,
+        stride=1,
+        padding=False,
+        center_gt=False,
+    ):
         self.samp_len = samp_len
         self.stride = stride
         self.padding = padding
         self.center_gt = center_gt
 
-        super().__init__(lq_folder=lq_folder,
-                         gt_folder=gt_folder,
-                         ann_file=ann_file,
-                         pipeline=pipeline,
-                         scale=scale,
-                         test_mode=test_mode)
+        super().__init__(
+            lq_folder=lq_folder,
+            gt_folder=gt_folder,
+            ann_file=ann_file,
+            pipeline=pipeline,
+            scale=scale,
+            test_mode=test_mode,
+        )
 
-    def find_neighboring_frames(self, center_idx, seq_len, nfrms_left,
-                                nfrms_right):
-        idxs = list(
-            range(center_idx - nfrms_left, center_idx + nfrms_right + 1))
+    def find_neighboring_frames(self, center_idx, seq_len, nfrms_left, nfrms_right):
+        idxs = list(range(center_idx - nfrms_left, center_idx + nfrms_right + 1))
         idxs = [max(min(x, seq_len - 1), 0) for x in idxs]  # clip
         return idxs
 
@@ -146,16 +148,13 @@ class PairedVideoDataset(SRAnnotationDataset):
         """
         # Get sequence keys
         if self.ann_file:
-            with open(self.ann_file, 'r') as f:
-                keys = f.read().split('\n')
-                keys = [
-                    k.strip() for k in keys
-                    if (k.strip() is not None and k != '')
-                ]
-            keys = [key.replace('/', os.sep) for key in keys]
+            with open(self.ann_file, "r") as f:
+                keys = f.read().split("\n")
+                keys = [k.strip() for k in keys if (k.strip() is not None and k != "")]
+            keys = [key.replace("/", os.sep) for key in keys]
         else:
-            sub_dirs = glob(osp.join(self.gt_folder, '*/'))
-            keys = [sub_dir.split('/')[-2] for sub_dir in sub_dirs]
+            sub_dirs = glob(osp.join(self.gt_folder, "*/"))
+            keys = [sub_dir.split("/")[-2] for sub_dir in sub_dirs]
 
         # Collect sample paths according to the keys
         data_infos = []
@@ -168,31 +167,34 @@ class PairedVideoDataset(SRAnnotationDataset):
             lq_paths = self.scan_folder(lq_seq)
             assert len(gt_paths) == len(lq_paths), (
                 f'The GT and LQ sequences for key "{key}" should have'
-                ' the same number of images;'
-                f' GT has {len(gt_paths)} images while'
-                f' LQ has {len(lq_paths)} images.')
+                " the same number of images;"
+                f" GT has {len(gt_paths)} images while"
+                f" LQ has {len(lq_paths)} images."
+            )
 
             # Sort frame paths
             gt_names = [osp.basename(gt_path) for gt_path in gt_paths]
             gt_names = sorted(
-                gt_names, key=lambda x: int(''.join(filter(str.isdigit, x))))
+                gt_names, key=lambda x: int("".join(filter(str.isdigit, x)))
+            )
             gt_paths = [osp.join(gt_seq, gt_name) for gt_name in gt_names]
 
             # Check
             for gt_name in gt_names:
                 lq_path = osp.join(lq_seq, gt_name)
-                assert lq_path in lq_paths, (
-                    f'Cannot find "{lq_path}" in "{lq_seq}".')
+                assert lq_path in lq_paths, f'Cannot find "{lq_path}" in "{lq_seq}".'
 
             samp_len = len(gt_paths) if self.samp_len == -1 else self.samp_len
             assert samp_len <= len(gt_paths), (
-                f'The sample length ({samp_len}) should not be'
-                f' larger than the sequence length ({len(gt_paths)}).')
+                f"The sample length ({samp_len}) should not be"
+                f" larger than the sequence length ({len(gt_paths)})."
+            )
 
             if self.center_gt and (samp_len % 2 == 0):
                 raise ValueError(
-                    f'The sample length ({samp_len}) should be odd'
-                    ' when requiring center GT.')
+                    f"The sample length ({samp_len}) should be odd"
+                    " when requiring center GT."
+                )
 
             # Record samples
             seq_len = len(gt_paths)
@@ -202,31 +204,28 @@ class PairedVideoDataset(SRAnnotationDataset):
             samp_start = 0 if self.padding else nfrms_left
             samp_end = seq_len if self.padding else (seq_len - nfrms_right)
             center_idxs = list(range(samp_start, samp_end, self.stride))
-            if self.test_mode and (center_idxs[-1] + nfrms_right +
-                                   1) < seq_len:
+            if self.test_mode and (center_idxs[-1] + nfrms_right + 1) < seq_len:
                 center_idxs.append(seq_len - nfrms_right - 1)
 
             for center_idx in center_idxs:
-                lq_idxs = self.find_neighboring_frames(center_idx=center_idx,
-                                                       seq_len=seq_len,
-                                                       nfrms_left=nfrms_left,
-                                                       nfrms_right=nfrms_right)
+                lq_idxs = self.find_neighboring_frames(
+                    center_idx=center_idx,
+                    seq_len=seq_len,
+                    nfrms_left=nfrms_left,
+                    nfrms_right=nfrms_right,
+                )
                 if self.center_gt:
                     gt_idxs = [center_idx]
                 else:
                     gt_idxs = lq_idxs
 
                 samp_gt_paths = [gt_paths[idx] for idx in gt_idxs]
-                samp_lq_paths = [
-                    osp.join(lq_seq, gt_names[idx]) for idx in lq_idxs
-                ]
+                samp_lq_paths = [osp.join(lq_seq, gt_names[idx]) for idx in lq_idxs]
 
-                record_key = key + os.sep + ','.join(
-                    [gt_names[idx] for idx in gt_idxs])
+                record_key = key + os.sep + ",".join([gt_names[idx] for idx in gt_idxs])
                 data_infos.append(
-                    dict(gt_path=samp_gt_paths,
-                         lq_path=samp_lq_paths,
-                         key=record_key))
+                    dict(gt_path=samp_gt_paths, lq_path=samp_lq_paths, key=record_key)
+                )
         return data_infos
 
 
@@ -300,39 +299,43 @@ class PairedVideoKeyFramesDataset(PairedVideoDataset):
             See the document for more details.
     """
 
-    def __init__(self,
-                 lq_folder,
-                 gt_folder,
-                 pipeline,
-                 ann_file='',
-                 scale=1,
-                 test_mode=False,
-                 samp_len=-1,
-                 stride=1,
-                 padding=False,
-                 center_gt=False,
-                 key_frames=None):
+    def __init__(
+        self,
+        lq_folder,
+        gt_folder,
+        pipeline,
+        ann_file="",
+        scale=1,
+        test_mode=False,
+        samp_len=-1,
+        stride=1,
+        padding=False,
+        center_gt=False,
+        key_frames=None,
+    ):
         if key_frames is None:
             key_frames = [1, 0, 1, 0, 1, 0, 1]
         self.key_frames = key_frames
-        super().__init__(lq_folder=lq_folder,
-                         gt_folder=gt_folder,
-                         ann_file=ann_file,
-                         pipeline=pipeline,
-                         scale=scale,
-                         test_mode=test_mode,
-                         samp_len=samp_len,
-                         stride=stride,
-                         padding=padding,
-                         center_gt=center_gt)
+        super().__init__(
+            lq_folder=lq_folder,
+            gt_folder=gt_folder,
+            ann_file=ann_file,
+            pipeline=pipeline,
+            scale=scale,
+            test_mode=test_mode,
+            samp_len=samp_len,
+            stride=stride,
+            padding=padding,
+            center_gt=center_gt,
+        )
 
-    def find_neighboring_frames(self, seq_len, center_idx, nfrms_left,
-                                nfrms_right):
+    def find_neighboring_frames(self, seq_len, center_idx, nfrms_left, nfrms_right):
         # Check
         assert len(self.key_frames) >= seq_len, (
-            f'The length of the key-frame annotation ({self.key_frames})'
-            ' should be larger than that of the sequence'
-            f' ({len(seq_len)}).')
+            f"The length of the key-frame annotation ({self.key_frames})"
+            " should be larger than that of the sequence"
+            f" ({len(seq_len)})."
+        )
         key_frames = self.key_frames[:seq_len]
 
         # Find neighboring key frames
@@ -343,7 +346,8 @@ class PairedVideoKeyFramesDataset(PairedVideoDataset):
             key_idxs_left = [center_idx - 1] * nfrms_left  # use neighbor
         elif len(key_idxs_left) < nfrms_left:
             key_idxs_left = [key_idxs_left[0]] * (
-                nfrms_left - len(key_idxs_left)) + key_idxs_left
+                nfrms_left - len(key_idxs_left)
+            ) + key_idxs_left
         else:
             key_idxs_left = key_idxs_left[-nfrms_left:]
 
@@ -352,7 +356,8 @@ class PairedVideoKeyFramesDataset(PairedVideoDataset):
             key_idxs_right = [center_idx + 1] * nfrms_right
         elif len(key_idxs_right) < nfrms_right:
             key_idxs_right = key_idxs_right + [key_idxs_right[-1]] * (
-                nfrms_right - len(key_idxs_right))
+                nfrms_right - len(key_idxs_right)
+            )
         else:
             key_idxs_right = key_idxs_right[:nfrms_right]
 
@@ -430,31 +435,35 @@ class PairedVideoKeyFramesAnnotationDataset(PairedVideoDataset):
             See the document for more details.
     """
 
-    def __init__(self,
-                 lq_folder,
-                 gt_folder,
-                 pipeline,
-                 ann_file='',
-                 scale=1,
-                 test_mode=False,
-                 samp_len=-1,
-                 stride=1,
-                 padding=False,
-                 center_gt=False,
-                 key_frames=None):
+    def __init__(
+        self,
+        lq_folder,
+        gt_folder,
+        pipeline,
+        ann_file="",
+        scale=1,
+        test_mode=False,
+        samp_len=-1,
+        stride=1,
+        padding=False,
+        center_gt=False,
+        key_frames=None,
+    ):
         if key_frames is None:
             key_frames = [1, 0, 1, 0, 1, 0, 1]
         self.key_frames = key_frames
-        super().__init__(lq_folder=lq_folder,
-                         gt_folder=gt_folder,
-                         ann_file=ann_file,
-                         pipeline=pipeline,
-                         scale=scale,
-                         test_mode=test_mode,
-                         samp_len=samp_len,
-                         stride=stride,
-                         padding=padding,
-                         center_gt=center_gt)
+        super().__init__(
+            lq_folder=lq_folder,
+            gt_folder=gt_folder,
+            ann_file=ann_file,
+            pipeline=pipeline,
+            scale=scale,
+            test_mode=test_mode,
+            samp_len=samp_len,
+            stride=stride,
+            padding=padding,
+            center_gt=center_gt,
+        )
 
     def load_annotations(self):
         """Load sequences according to the annotation file.
@@ -488,16 +497,13 @@ class PairedVideoKeyFramesAnnotationDataset(PairedVideoDataset):
         """
         # Get sequence keys
         if self.ann_file:
-            with open(self.ann_file, 'r') as f:
-                keys = f.read().split('\n')
-                keys = [
-                    k.strip() for k in keys
-                    if (k.strip() is not None and k != '')
-                ]
-            keys = [key.replace('/', os.sep) for key in keys]
+            with open(self.ann_file, "r") as f:
+                keys = f.read().split("\n")
+                keys = [k.strip() for k in keys if (k.strip() is not None and k != "")]
+            keys = [key.replace("/", os.sep) for key in keys]
         else:
-            sub_dirs = glob(osp.join(self.gt_folder, '*/'))
-            keys = [sub_dir.split('/')[-2] for sub_dir in sub_dirs]
+            sub_dirs = glob(osp.join(self.gt_folder, "*/"))
+            keys = [sub_dir.split("/")[-2] for sub_dir in sub_dirs]
 
         # Collect sample paths according to the keys
         data_infos = []
@@ -510,31 +516,34 @@ class PairedVideoKeyFramesAnnotationDataset(PairedVideoDataset):
             lq_paths = self.scan_folder(lq_seq)
             assert len(gt_paths) == len(lq_paths), (
                 f'The GT and LQ sequences for key "{key}" should have'
-                ' the same number of images;'
-                f' GT has {len(gt_paths)} images while'
-                f' LQ has {len(lq_paths)} images.')
+                " the same number of images;"
+                f" GT has {len(gt_paths)} images while"
+                f" LQ has {len(lq_paths)} images."
+            )
 
             # Sort frame paths
             gt_names = [osp.basename(gt_path) for gt_path in gt_paths]
             gt_names = sorted(
-                gt_names, key=lambda x: int(''.join(filter(str.isdigit, x))))
+                gt_names, key=lambda x: int("".join(filter(str.isdigit, x)))
+            )
             gt_paths = [osp.join(gt_seq, gt_name) for gt_name in gt_names]
 
             # Check
             for gt_name in gt_names:
                 lq_path = osp.join(lq_seq, gt_name)
-                assert lq_path in lq_paths, (
-                    f'Cannot find "{lq_path}" in "{lq_seq}".')
+                assert lq_path in lq_paths, f'Cannot find "{lq_path}" in "{lq_seq}".'
 
             samp_len = len(gt_paths) if self.samp_len == -1 else self.samp_len
             assert samp_len <= len(gt_paths), (
-                f'The sample length ({samp_len}) should not be'
-                f' larger than the sequence length ({len(gt_paths)}).')
+                f"The sample length ({samp_len}) should not be"
+                f" larger than the sequence length ({len(gt_paths)})."
+            )
 
             if self.center_gt and (samp_len % 2 == 0):
                 raise ValueError(
-                    f'The sample length ({samp_len}) should be odd'
-                    ' when requiring center GT.')
+                    f"The sample length ({samp_len}) should be odd"
+                    " when requiring center GT."
+                )
 
             # Record samples
             seq_len = len(gt_paths)
@@ -544,31 +553,32 @@ class PairedVideoKeyFramesAnnotationDataset(PairedVideoDataset):
             samp_start = 0 if self.padding else nfrms_left
             samp_end = seq_len if self.padding else (seq_len - nfrms_right)
             center_idxs = list(range(samp_start, samp_end, self.stride))
-            if self.test_mode and (center_idxs[-1] + nfrms_right +
-                                   1) < seq_len:
+            if self.test_mode and (center_idxs[-1] + nfrms_right + 1) < seq_len:
                 center_idxs.append(seq_len - nfrms_right - 1)
 
             for center_idx in center_idxs:
-                lq_idxs = self.find_neighboring_frames(center_idx=center_idx,
-                                                       seq_len=seq_len,
-                                                       nfrms_left=nfrms_left,
-                                                       nfrms_right=nfrms_right)
+                lq_idxs = self.find_neighboring_frames(
+                    center_idx=center_idx,
+                    seq_len=seq_len,
+                    nfrms_left=nfrms_left,
+                    nfrms_right=nfrms_right,
+                )
                 if self.center_gt:
                     gt_idxs = [center_idx]
                 else:
                     gt_idxs = lq_idxs
 
                 samp_gt_paths = [gt_paths[idx] for idx in gt_idxs]
-                samp_lq_paths = [
-                    osp.join(lq_seq, gt_names[idx]) for idx in lq_idxs
-                ]
+                samp_lq_paths = [osp.join(lq_seq, gt_names[idx]) for idx in lq_idxs]
 
-                record_key = key + os.sep + ','.join(
-                    [gt_names[idx] for idx in gt_idxs])
+                record_key = key + os.sep + ",".join([gt_names[idx] for idx in gt_idxs])
                 key_frms = [self.key_frames[idx] for idx in lq_idxs]
                 data_infos.append(
-                    dict(gt_path=samp_gt_paths,
-                         lq_path=samp_lq_paths,
-                         key=record_key,
-                         key_frms=key_frms))
+                    dict(
+                        gt_path=samp_gt_paths,
+                        lq_path=samp_lq_paths,
+                        key=record_key,
+                        key_frms=key_frms,
+                    )
+                )
         return data_infos

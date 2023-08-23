@@ -31,8 +31,8 @@ class PerceptualLossGray(PerceptualLoss):
         x = x.repeat(1, 3, 1, 1)
 
         if self.norm_img:
-            x = (x + 1.) * 0.5
-            gt = (gt + 1.) * 0.5
+            x = (x + 1.0) * 0.5
+            gt = (gt + 1.0) * 0.5
         # extract vgg features
         x_features = self.vgg(x)
         gt_features = self.vgg(gt.detach())
@@ -41,8 +41,10 @@ class PerceptualLossGray(PerceptualLoss):
         if self.perceptual_weight > 0:
             percep_loss = 0
             for k in x_features.keys():
-                percep_loss += self.criterion(
-                    x_features[k], gt_features[k]) * self.layer_weights[k]
+                percep_loss += (
+                    self.criterion(x_features[k], gt_features[k])
+                    * self.layer_weights[k]
+                )
             percep_loss *= self.perceptual_weight
         else:
             percep_loss = None
@@ -55,9 +57,12 @@ class PerceptualLossGray(PerceptualLoss):
 
             style_loss = 0
             for k in x_features.keys():
-                style_loss += self.criterion(self._gram_mat(
-                    x_features[k]), self._gram_mat(
-                        gt_features[k])) * self.layer_weights_style[k]
+                style_loss += (
+                    self.criterion(
+                        self._gram_mat(x_features[k]), self._gram_mat(gt_features[k])
+                    )
+                    * self.layer_weights_style[k]
+                )
             style_loss *= self.style_weight
         else:
             style_loss = None

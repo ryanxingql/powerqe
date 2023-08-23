@@ -33,11 +33,7 @@ class DnCNN(BaseNet):
         if_bn (bool): If use BN layer. Default: False.
     """
 
-    def __init__(self,
-                 io_channels=3,
-                 mid_channels=64,
-                 num_blocks=15,
-                 if_bn=False):
+    def __init__(self, io_channels=3, mid_channels=64, num_blocks=15, if_bn=False):
         super().__init__()
 
         # input conv
@@ -49,24 +45,18 @@ class DnCNN(BaseNet):
             if if_bn:
                 layers += [
                     # bias is unnecessary and off due to the following BN
-                    nn.Conv2d(mid_channels,
-                              mid_channels,
-                              3,
-                              padding=1,
-                              bias=False),
-                    nn.BatchNorm2d(num_features=mid_channels,
-                                   momentum=0.9,
-                                   eps=1e-04,
-                                   affine=True)
+                    nn.Conv2d(mid_channels, mid_channels, 3, padding=1, bias=False),
+                    nn.BatchNorm2d(
+                        num_features=mid_channels, momentum=0.9, eps=1e-04, affine=True
+                    ),
                 ]
             else:
-                layers.append(
-                    nn.Conv2d(mid_channels, mid_channels, 3, padding=1))
+                layers.append(nn.Conv2d(mid_channels, mid_channels, 3, padding=1))
 
         # output conv
         layers += [
             nn.ReLU(inplace=True),
-            nn.Conv2d(mid_channels, io_channels, 3, padding=1)
+            nn.Conv2d(mid_channels, io_channels, 3, padding=1),
         ]
 
         self.layers = nn.Sequential(*layers)

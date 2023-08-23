@@ -32,103 +32,112 @@ def run_cmd(cmd):
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='Compress image dataset.')
-    parser.add_argument('--codec', type=str, required=True, choices=['bpg'])
-    parser.add_argument('--dataset',
-                        type=str,
-                        required=True,
-                        choices=['div2k', 'flickr2k'])
-    parser.add_argument('--max-npro', type=int, default=16)
-    parser.add_argument('--quality', type=int, default=37)
+    parser = argparse.ArgumentParser(description="Compress image dataset.")
+    parser.add_argument("--codec", type=str, required=True, choices=["bpg"])
+    parser.add_argument(
+        "--dataset", type=str, required=True, choices=["div2k", "flickr2k"]
+    )
+    parser.add_argument("--max-npro", type=int, default=16)
+    parser.add_argument("--quality", type=int, default=37)
     args = parser.parse_args()
     return args
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     args = parse_args()
 
-    if args.codec == 'bpg':
-        enc_path = osp.abspath('data/libbpg/bpgenc')
-        dec_path = osp.abspath('data/libbpg/bpgdec')
+    if args.codec == "bpg":
+        enc_path = osp.abspath("data/libbpg/bpgenc")
+        dec_path = osp.abspath("data/libbpg/bpgdec")
         paths = []
 
-        if args.dataset == 'div2k':
-            src_root = osp.abspath('data/div2k')
-            tmp_root = osp.abspath(f'tmp/div2k_lq/bpg/qp{args.quality}')
-            tar_root = osp.abspath(f'data/div2k_lq/bpg/qp{args.quality}')
+        if args.dataset == "div2k":
+            src_root = osp.abspath("data/div2k")
+            tmp_root = osp.abspath(f"tmp/div2k_lq/bpg/qp{args.quality}")
+            tar_root = osp.abspath(f"data/div2k_lq/bpg/qp{args.quality}")
 
             # Training set
-            src_dir = osp.join(src_root, 'train')
-            tmp_dir = osp.join(tmp_root, 'train')
-            tar_dir = osp.join(tar_root, 'train')
+            src_dir = osp.join(src_root, "train")
+            tmp_dir = osp.join(tmp_root, "train")
+            tar_dir = osp.join(tar_root, "train")
             os.makedirs(tmp_dir)
             os.makedirs(tar_dir)
 
             for idx in range(1, 801):
                 paths.append(
-                    dict(src=osp.join(src_dir, f'{idx:04d}.png'),
-                         bpg=osp.join(tmp_dir, f'{idx:04d}.bpg'),
-                         tar=osp.join(tar_dir, f'{idx:04d}.png')))
+                    dict(
+                        src=osp.join(src_dir, f"{idx:04d}.png"),
+                        bpg=osp.join(tmp_dir, f"{idx:04d}.bpg"),
+                        tar=osp.join(tar_dir, f"{idx:04d}.png"),
+                    )
+                )
 
             # Validation set
-            src_dir = osp.join(src_root, 'valid')
-            tmp_dir = osp.join(tmp_root, 'valid')
-            tar_dir = osp.join(tar_root, 'valid')
+            src_dir = osp.join(src_root, "valid")
+            tmp_dir = osp.join(tmp_root, "valid")
+            tar_dir = osp.join(tar_root, "valid")
             os.makedirs(tmp_dir)
             os.makedirs(tar_dir)
 
             for idx in range(801, 901):
                 paths.append(
-                    dict(src=osp.join(src_dir, f'{idx:04d}.png'),
-                         bpg=osp.join(tmp_dir, f'{idx:04d}.bpg'),
-                         tar=osp.join(tar_dir, f'{idx:04d}.png')))
+                    dict(
+                        src=osp.join(src_dir, f"{idx:04d}.png"),
+                        bpg=osp.join(tmp_dir, f"{idx:04d}.bpg"),
+                        tar=osp.join(tar_dir, f"{idx:04d}.png"),
+                    )
+                )
 
-        if args.dataset == 'flickr2k':
-            src_dir = osp.abspath('data/flickr2k')
-            tmp_dir = osp.abspath(f'tmp/flickr2k_lq/bpg/qp{args.quality}')
-            tar_dir = osp.abspath(f'data/flickr2k_lq/bpg/qp{args.quality}')
+        if args.dataset == "flickr2k":
+            src_dir = osp.abspath("data/flickr2k")
+            tmp_dir = osp.abspath(f"tmp/flickr2k_lq/bpg/qp{args.quality}")
+            tar_dir = osp.abspath(f"data/flickr2k_lq/bpg/qp{args.quality}")
 
             os.makedirs(tmp_dir)
             os.makedirs(tar_dir)
 
             for idx in range(1, 2651):
                 paths.append(
-                    dict(src=osp.join(src_dir, f'{idx:06d}.png'),
-                         bpg=osp.join(tmp_dir, f'{idx:06d}.bpg'),
-                         tar=osp.join(tar_dir, f'{idx:06d}.png')))
+                    dict(
+                        src=osp.join(src_dir, f"{idx:06d}.png"),
+                        bpg=osp.join(tmp_dir, f"{idx:06d}.bpg"),
+                        tar=osp.join(tar_dir, f"{idx:06d}.png"),
+                    )
+                )
 
             # Create meta
-            with open(osp.join(tar_dir, 'train.txt'), 'w') as file:
+            with open(osp.join(tar_dir, "train.txt"), "w") as file:
                 for idx in tqdm(range(1, 1989), ncols=0):
-                    img_name = f'{idx:06d}.png'
+                    img_name = f"{idx:06d}.png"
                     gt_path = osp.join(src_dir, img_name)
                     gt = cv2.imread(gt_path)
                     h, w, c = gt.shape
-                    line = f'{img_name} ({h},{w},{c})\n'
+                    line = f"{img_name} ({h},{w},{c})\n"
                     file.write(line)
 
-            with open(osp.join(tar_dir, 'test.txt'), 'w') as file:
+            with open(osp.join(tar_dir, "test.txt"), "w") as file:
                 for idx in tqdm(range(1989, 2651), ncols=0):
-                    img_name = f'{idx:06d}.png'
+                    img_name = f"{idx:06d}.png"
                     gt_path = osp.join(src_dir, img_name)
                     gt = cv2.imread(gt_path)
                     h, w, c = gt.shape
-                    line = f'{img_name} ({h},{w},{c})\n'
+                    line = f"{img_name} ({h},{w},{c})\n"
                     file.write(line)
 
         # Compression
         pool = mp.Pool(processes=args.max_npro)
         pbar = tqdm(total=len(paths), ncols=0)
         for path in paths:
-            src_path = path['src']
-            enc_cmd = (f'{enc_path} -o {path["bpg"]} -q {args.quality}'
-                       f' {path["src"]}')
+            src_path = path["src"]
+            enc_cmd = f'{enc_path} -o {path["bpg"]} -q {args.quality}' f' {path["src"]}'
             dec_cmd = f'{dec_path} -o {path["tar"]} {path["bpg"]}'
-            cmd = f'{enc_cmd} && {dec_cmd}'
-            pool.apply_async(func=run_cmd,
-                             args=(cmd, ),
-                             callback=lambda _: pbar.update(),
-                             error_callback=lambda err: print(err))
+            cmd = f"{enc_cmd} && {dec_cmd}"
+            pool.apply_async(
+                func=run_cmd,
+                args=(cmd,),
+                callback=lambda _: pbar.update(),
+                error_callback=lambda err: print(err),
+            )
         pool.close()
         pool.join()
         pbar.close()

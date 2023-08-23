@@ -40,39 +40,42 @@ class EDVRNetQE(EDVRNet):
         with_tsa (bool): Whether to use TSA module.
     """
 
-    def __init__(self,
-                 io_channels,
-                 mid_channels=64,
-                 num_frames=5,
-                 deform_groups=8,
-                 num_blocks_extraction=5,
-                 num_blocks_reconstruction=10,
-                 center_frame_idx=2,
-                 with_tsa=True):
-        super().__init__(in_channels=io_channels,
-                         out_channels=io_channels,
-                         mid_channels=mid_channels,
-                         num_frames=num_frames,
-                         deform_groups=deform_groups,
-                         num_blocks_extraction=num_blocks_extraction,
-                         num_blocks_reconstruction=num_blocks_reconstruction,
-                         center_frame_idx=center_frame_idx,
-                         with_tsa=with_tsa)
+    def __init__(
+        self,
+        io_channels,
+        mid_channels=64,
+        num_frames=5,
+        deform_groups=8,
+        num_blocks_extraction=5,
+        num_blocks_reconstruction=10,
+        center_frame_idx=2,
+        with_tsa=True,
+    ):
+        super().__init__(
+            in_channels=io_channels,
+            out_channels=io_channels,
+            mid_channels=mid_channels,
+            num_frames=num_frames,
+            deform_groups=deform_groups,
+            num_blocks_extraction=num_blocks_extraction,
+            num_blocks_reconstruction=num_blocks_reconstruction,
+            center_frame_idx=center_frame_idx,
+            with_tsa=with_tsa,
+        )
 
         # replace original layers
         self.conv_hr = nn.Conv2d(mid_channels, mid_channels, 3, 1, 1)
         self.conv_last = nn.Conv2d(mid_channels, io_channels, 3, 1, 1)
 
         # remove unused parameters
-        delattr(self, 'upsample1')
-        delattr(self, 'upsample2')
-        delattr(self, 'img_upsample')
+        delattr(self, "upsample1")
+        delattr(self, "upsample2")
+        delattr(self, "img_upsample")
 
     def forward(self, x):
         n, t, c, h, w = x.size()
         if h % 4 != 0 or w % 4 != 0:
-            raise ValueError(
-                f'Height ({h}) and width ({w}) should be divisible by 4.')
+            raise ValueError(f"Height ({h}) and width ({w}) should be divisible by 4.")
 
         x_center = x[:, self.center_frame_idx, :, :, :].contiguous()
 
@@ -93,13 +96,14 @@ class EDVRNetQE(EDVRNet):
         ref_feats = [  # reference feature list
             l1_feat[:, self.center_frame_idx, :, :, :].clone(),
             l2_feat[:, self.center_frame_idx, :, :, :].clone(),
-            l3_feat[:, self.center_frame_idx, :, :, :].clone()
+            l3_feat[:, self.center_frame_idx, :, :, :].clone(),
         ]
         aligned_feat = []
         for i in range(t):
             neighbor_feats = [
-                l1_feat[:, i, :, :, :].clone(), l2_feat[:, i, :, :, :].clone(),
-                l3_feat[:, i, :, :, :].clone()
+                l1_feat[:, i, :, :, :].clone(),
+                l2_feat[:, i, :, :, :].clone(),
+                l3_feat[:, i, :, :, :].clone(),
             ]
             aligned_feat.append(self.pcd_alignment(neighbor_feats, ref_feats))
         aligned_feat = torch.stack(aligned_feat, dim=1)  # (n, t, c, h, w)

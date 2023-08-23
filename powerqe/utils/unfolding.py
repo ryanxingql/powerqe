@@ -34,12 +34,18 @@ def pad_img_sz_mul(img, sz_mul):
     """
     h, w = img.shape[2:]
     if (h < sz_mul) or (w < sz_mul):
-        raise ValueError(f'Height ({h}) and width ({w}) should not be smaller'
-                         f' than the patch size ({sz_mul}).')
+        raise ValueError(
+            f"Height ({h}) and width ({w}) should not be smaller"
+            f" than the patch size ({sz_mul})."
+        )
     diff_h, diff_w = cal_diff(h, sz_mul), cal_diff(w, sz_mul)
-    pad_info = ((diff_w // 2), (diff_w - diff_w // 2), (diff_h // 2),
-                (diff_h - diff_h // 2))
-    img_pad = nn_func.pad(img, pad_info, mode='reflect')
+    pad_info = (
+        (diff_w // 2),
+        (diff_w - diff_w // 2),
+        (diff_h // 2),
+        (diff_h - diff_h // 2),
+    )
+    img_pad = nn_func.pad(img, pad_info, mode="reflect")
     return img_pad, pad_info
 
 
@@ -57,9 +63,13 @@ def pad_img_min_sz(img, min_size):
     h, w = img.shape[2:]
     diff_h = min_size - h if h < min_size else 0
     diff_w = min_size - w if w < min_size else 0
-    pad_info = ((diff_w // 2), (diff_w - diff_w // 2), (diff_h // 2),
-                (diff_h - diff_h // 2))
-    img_pad = nn_func.pad(img, pad_info, mode='reflect')
+    pad_info = (
+        (diff_w // 2),
+        (diff_w - diff_w // 2),
+        (diff_h // 2),
+        (diff_h - diff_h // 2),
+    )
+    img_pad = nn_func.pad(img, pad_info, mode="reflect")
     return img_pad, pad_info
 
 
@@ -114,11 +124,10 @@ def combine_patches(patches, unfold_shape):
     h_pad = unfold_shape[1] * unfold_shape[4]
     w_pad = unfold_shape[2] * unfold_shape[5]
 
-    img = patches.view(
-        unfold_shape)  # b num_patch_h num_patch_w c patch_sz patch_sz
+    img = patches.view(unfold_shape)  # b num_patch_h num_patch_w c patch_sz patch_sz
     img = img.permute(
-        0, 3, 1, 4, 2,
-        5).contiguous()  # b c num_patch_h patch_sz num_patch_w patch_sz
+        0, 3, 1, 4, 2, 5
+    ).contiguous()  # b c num_patch_h patch_sz num_patch_w patch_sz
     img = img.view(b, c, h_pad, w_pad)
     return img
 
@@ -135,11 +144,11 @@ def crop_img(img, pad_info):
         Tensor: Cropped image.
     """
     if pad_info[3] == 0 and pad_info[1] == 0:
-        img = img[..., pad_info[2]:, pad_info[0]:]
+        img = img[..., pad_info[2] :, pad_info[0] :]
     elif pad_info[3] == 0:
-        img = img[..., pad_info[2]:, pad_info[0]:-pad_info[1]]
+        img = img[..., pad_info[2] :, pad_info[0] : -pad_info[1]]
     elif pad_info[1] == 0:
-        img = img[..., pad_info[2]:-pad_info[3], pad_info[0]:]
+        img = img[..., pad_info[2] : -pad_info[3], pad_info[0] :]
     else:
-        img = img[..., pad_info[2]:-pad_info[3], pad_info[0]:-pad_info[1]]
+        img = img[..., pad_info[2] : -pad_info[3], pad_info[0] : -pad_info[1]]
     return img

@@ -38,5 +38,7 @@ class BaseNet(nn.Module):
         elif pretrained is None:
             pass  # use default initialization
         else:
-            raise TypeError('"pretrained" must be a string or None;'
-                            f' received "{type(pretrained)}".')
+            raise TypeError(
+                '"pretrained" must be a string or None;'
+                f' received "{type(pretrained)}".'
+            )

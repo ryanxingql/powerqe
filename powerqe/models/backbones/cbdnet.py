@@ -42,51 +42,65 @@ class CBDNet(BaseNet):
             the denoising module.
     """
 
-    def __init__(self,
-                 io_channels=3,
-                 estimate_channels=32,
-                 nlevel_denoise=3,
-                 nf_base_denoise=64,
-                 nf_gr_denoise=2,
-                 nl_base_denoise=1,
-                 nl_gr_denoise=2,
-                 down_denoise='avepool2d',
-                 up_denoise='transpose2d',
-                 reduce_denoise='add'):
+    def __init__(
+        self,
+        io_channels=3,
+        estimate_channels=32,
+        nlevel_denoise=3,
+        nf_base_denoise=64,
+        nf_gr_denoise=2,
+        nl_base_denoise=1,
+        nl_gr_denoise=2,
+        down_denoise="avepool2d",
+        up_denoise="transpose2d",
+        reduce_denoise="add",
+    ):
         super().__init__()
 
-        estimate_list = nn.ModuleList([
-            nn.Conv2d(in_channels=io_channels,
-                      out_channels=estimate_channels,
-                      kernel_size=3,
-                      padding=3 // 2),
-            nn.ReLU(inplace=True)
-        ])
+        estimate_list = nn.ModuleList(
+            [
+                nn.Conv2d(
+                    in_channels=io_channels,
+                    out_channels=estimate_channels,
+                    kernel_size=3,
+                    padding=3 // 2,
+                ),
+                nn.ReLU(inplace=True),
+            ]
+        )
         for _ in range(3):
-            estimate_list += nn.ModuleList([
-                nn.Conv2d(in_channels=estimate_channels,
-                          out_channels=estimate_channels,
-                          kernel_size=3,
-                          padding=3 // 2),
-                nn.ReLU(inplace=True)
-            ])
-        estimate_list += nn.ModuleList([
-            nn.Conv2d(estimate_channels, io_channels, 3, padding=3 // 2),
-            nn.ReLU(inplace=True)
-        ])
+            estimate_list += nn.ModuleList(
+                [
+                    nn.Conv2d(
+                        in_channels=estimate_channels,
+                        out_channels=estimate_channels,
+                        kernel_size=3,
+                        padding=3 // 2,
+                    ),
+                    nn.ReLU(inplace=True),
+                ]
+            )
+        estimate_list += nn.ModuleList(
+            [
+                nn.Conv2d(estimate_channels, io_channels, 3, padding=3 // 2),
+                nn.ReLU(inplace=True),
+            ]
+        )
         self.estimate = nn.Sequential(*estimate_list)
 
-        self.denoise = UNet(nf_in=io_channels * 2,
-                            nf_out=io_channels,
-                            nlevel=nlevel_denoise,
-                            nf_base=nf_base_denoise,
-                            nf_gr=nf_gr_denoise,
-                            nl_base=nl_base_denoise,
-                            nl_gr=nl_gr_denoise,
-                            down=down_denoise,
-                            up=up_denoise,
-                            reduce=reduce_denoise,
-                            residual=False)
+        self.denoise = UNet(
+            nf_in=io_channels * 2,
+            nf_out=io_channels,
+            nlevel=nlevel_denoise,
+            nf_base=nf_base_denoise,
+            nf_gr=nf_gr_denoise,
+            nl_base=nl_base_denoise,
+            nl_gr=nl_gr_denoise,
+            down=down_denoise,
+            up=up_denoise,
+            reduce=reduce_denoise,
+            residual=False,
+        )
 
     def forward(self, x):
         """Forward.

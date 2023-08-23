@@ -35,18 +35,22 @@ class RRDBNetQE(RRDBNet):
         upscale_factor (int): Upsampling factor. Support x1, x2 and x4.
     """
 
-    def __init__(self,
-                 io_channels,
-                 mid_channels=64,
-                 num_blocks=23,
-                 growth_channels=32,
-                 upscale_factor=4):
-        super().__init__(in_channels=io_channels,
-                         out_channels=io_channels,
-                         mid_channels=mid_channels,
-                         num_blocks=num_blocks,
-                         growth_channels=growth_channels,
-                         upscale_factor=upscale_factor)
+    def __init__(
+        self,
+        io_channels,
+        mid_channels=64,
+        num_blocks=23,
+        growth_channels=32,
+        upscale_factor=4,
+    ):
+        super().__init__(
+            in_channels=io_channels,
+            out_channels=io_channels,
+            mid_channels=mid_channels,
+            num_blocks=num_blocks,
+            growth_channels=growth_channels,
+            upscale_factor=upscale_factor,
+        )
 
     def init_weights(self, pretrained=None, strict=True, revise_keys=None):
         """Init weights for models.
@@ -64,23 +68,27 @@ class RRDBNetQE(RRDBNet):
                 Default: strip the prefix 'module.' by [(r'^module\\.', '')].
         """
         if revise_keys is None:
-            revise_keys = [(r'^module\.', '')]
+            revise_keys = [(r"^module\.", "")]
         if isinstance(pretrained, str):
             logger = get_root_logger()
-            load_checkpoint(self,
-                            pretrained,
-                            strict=strict,
-                            logger=logger,
-                            revise_keys=revise_keys)
+            load_checkpoint(
+                self, pretrained, strict=strict, logger=logger, revise_keys=revise_keys
+            )
         elif pretrained is None:
             # Use smaller std for better stability and performance. We
             # use 0.1. See more details in "ESRGAN: Enhanced Super-Resolution
             # Generative Adversarial Networks"
             for m in [
-                    self.conv_first, self.conv_body, self.conv_up1,
-                    self.conv_up2, self.conv_hr, self.conv_last
+                self.conv_first,
+                self.conv_body,
+                self.conv_up1,
+                self.conv_up2,
+                self.conv_hr,
+                self.conv_last,
             ]:
                 default_init_weights(m, 0.1)
         else:
-            raise TypeError('"pretrained" must be a string or None;'
-                            f' received "{type(pretrained)}".')
+            raise TypeError(
+                '"pretrained" must be a string or None;'
+                f' received "{type(pretrained)}".'
+            )

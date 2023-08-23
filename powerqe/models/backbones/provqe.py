@@ -45,10 +45,10 @@ class ProVQE(BasicVSRPlusPlus):
         n, t, _, h, w = flows.size()  # (N, nfrms-1, 2, H, W)
 
         nfrms = t + 1
-        if 'forward' in module_name:
+        if "forward" in module_name:
             frame_idx = range(0, nfrms)  # 0, 1, ..., nfrms-1
             flow_idx = range(-1, nfrms - 1)  # -1, 0, ..., nfrms-2
-        elif 'backward' in module_name:
+        elif "backward" in module_name:
             frame_idx = range(nfrms - 1, -1, -1)  # nfrms-1, nfrms-2, ..., 0
             flow_idx = range(nfrms - 1, -1, -1)  # nfrms-1, nfrms-2, ..., 0
             key_frms = [kfs[::-1] for kfs in key_frms]
@@ -57,7 +57,7 @@ class ProVQE(BasicVSRPlusPlus):
 
         feat_prop = flows.new_zeros(n, self.mid_channels, h, w)
         for i, idx in enumerate(frame_idx):
-            feat_current = feats['spatial'][idx]
+            feat_current = feats["spatial"][idx]
             if self.cpu_cache:
                 feat_current = feat_current.cuda()
                 feat_prop = feat_prop.cuda()
@@ -67,8 +67,9 @@ class ProVQE(BasicVSRPlusPlus):
                 flow_n1 = flows[:, flow_idx[i], :, :, :]
                 if self.cpu_cache:
                     flow_n1 = flow_n1.cuda()
-                cond_n1 = flow_warp(feat_prop, flow_n1.permute(
-                    0, 2, 3, 1))  # warp propagated feature from i-1 to i
+                cond_n1 = flow_warp(
+                    feat_prop, flow_n1.permute(0, 2, 3, 1)
+                )  # warp propagated feature from i-1 to i
                 # NOTE: feat_prop is also the feats[module_name][-1]
 
                 # initialize second-order features
@@ -80,55 +81,55 @@ class ProVQE(BasicVSRPlusPlus):
                 # key frame
                 if i > 1:  # has at least two previous frames
                     for ib in range(
-                            n
+                        n
                     ):  # each sample may have different key-frame annotation
-                        if sum(key_frms[ib]
-                               [:i - 1]) > 0:  # has at least one key frame
-                            i_key = max(
-                                [j for j in range(i - 1) if key_frms[ib][j]])
+                        if sum(key_frms[ib][: i - 1]) > 0:  # has at least one key frame
+                            i_key = max([j for j in range(i - 1) if key_frms[ib][j]])
                         else:
                             i_key = i - 2
 
                         ngaps = i - i_key
-                        feat_n2_ib = feats[module_name][-ngaps][ib:ib + 1]
+                        feat_n2_ib = feats[module_name][-ngaps][ib : ib + 1]
                         if self.cpu_cache:
                             feat_n2_ib = feat_n2_ib.cuda()
 
-                        flow_left = flows[ib:ib + 1,
-                                          flow_idx[i_key + 1], :, :, :]
+                        flow_left = flows[ib : ib + 1, flow_idx[i_key + 1], :, :, :]
                         if self.cpu_cache:
                             flow_left = flow_left.cuda()
                         for j in range(1, ngaps):
-                            flow_right = flows[ib:ib + 1, flow_idx[i_key + 1 +
-                                                                   j], :, :, :]
+                            flow_right = flows[
+                                ib : ib + 1, flow_idx[i_key + 1 + j], :, :, :
+                            ]
                             if self.cpu_cache:
                                 flow_right = flow_right.cuda()
                             flow_left = flow_right + flow_warp(
-                                flow_left, flow_right.permute(0, 2, 3, 1))
+                                flow_left, flow_right.permute(0, 2, 3, 1)
+                            )
                         flow_n2_ib = flow_left
 
-                        cond_n2[ib:ib + 1] = flow_warp(
+                        cond_n2[ib : ib + 1] = flow_warp(
                             feat_n2_ib, flow_n2_ib.permute(0, 2, 3, 1)
                         )  # warp key propagated feature from i_key to i
 
-                        feat_n2[ib:ib + 1] = feat_n2_ib
-                        flow_n2[ib:ib + 1] = flow_n2_ib
+                        feat_n2[ib : ib + 1] = feat_n2_ib
+                        flow_n2[ib : ib + 1] = flow_n2_ib
 
                 # flow-guided deformable convolution
                 cond = torch.cat([cond_n1, feat_current, cond_n2], dim=1)
                 feat_prop = torch.cat([feat_prop, feat_n2], dim=1)
                 feat_prop = self.deform_align[module_name](
-                    feat_prop, cond, flow_n1,
-                    flow_n2)  # align propagated feature with cond and flow
+                    feat_prop, cond, flow_n1, flow_n2
+                )  # align propagated feature with cond and flow
 
             # concatenate
             # 1. spatial
             # 2. other modules' output
             # 3. propagated (aligned) for current module
-            feat = [feat_current] + [
-                feats[k][idx]
-                for k in feats if k not in ['spatial', module_name]
-            ] + [feat_prop]
+            feat = (
+                [feat_current]
+                + [feats[k][idx] for k in feats if k not in ["spatial", module_name]]
+                + [feat_prop]
+            )
             if self.cpu_cache:
                 feat = [f.cuda() for f in feat]
             feat = torch.cat(feat, dim=1)
@@ -140,7 +141,7 @@ class ProVQE(BasicVSRPlusPlus):
                 feats[module_name][-1] = feats[module_name][-1].cpu()
                 torch.cuda.empty_cache()
 
-        if 'backward' in module_name:
+        if "backward" in module_name:
             feats[module_name] = feats[module_name][::-1]
 
         return feats
@@ -167,10 +168,9 @@ class ProVQE(BasicVSRPlusPlus):
         if self.is_low_res_input:
             lqs_downsample = lqs.clone()
         else:
-            lqs_downsample = nn_func.interpolate(lqs.view(-1, c, h, w),
-                                                 scale_factor=0.25,
-                                                 mode='bicubic').view(
-                                                     n, t, c, h // 4, w // 4)
+            lqs_downsample = nn_func.interpolate(
+                lqs.view(-1, c, h, w), scale_factor=0.25, mode="bicubic"
+            ).view(n, t, c, h // 4, w // 4)
 
         # check whether the input is an extended sequence
         self.check_if_mirror_extended(lqs)
@@ -178,32 +178,34 @@ class ProVQE(BasicVSRPlusPlus):
         feats = {}
         # compute spatial features
         if self.cpu_cache:
-            feats['spatial'] = []
+            feats["spatial"] = []
             for i in range(0, t):
                 feat = self.feat_extract(lqs[:, i, :, :, :]).cpu()
-                feats['spatial'].append(feat)
+                feats["spatial"].append(feat)
                 torch.cuda.empty_cache()
         else:
             feats_ = self.feat_extract(lqs.view(-1, c, h, w))
             h, w = feats_.shape[2:]
             feats_ = feats_.view(n, t, -1, h, w)
-            feats['spatial'] = [feats_[:, i, :, :, :]
-                                for i in range(0, t)]  # [t * (n, c, h, w)]
+            feats["spatial"] = [
+                feats_[:, i, :, :, :] for i in range(0, t)
+            ]  # [t * (n, c, h, w)]
 
         # compute optical flow using the low-res inputs
         assert lqs_downsample.size(3) >= 64 and lqs_downsample.size(4) >= 64, (
-            'The height and width of LR inputs must be at least 64, '
-            f'but got {h} and {w}.')
+            "The height and width of LR inputs must be at least 64, "
+            f"but got {h} and {w}."
+        )
         flows_forward, flows_backward = self.compute_flow(lqs_downsample)
 
         # feature propagation
         for iter_ in [1, 2]:
-            for direction in ['backward', 'forward']:
-                module_name = f'{direction}_{iter_}'
+            for direction in ["backward", "forward"]:
+                module_name = f"{direction}_{iter_}"
 
                 feats[module_name] = []
 
-                if direction == 'backward':
+                if direction == "backward":
                     flows = flows_backward
                 elif flows_forward is not None:
                     flows = flows_forward

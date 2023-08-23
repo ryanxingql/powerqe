@@ -20,8 +20,13 @@ import torch
 from mmedit.core import tensor2img
 from mmedit.models import BasicRestorer
 
-from ...utils.unfolding import (combine_patches, crop_img, pad_img_min_sz,
-                                pad_img_sz_mul, unfold_img)
+from ...utils.unfolding import (
+    combine_patches,
+    crop_img,
+    pad_img_min_sz,
+    pad_img_sz_mul,
+    unfold_img,
+)
 from ..registry import MODELS
 
 
@@ -42,25 +47,20 @@ class BasicQERestorer(BasicRestorer):
         pretrained (str): Path for pretrained model. Default: None.
     """
 
-    def __init__(self,
-                 generator,
-                 pixel_loss,
-                 train_cfg=None,
-                 test_cfg=None,
-                 pretrained=None):
-        super().__init__(generator=generator,
-                         pixel_loss=pixel_loss,
-                         train_cfg=train_cfg,
-                         test_cfg=test_cfg,
-                         pretrained=pretrained)
+    def __init__(
+        self, generator, pixel_loss, train_cfg=None, test_cfg=None, pretrained=None
+    ):
+        super().__init__(
+            generator=generator,
+            pixel_loss=pixel_loss,
+            train_cfg=train_cfg,
+            test_cfg=test_cfg,
+            pretrained=pretrained,
+        )
 
-    def forward_test(self,
-                     lq,
-                     gt=None,
-                     meta=None,
-                     save_image=False,
-                     save_path=None,
-                     iteration=None):
+    def forward_test(
+        self, lq, gt=None, meta=None, save_image=False, save_path=None, iteration=None
+    ):
         """Test forward.
 
         To save memory, image can be cut (or unfolded) into patches.
@@ -90,28 +90,32 @@ class BasicQERestorer(BasicRestorer):
                 the value is a dict of evaluation results.
         """
         # Check
-        assert self.test_cfg is not None, (
-            '"self.test_cfg" should be provided; received None.')
+        assert (
+            self.test_cfg is not None
+        ), '"self.test_cfg" should be provided; received None.'
 
-        assert len(lq) == 1, ('Only one sample is allowed per batch to'
-                              ' (1) manage image unfolding;'
-                              ' (2) extract image names for image saving;'
-                              ' (3) evaluate image metrics.')
+        assert len(lq) == 1, (
+            "Only one sample is allowed per batch to"
+            " (1) manage image unfolding;"
+            " (2) extract image names for image saving;"
+            " (3) evaluate image metrics."
+        )
 
-        assert 'metrics' in self.test_cfg, (
-            'metrics should be provided in test_cfg for evaluation.')
+        assert (
+            "metrics" in self.test_cfg
+        ), "metrics should be provided in test_cfg for evaluation."
 
         # Inference
-        if 'padding' in self.test_cfg:
-            _cfg = self.test_cfg['padding']
-            lq, pad_info = pad_img_min_sz(lq, _cfg['minSize'])
+        if "padding" in self.test_cfg:
+            _cfg = self.test_cfg["padding"]
+            lq, pad_info = pad_img_min_sz(lq, _cfg["minSize"])
 
-        if 'unfolding' in self.test_cfg:
-            _cfg = self.test_cfg['unfolding']
-            lq_pad, pad_info_unfold = pad_img_sz_mul(lq, _cfg['patchsize'])
-            lq_patches, unfold_shape = unfold_img(lq_pad, _cfg['patchsize'])
+        if "unfolding" in self.test_cfg:
+            _cfg = self.test_cfg["unfolding"]
+            lq_pad, pad_info_unfold = pad_img_sz_mul(lq, _cfg["patchsize"])
+            lq_patches, unfold_shape = unfold_img(lq_pad, _cfg["patchsize"])
 
-            splits = _cfg['splits']
+            splits = _cfg["splits"]
             npatches = lq_patches.shape[0]
             if splits > npatches:
                 splits = npatches
@@ -120,11 +124,10 @@ class BasicQERestorer(BasicRestorer):
             output_patches = []
             for split in range(splits):
                 output_patches.append(
-                    self.generator(lq_patches[split * b_split:(split + 1) *
-                                              b_split]))
+                    self.generator(lq_patches[split * b_split : (split + 1) * b_split])
+                )
             if splits * b_split < npatches:
-                output_patches.append(
-                    self.generator(lq_patches[splits * b_split:]))
+                output_patches.append(self.generator(lq_patches[splits * b_split :]))
             output_patches = torch.cat(output_patches, dim=0)
 
             output = combine_patches(output_patches, unfold_shape)
@@ -132,33 +135,40 @@ class BasicQERestorer(BasicRestorer):
         else:
             output = self.generator(lq)
 
-        if 'padding' in self.test_cfg:
+        if "padding" in self.test_cfg:
             output = crop_img(output, pad_info)
 
         # De-normalize before image saving and evaluation
-        if 'denormalize' in self.test_cfg:
+        if "denormalize" in self.test_cfg:
             device = output.device
-            mean = torch.tensor(self.test_cfg['denormalize']['mean']).view(
-                1, -1, 1, 1).to(device)
-            std = torch.tensor(self.test_cfg['denormalize']['std']).view(
-                1, -1, 1, 1).to(device)
+            mean = (
+                torch.tensor(self.test_cfg["denormalize"]["mean"])
+                .view(1, -1, 1, 1)
+                .to(device)
+            )
+            std = (
+                torch.tensor(self.test_cfg["denormalize"]["std"])
+                .view(1, -1, 1, 1)
+                .to(device)
+            )
             output = output * std + mean
             gt = gt * std + mean
 
         # Save image
         if save_image:
-            lq_path = meta[0]['lq_path']
+            lq_path = meta[0]["lq_path"]
             lq_name = osp.splitext(osp.basename(lq_path))[0]
-            save_subpath = lq_name + '.png'
+            save_subpath = lq_name + ".png"
 
             if isinstance(iteration, numbers.Number):  # val during training
-                _save_path = osp.join(save_path, f'{iteration + 1}',
-                                      save_subpath)
+                _save_path = osp.join(save_path, f"{iteration + 1}", save_subpath)
             elif iteration is None:  # testing
                 _save_path = osp.join(save_path, save_subpath)
             else:
-                raise TypeError('"iteration" should be a number or None;'
-                                f' received "{type(iteration)}".')
+                raise TypeError(
+                    '"iteration" should be a number or None;'
+                    f' received "{type(iteration)}".'
+                )
 
             mmcv.imwrite(tensor2img(output), _save_path)
 
@@ -186,29 +196,33 @@ class BasicVQERestorer(BasicRestorer):
             Default: False.
     """
 
-    def __init__(self,
-                 generator,
-                 pixel_loss,
-                 train_cfg=None,
-                 test_cfg=None,
-                 pretrained=None,
-                 center_gt=False):
-        super().__init__(generator=generator,
-                         pixel_loss=pixel_loss,
-                         train_cfg=train_cfg,
-                         test_cfg=test_cfg,
-                         pretrained=pretrained)
+    def __init__(
+        self,
+        generator,
+        pixel_loss,
+        train_cfg=None,
+        test_cfg=None,
+        pretrained=None,
+        center_gt=False,
+    ):
+        super().__init__(
+            generator=generator,
+            pixel_loss=pixel_loss,
+            train_cfg=train_cfg,
+            test_cfg=test_cfg,
+            pretrained=pretrained,
+        )
 
         # For evaluation
         self.center_gt = center_gt
 
         # Fix pre-trained networks
-        self.fix_iter = train_cfg.get('fix_iter', 0) if train_cfg else 0
-        self.fix_module = train_cfg.get('fix_module', []) if train_cfg else []
+        self.fix_iter = train_cfg.get("fix_iter", 0) if train_cfg else 0
+        self.fix_module = train_cfg.get("fix_module", []) if train_cfg else []
         self.is_weight_fixed = False
 
         # Count training steps
-        self.register_buffer('step_counter', torch.zeros(1))
+        self.register_buffer("step_counter", torch.zeros(1))
 
     def train_step(self, data_batch, optimizer):
         # Fix parameter
@@ -226,14 +240,14 @@ class BasicVQERestorer(BasicRestorer):
 
         # Inference
         outputs = self(**data_batch, test_mode=False)
-        loss, log_vars = self.parse_losses(outputs.pop('losses'))
+        loss, log_vars = self.parse_losses(outputs.pop("losses"))
 
         # Optimize
-        optimizer['generator'].zero_grad()
+        optimizer["generator"].zero_grad()
         loss.backward()
-        optimizer['generator'].step()
+        optimizer["generator"].step()
 
-        outputs.update({'log_vars': log_vars})
+        outputs.update({"log_vars": log_vars})
 
         self.step_counter += 1
 
@@ -254,16 +268,17 @@ class BasicVQERestorer(BasicRestorer):
         """
         nfrms = gt.shape[0]
         if self.center_gt and (nfrms % 2 == 0):
-            raise ValueError('Number of output frames should be odd.')
+            raise ValueError("Number of output frames should be odd.")
 
-        crop_border = self.test_cfg.get('crop_border', 0)
+        crop_border = self.test_cfg.get("crop_border", 0)
         eval_result = dict()
 
         for metric in metrics:
             if metric not in self.allowed_metrics:
                 raise ValueError(
                     f'Supported metrics include "{self.allowed_metrics}";'
-                    f' received "{metric}".')
+                    f' received "{metric}".'
+                )
             eval_func = self.allowed_metrics[metric]
 
             results = []
@@ -284,13 +299,9 @@ class BasicVQERestorer(BasicRestorer):
 
         return eval_result
 
-    def forward_test(self,
-                     lq,
-                     gt=None,
-                     meta=None,
-                     save_image=False,
-                     save_path=None,
-                     iteration=None):
+    def forward_test(
+        self, lq, gt=None, meta=None, save_image=False, save_path=None, iteration=None
+    ):
         """Test forward.
 
         For image saving, meta_keys of Collect transform should contains
@@ -313,33 +324,37 @@ class BasicVQERestorer(BasicRestorer):
         """
         # Check
         assert self.test_cfg is not None, ValueError(
-            '"self.test_cfg" should be provided; received None.')
+            '"self.test_cfg" should be provided; received None.'
+        )
 
         assert len(lq) == 1, (
-            'Only one sample is allowed per batch to'
+            "Only one sample is allowed per batch to"
             ' (1) extract image names from "meta" for image saving;'
-            ' (2) evaluate image metrics.')
+            " (2) evaluate image metrics."
+        )
 
-        if 'unfolding' in self.test_cfg:
+        if "unfolding" in self.test_cfg:
             raise NotImplementedError(
-                'Unfolding is not supported yet for video tensor.')
+                "Unfolding is not supported yet for video tensor."
+            )
 
         nfrms = lq.shape[1]
         if self.center_gt and (nfrms % 2 == 0):
-            raise ValueError('Number of input frames should be odd'
-                             ' when "center_gt" is True.')
+            raise ValueError(
+                "Number of input frames should be odd" ' when "center_gt" is True.'
+            )
 
-        assert 'metrics' in self.test_cfg, (
-            'metrics should be provided in "test_cfg" for evaluation.')
+        assert (
+            "metrics" in self.test_cfg
+        ), 'metrics should be provided in "test_cfg" for evaluation.'
 
         # Inference
-        if 'padding' in self.test_cfg:
-            _cfg = self.test_cfg['padding']
+        if "padding" in self.test_cfg:
+            _cfg = self.test_cfg["padding"]
             _tensors = []
             _pad_info = ()
             for it in range(nfrms):
-                _lq_it, pad_info = pad_img_min_sz(lq[:, it, ...],
-                                                  _cfg['minSize'])
+                _lq_it, pad_info = pad_img_min_sz(lq[:, it, ...], _cfg["minSize"])
                 _tensors.append(_lq_it)
                 if _pad_info:
                     assert pad_info == _pad_info
@@ -359,36 +374,45 @@ class BasicVQERestorer(BasicRestorer):
         output = output.squeeze(0)  # (T, C, H, W) or (C, H, W)
 
         # Denormalize before image saving and evaluation
-        if 'denormalize' in self.test_cfg:
+        if "denormalize" in self.test_cfg:
             device = output.device
-            mean = torch.tensor(self.test_cfg['denormalize']['mean']).view(
-                1, -1, 1, 1).to(device)
-            std = torch.tensor(self.test_cfg['denormalize']['std']).view(
-                1, -1, 1, 1).to(device)
+            mean = (
+                torch.tensor(self.test_cfg["denormalize"]["mean"])
+                .view(1, -1, 1, 1)
+                .to(device)
+            )
+            std = (
+                torch.tensor(self.test_cfg["denormalize"]["std"])
+                .view(1, -1, 1, 1)
+                .to(device)
+            )
             if gt.dim() == 3:
-                mean = torch.tensor(self.test_cfg['denormalize']['mean']).view(
-                    -1, 1, 1).to(device)
-                std = torch.tensor(self.test_cfg['denormalize']['std']).view(
-                    -1, 1, 1).to(device)
+                mean = (
+                    torch.tensor(self.test_cfg["denormalize"]["mean"])
+                    .view(-1, 1, 1)
+                    .to(device)
+                )
+                std = (
+                    torch.tensor(self.test_cfg["denormalize"]["std"])
+                    .view(-1, 1, 1)
+                    .to(device)
+                )
             gt = gt * std + mean
             output = output * std + mean
 
         # Save images
         if save_image:
-            key = meta[0]['key']
+            key = meta[0]["key"]
             if self.center_gt:
                 key_dir = osp.dirname(key)
                 key_stem = osp.splitext(osp.basename(key))[0]
-                save_subpath = osp.join(key_dir, key_stem + '.png')
+                save_subpath = osp.join(key_dir, key_stem + ".png")
             else:
                 key_dir = osp.dirname(key)
-                key_names = osp.basename(key).split(',')
-                key_stems = [
-                    osp.splitext(key_name)[0] for key_name in key_names
-                ]
+                key_names = osp.basename(key).split(",")
+                key_stems = [osp.splitext(key_name)[0] for key_name in key_names]
                 save_subpaths = [
-                    osp.join(key_dir, key_stem + '.png')
-                    for key_stem in key_stems
+                    osp.join(key_dir, key_stem + ".png") for key_stem in key_stems
                 ]
 
             for it in range(nfrms):  # note: T is the input lq idx
@@ -398,15 +422,15 @@ class BasicVQERestorer(BasicRestorer):
                 else:  # save every output frame
                     save_subpath = save_subpaths[it]
 
-                if isinstance(iteration,
-                              numbers.Number):  # val during training
-                    _save_path = osp.join(save_path, f'{iteration + 1}',
-                                          save_subpath)
+                if isinstance(iteration, numbers.Number):  # val during training
+                    _save_path = osp.join(save_path, f"{iteration + 1}", save_subpath)
                 elif iteration is None:  # testing
                     _save_path = osp.join(save_path, save_subpath)
                 else:
-                    raise TypeError('"iteration" should be a number or None;'
-                                    f' received "{type(iteration)}".')
+                    raise TypeError(
+                        '"iteration" should be a number or None;'
+                        f' received "{type(iteration)}".'
+                    )
 
                 if self.center_gt:
                     mmcv.imwrite(tensor2img(output), _save_path)
@@ -414,6 +438,9 @@ class BasicVQERestorer(BasicRestorer):
                     mmcv.imwrite(tensor2img(output[it]), _save_path)
 
         # Evaluation
-        results = dict(eval_result=self.evaluate(
-            metrics=self.test_cfg['metrics'], output=output, gt=gt))
+        results = dict(
+            eval_result=self.evaluate(
+                metrics=self.test_cfg["metrics"], output=output, gt=gt
+            )
+        )
         return results

@@ -37,13 +37,13 @@ class DCAD(BaseNet):
         for _ in range(num_blocks):
             layers += [
                 nn.ReLU(inplace=False),
-                nn.Conv2d(mid_channels, mid_channels, 3, padding=1)
+                nn.Conv2d(mid_channels, mid_channels, 3, padding=1),
             ]
 
         # output conv
         layers += [
             nn.ReLU(inplace=False),
-            nn.Conv2d(mid_channels, io_channels, 3, padding=1)
+            nn.Conv2d(mid_channels, io_channels, 3, padding=1),
         ]
 
         self.layers = nn.Sequential(*layers)

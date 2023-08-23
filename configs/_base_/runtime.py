@@ -1,28 +1,27 @@
 train_cfg = None
-test_cfg = dict(metrics=['PSNR', 'SSIM'], crop_border=1)
+test_cfg = dict(metrics=["PSNR", "SSIM"], crop_border=1)
 
-optimizers = dict(generator=dict(type='Adam', lr=1e-4, betas=(0.9, 0.999)))
+optimizers = dict(generator=dict(type="Adam", lr=1e-4, betas=(0.9, 0.999)))
 
 total_iters = 500 * 1000
-lr_config = dict(policy='CosineRestart',
-                 by_epoch=False,
-                 periods=[total_iters],
-                 min_lr=1e-7)
+lr_config = dict(
+    policy="CosineRestart", by_epoch=False, periods=[total_iters], min_lr=1e-7
+)
 
 val_inter = total_iters // 10
-checkpoint_config = dict(interval=val_inter,
-                         save_optimizer=True,
-                         by_epoch=False)
+checkpoint_config = dict(interval=val_inter, save_optimizer=True, by_epoch=False)
 evaluation = dict(interval=val_inter, save_image=False, gpu_collect=True)
-log_config = dict(interval=100,
-                  hooks=[
-                      dict(type='TextLoggerHook', by_epoch=False),
-                      dict(type='TensorboardLoggerHook')
-                  ])
+log_config = dict(
+    interval=100,
+    hooks=[
+        dict(type="TextLoggerHook", by_epoch=False),
+        dict(type="TensorboardLoggerHook"),
+    ],
+)
 visual_config = None
 
-dist_params = dict(backend='nccl')
-log_level = 'INFO'
+dist_params = dict(backend="nccl")
+log_level = "INFO"
 load_from = None
 resume_from = None
-workflow = [('train', 1)]
+workflow = [("train", 1)]
