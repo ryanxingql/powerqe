@@ -192,7 +192,6 @@ class ESRGANRestorer(BasicQERestorer):
 
         self.step_counter += 1
 
-        log_vars.pop("loss")  # remove the unnecessary 'loss'
         outputs = dict(
             log_vars=log_vars,
             num_samples=len(gt.data),
