@@ -7,8 +7,8 @@ model = dict(
     generator=dict(
         type="RRDBNetQE",
         io_channels=3,
-        mid_channels=64,
-        num_blocks=23,
+        mid_channels=32,
+        num_blocks=16,
         growth_channels=32,
         upscale_factor=1,
     ),
