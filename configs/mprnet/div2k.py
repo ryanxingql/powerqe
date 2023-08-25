@@ -4,7 +4,15 @@ exp_name = "mprnet_div2k"
 
 model = dict(
     type="BasicQERestorer",
-    generator=dict(type="MPRNet", io_c=3, n_feat=96),
+    generator=dict(
+        type="MPRNet",
+        io_c=3,
+        n_feat=16,
+        scale_unetfeats=16,
+        scale_orsnetfeats=16,
+        num_cab=4,
+        reduction=4,
+    ),
     pixel_loss=dict(type="CharbonnierLoss", loss_weight=1.0, reduction="mean"),
 )
 
