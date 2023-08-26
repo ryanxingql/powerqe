@@ -8,11 +8,11 @@ model = dict(
     generator=dict(
         type="EDVRNetQE",
         io_channels=3,
-        mid_channels=64,
+        mid_channels=32,
         num_frames=3,
         deform_groups=8,
-        num_blocks_extraction=5,
-        num_blocks_reconstruction=10,
+        num_blocks_extraction=3,
+        num_blocks_reconstruction=5,
         center_frame_idx=1,  # invalid when TSA is off
         with_tsa=False,
     ),
