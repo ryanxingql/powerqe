@@ -31,6 +31,11 @@ Content:
   - [Testing](#testing)
   - [Changelog](#changelog)
 
+Resources:
+
+- [Pretrained models](https://www.dropbox.com/sh/3mzzprf7ulv6fcf/AAAy5sp3nODU07sTN-qSgnNRa?dl=0)
+- [Document](docs/v3.md)
+
 ## Install dependency
 
 MMEditing is a submodule of PowerQE. One can easily upgrade the MMEditing, and add their models to PowerQE without modifying the MMEditing repository. One should clone PowerQE along with MMEditing like this:
@@ -122,8 +127,8 @@ Optional options:
 
 ## Changelog
 
-| Version                                                       | Document               | PyTorch | MMEditing | Video approaches |
-| ------------------------------------------------------------- | ---------------------- | ------- | --------- | ---------------- |
-| V3                                                            | [Document](docs/v3.md) | V1      | V0        | Supported        |
-| [V2](https://github.com/ryanxingql/powerqe/releases/tag/v2.0) | N/A                    | V1      | V0        | N/A              |
-| [V1](https://github.com/ryanxingql/powerqe/releases/tag/v1.0) | N/A                    | V1      | V0        | N/A              |
+| Version                                                       | PyTorch | MMEditing | Video approaches |
+| ------------------------------------------------------------- | ------- | --------- | ---------------- |
+| V3                                                            | V1      | V0        | Supported        |
+| [V2](https://github.com/ryanxingql/powerqe/releases/tag/v2.0) | V1      | V0        | N/A              |
+| [V1](https://github.com/ryanxingql/powerqe/releases/tag/v1.0) | V1      | V0        | N/A              |
