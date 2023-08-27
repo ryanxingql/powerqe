@@ -116,8 +116,8 @@ class ESRGANRestorer(BasicQERestorer):
         # generator
         fake_g_output = self.generator(lq)
 
-        losses = dict()
-        log_vars = dict()
+        losses = {}
+        log_vars = {}
 
         # no updates to discriminator parameters.
         set_requires_grad(self.discriminator, False)
@@ -159,21 +159,20 @@ class ESRGANRestorer(BasicQERestorer):
             loss_g.backward()
             optimizer["generator"].step()
 
-        # discriminator
+        # Discriminator
+
         set_requires_grad(self.discriminator, True)
+
         # real
-        fake_d_pred = self.discriminator(fake_g_output).detach()
         real_d_pred = self.discriminator(gt)
+        fake_d_pred = self.discriminator(fake_g_output).detach()
         loss_d_real = (
             self.gan_loss(
                 real_d_pred - torch.mean(fake_d_pred), target_is_real=True, is_disc=True
             )
             * 0.5
-        )  # 0.5 for averaging loss_d_real and loss_d_fake
-        loss_d, log_vars_d = self.parse_losses(dict(loss_d_real=loss_d_real))
-        optimizer["discriminator"].zero_grad()
-        loss_d.backward()
-        log_vars.update(log_vars_d)
+        )
+
         # fake
         fake_d_pred = self.discriminator(fake_g_output.detach())
         loss_d_fake = (
@@ -183,19 +182,23 @@ class ESRGANRestorer(BasicQERestorer):
                 is_disc=True,
             )
             * 0.5
-        )  # 0.5 for averaging loss_d_real and loss_d_fake
-        loss_d, log_vars_d = self.parse_losses(dict(loss_d_fake=loss_d_fake))
-        loss_d.backward()
-        log_vars.update(log_vars_d)
+        )
 
+        loss_d, log_vars_d = self.parse_losses(
+            {"loss_d_real": loss_d_real, "loss_d_fake": loss_d_fake}
+        )
+        optimizer["discriminator"].zero_grad()
+        loss_d.backward()
         optimizer["discriminator"].step()
+        log_vars_d["loss_discriminator"] = log_vars_d["loss"]
+        log_vars_d.pop("loss")  # remove the unnecessary 'loss'
+        log_vars.update(log_vars_d)
 
         self.step_counter += 1
 
-        outputs = dict(
-            log_vars=log_vars,
-            num_samples=len(gt.data),
-            results=dict(lq=lq.cpu(), gt=gt.cpu(), output=fake_g_output.cpu()),
-        )
-
+        outputs = {
+            "log_vars": log_vars,
+            "num_samples": len(gt.data),
+            "results": {"lq": lq.cpu(), "gt": gt.cpu(), "output": fake_g_output.cpu()},
+        }
         return outputs
