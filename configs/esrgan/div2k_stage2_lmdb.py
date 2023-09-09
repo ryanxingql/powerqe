@@ -4,7 +4,7 @@ exp_name = "esrgan_div2k_stage2"
 
 model = dict(
     type="ESRGANRestorer",
-    discriminator=dict(type="ModifiedVGG", in_channels=3, mid_channels=64),
+    discriminator=dict(type="ModifiedVGG", in_channels=3, mid_channels=16),
     pixel_loss=dict(loss_weight=1e-2),
     perceptual_loss=dict(
         type="PerceptualLoss",
