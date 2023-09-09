@@ -1,20 +1,11 @@
-_base_ = ["div2k_stage1.py"]
+_base_ = "div2k_stage1.py"
 
 exp_name = "esrgan_div2k_stage2"
 
 model = dict(
-    _delete_=True,
     type="ESRGANRestorer",
-    generator=dict(
-        type="RRDBNetQE",
-        io_channels=3,
-        mid_channels=32,
-        num_blocks=16,
-        growth_channels=32,
-        upscale_factor=1,
-    ),
     discriminator=dict(type="ModifiedVGG", in_channels=3, mid_channels=64),
-    pixel_loss=dict(type="L1Loss", loss_weight=1e-2, reduction="mean"),
+    pixel_loss=dict(loss_weight=1e-2),
     perceptual_loss=dict(
         type="PerceptualLoss",
         layer_weights={"34": 1.0},

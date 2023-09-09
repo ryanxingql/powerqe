@@ -1,4 +1,4 @@
-_base_ = ["../basicvsr_plus_plus/vimeo90k_septuplet.py"]
+_base_ = "../basicvsr_plus_plus/vimeo90k_septuplet.py"
 
 exp_name = "provqe_vimeo90k_septuplet"
 

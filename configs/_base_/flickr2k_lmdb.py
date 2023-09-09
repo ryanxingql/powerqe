@@ -1,4 +1,4 @@
-_base_ = ["flickr2k.py"]
+_base_ = "flickr2k.py"
 
 train_lq_folder = "data/lmdb/flickr2k_lq/bpg/qp37/train.lmdb"
 train_gt_folder = "data/lmdb/flickr2k/train.lmdb"

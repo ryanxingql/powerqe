@@ -1,4 +1,4 @@
-_base_ = ["div2k.py"]
+_base_ = "div2k.py"
 
 train_lq_folder = "data/lmdb/div2k_lq/bpg/qp37/train.lmdb"
 train_gt_folder = "data/lmdb/div2k/train.lmdb"
