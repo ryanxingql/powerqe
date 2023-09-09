@@ -76,7 +76,7 @@ Please refer to the document for [detailed preparation](docs/v3.md#prepare-data)
 ```bash
 #chmod +x tools/dist_train.sh  # for the first time
 
-conda activate powerqe &&\
+conda activate pqe &&\
  CUDA_VISIBLE_DEVICES=0\
  PORT=29500\
  tools/dist_train.sh\
@@ -85,7 +85,7 @@ conda activate powerqe &&\
  <optional-options>
 ```
 
-- Activate environment powerqe.
+- Activate environment.
 - Use GPU 0.
 - Use port 29500 for communication.
 - Training script.
@@ -102,7 +102,7 @@ Optional options:
 ```bash
 #chmod +x tools/dist_test.sh  # for the first time
 
-conda activate powerqe &&\
+conda activate pqe &&\
  CUDA_VISIBLE_DEVICES=0\
  PORT=29510\
  tools/dist_test.sh\
@@ -112,7 +112,7 @@ conda activate powerqe &&\
  <optional-options>
 ```
 
-- Activate environment powerqe.
+- Activate environment.
 - Use GPU 0.
 - Use port 29510 for communication.
 - Test script.
