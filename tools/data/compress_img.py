@@ -31,9 +31,14 @@ def run_cmd(cmd):
     os.system(cmd)
 
 
+def opencv_write_jpeg(src_path, quality, tar_path):
+    img = cv2.imread(src_path)
+    cv2.imwrite(tar_path, img, [cv2.IMWRITE_JPEG_QUALITY, quality])
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Compress image dataset.")
-    parser.add_argument("--codec", type=str, required=True, choices=["bpg"])
+    parser.add_argument("--codec", type=str, required=True, choices=["bpg", "jpeg"])
     parser.add_argument(
         "--dataset", type=str, required=True, choices=["div2k", "flickr2k"]
     )
@@ -60,6 +65,7 @@ if __name__ == "__main__":
             src_dir = osp.join(src_root, "train")
             tmp_dir = osp.join(tmp_root, "train")
             tar_dir = osp.join(tar_root, "train")
+
             os.makedirs(tmp_dir)
             os.makedirs(tar_dir)
 
@@ -128,13 +134,95 @@ if __name__ == "__main__":
         pool = mp.Pool(processes=args.max_npro)
         pbar = tqdm(total=len(paths), ncols=0)
         for path in paths:
-            src_path = path["src"]
             enc_cmd = f'{enc_path} -o {path["bpg"]} -q {args.quality}' f' {path["src"]}'
             dec_cmd = f'{dec_path} -o {path["tar"]} {path["bpg"]}'
             cmd = f"{enc_cmd} && {dec_cmd}"
             pool.apply_async(
                 func=run_cmd,
                 args=(cmd,),
+                callback=lambda _: pbar.update(),
+                error_callback=lambda err: print(err),
+            )
+        pool.close()
+        pool.join()
+        pbar.close()
+
+    elif args.codec == "jpeg":
+        paths = []
+
+        if args.dataset == "div2k":
+            src_root = osp.abspath("data/div2k")
+            tar_root = osp.abspath(f"data/div2k_lq/jpeg/qf{args.quality}")
+
+            # Training set
+            src_dir = osp.join(src_root, "train")
+            tar_dir = osp.join(tar_root, "train")
+            os.makedirs(tar_dir)
+
+            for idx in range(1, 801):
+                paths.append(
+                    dict(
+                        src=osp.join(src_dir, f"{idx:04d}.png"),
+                        tar=osp.join(tar_dir, f"{idx:04d}.jpg"),
+                    )
+                )
+
+            # Validation set
+            src_dir = osp.join(src_root, "valid")
+            tar_dir = osp.join(tar_root, "valid")
+            os.makedirs(tar_dir)
+
+            for idx in range(801, 901):
+                paths.append(
+                    dict(
+                        src=osp.join(src_dir, f"{idx:04d}.png"),
+                        tar=osp.join(tar_dir, f"{idx:04d}.jpg"),
+                    )
+                )
+
+        if args.dataset == "flickr2k":
+            src_dir = osp.abspath("data/flickr2k")
+            tar_dir = osp.abspath(f"data/flickr2k_lq/jpeg/qf{args.quality}")
+            os.makedirs(tar_dir)
+
+            for idx in range(1, 2651):
+                paths.append(
+                    dict(
+                        src=osp.join(src_dir, f"{idx:06d}.png"),
+                        tar=osp.join(tar_dir, f"{idx:06d}.jpg"),
+                    )
+                )
+
+            # Create meta
+            with open(osp.join(tar_dir, "train.txt"), "w") as file:
+                for idx in tqdm(range(1, 1989), ncols=0):
+                    img_name = f"{idx:06d}.png"
+                    gt_path = osp.join(src_dir, img_name)
+                    gt = cv2.imread(gt_path)
+                    h, w, c = gt.shape
+                    line = f"{img_name} ({h},{w},{c})\n"
+                    file.write(line)
+
+            with open(osp.join(tar_dir, "test.txt"), "w") as file:
+                for idx in tqdm(range(1989, 2651), ncols=0):
+                    img_name = f"{idx:06d}.png"
+                    gt_path = osp.join(src_dir, img_name)
+                    gt = cv2.imread(gt_path)
+                    h, w, c = gt.shape
+                    line = f"{img_name} ({h},{w},{c})\n"
+                    file.write(line)
+
+        # Compression
+        pool = mp.Pool(processes=args.max_npro)
+        pbar = tqdm(total=len(paths), ncols=0)
+        for path in paths:
+            pool.apply_async(
+                func=opencv_write_jpeg,
+                args=(
+                    path["src"],
+                    args.quality,
+                    path["tar"],
+                ),
                 callback=lambda _: pbar.update(),
                 error_callback=lambda err: print(err),
             )
