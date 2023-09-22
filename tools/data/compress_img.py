@@ -33,7 +33,10 @@ def run_cmd(cmd):
 
 def opencv_write_jpeg(src_path, quality, tar_path):
     img = cv2.imread(src_path)
-    cv2.imwrite(tar_path, img, [cv2.IMWRITE_JPEG_QUALITY, quality])
+    encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), quality]  # 0-100
+    _, jpeg_data = cv2.imencode(".jpg", img, encode_param)
+    comp_img = cv2.imdecode(jpeg_data, cv2.IMREAD_COLOR)
+    cv2.imwrite(tar_path, comp_img)
 
 
 def parse_args():
@@ -163,7 +166,7 @@ if __name__ == "__main__":
                 paths.append(
                     dict(
                         src=osp.join(src_dir, f"{idx:04d}.png"),
-                        tar=osp.join(tar_dir, f"{idx:04d}.jpg"),
+                        tar=osp.join(tar_dir, f"{idx:04d}.png"),
                     )
                 )
 
@@ -176,7 +179,7 @@ if __name__ == "__main__":
                 paths.append(
                     dict(
                         src=osp.join(src_dir, f"{idx:04d}.png"),
-                        tar=osp.join(tar_dir, f"{idx:04d}.jpg"),
+                        tar=osp.join(tar_dir, f"{idx:04d}.png"),
                     )
                 )
 
@@ -189,7 +192,7 @@ if __name__ == "__main__":
                 paths.append(
                     dict(
                         src=osp.join(src_dir, f"{idx:06d}.png"),
-                        tar=osp.join(tar_dir, f"{idx:06d}.jpg"),
+                        tar=osp.join(tar_dir, f"{idx:06d}.png"),
                     )
                 )
 
