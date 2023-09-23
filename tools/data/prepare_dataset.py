@@ -330,6 +330,7 @@ def parse_args():
             "div2k_qp27",
             "div2k_qp32",
             "div2k_qp42",
+            "div2k_qp47",
         ],
         required=True,
     )
@@ -433,17 +434,39 @@ if __name__ == "__main__":
             ),
         ]
 
-    elif args.dataset == "div2k_qf10":
+    elif "div2k_qp" in args.dataset:
+        quality = args.dataset.split("div2k_qp")[1]
         lq_list = [
-            f"data/div2k_lq/jpeg/qf10/train/{idx:04d}.png" for idx in range(1, 801)
+            f"data/div2k_lq/bpg/qp{quality}/train/{idx:04d}.png"
+            for idx in range(1, 801)
         ]
         opts = [
             dict(
                 n_thread=args.n_thread,
                 compression_level=args.compression_level,
                 img_list=lq_list,
-                save_folder="tmp/patches/div2k_lq/jpeg/qf10/train",
-                lmdb_folder="data/lmdb/div2k_lq/jpeg/qf10/train.lmdb",
+                save_folder=f"tmp/patches/div2k_lq/bpg/qp{quality}/train",
+                lmdb_folder=f"data/lmdb/div2k_lq/bpg/qp{quality}/train.lmdb",
+                crop_size=args.crop_size,
+                step=args.step,
+                thresh_size=args.thresh_size,
+                suffix=args.suffix,
+            ),
+        ]
+
+    elif "div2k_qf" in args.dataset:
+        quality = args.dataset.split("div2k_qf")[1]
+        lq_list = [
+            f"data/div2k_lq/jpeg/qf{quality}/train/{idx:04d}.png"
+            for idx in range(1, 801)
+        ]
+        opts = [
+            dict(
+                n_thread=args.n_thread,
+                compression_level=args.compression_level,
+                img_list=lq_list,
+                save_folder=f"tmp/patches/div2k_lq/jpeg/qf{quality}/train",
+                lmdb_folder=f"data/lmdb/div2k_lq/jpeg/qf{quality}/train.lmdb",
                 crop_size=args.crop_size,
                 step=args.step,
                 thresh_size=args.thresh_size,

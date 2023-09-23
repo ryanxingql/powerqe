@@ -1,4 +1,4 @@
-_base_ = ["../_base_/runtime.py", "../_base_/div2k_qf10_stage1_lmdb.py"]
+_base_ = ["../../_base_/runtime.py", "../../_base_/jpeg/div2k_qf10_lmdb.py"]
 
 exp_name = "rdn_div2k_qf10"
 
