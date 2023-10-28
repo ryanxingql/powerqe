@@ -121,7 +121,7 @@ def worker(path, opt):
             index += 1
             cropped_img = img[x : x + crop_size, y : y + crop_size, ...]
             cv2.imwrite(
-                osp.join(opt["save_folder"], f"{img_name}_s{index:03d}{extension}"),
+                osp.join(opt["save_folder"], f"{img_name}_s{index:03d}.png"),
                 cropped_img,
                 [cv2.IMWRITE_PNG_COMPRESSION, opt["compression_level"]],
             )
@@ -317,7 +317,22 @@ def parse_args():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
-        "--dataset", help="dataset name", choices=["div2k", "flickr2k"], required=True
+        "--dataset",
+        help="dataset name",
+        choices=[
+            "div2k",
+            "flickr2k",
+            "div2k_qf10",
+            "div2k_qf20",
+            "div2k_qf30",
+            "div2k_qf40",
+            "div2k_qf50",
+            "div2k_qp27",
+            "div2k_qp32",
+            "div2k_qp42",
+            "div2k_qp47",
+        ],
+        required=True,
     )
     parser.add_argument(
         "--crop-size",
@@ -391,7 +406,7 @@ if __name__ == "__main__":
             ),
         ]
 
-    if args.dataset == "flickr2k":
+    elif args.dataset == "flickr2k":
         gt_list = [f"data/flickr2k/{idx:06d}.png" for idx in range(1, 1989)]
         lq_list = [f"data/flickr2k_lq/bpg/qp37/{idx:06d}.png" for idx in range(1, 1989)]
         opts = [
@@ -411,7 +426,47 @@ if __name__ == "__main__":
                 compression_level=args.compression_level,
                 img_list=lq_list,
                 save_folder="tmp/patches/flickr2k_lq/bpg/qp37/train",
-                lmdb_folder=("data/lmdb/flickr2k_lq/bpg/qp37/train.lmdb"),
+                lmdb_folder="data/lmdb/flickr2k_lq/bpg/qp37/train.lmdb",
+                crop_size=args.crop_size,
+                step=args.step,
+                thresh_size=args.thresh_size,
+                suffix=args.suffix,
+            ),
+        ]
+
+    elif "div2k_qp" in args.dataset:
+        quality = args.dataset.split("div2k_qp")[1]
+        lq_list = [
+            f"data/div2k_lq/bpg/qp{quality}/train/{idx:04d}.png"
+            for idx in range(1, 801)
+        ]
+        opts = [
+            dict(
+                n_thread=args.n_thread,
+                compression_level=args.compression_level,
+                img_list=lq_list,
+                save_folder=f"tmp/patches/div2k_lq/bpg/qp{quality}/train",
+                lmdb_folder=f"data/lmdb/div2k_lq/bpg/qp{quality}/train.lmdb",
+                crop_size=args.crop_size,
+                step=args.step,
+                thresh_size=args.thresh_size,
+                suffix=args.suffix,
+            ),
+        ]
+
+    elif "div2k_qf" in args.dataset:
+        quality = args.dataset.split("div2k_qf")[1]
+        lq_list = [
+            f"data/div2k_lq/jpeg/qf{quality}/train/{idx:04d}.png"
+            for idx in range(1, 801)
+        ]
+        opts = [
+            dict(
+                n_thread=args.n_thread,
+                compression_level=args.compression_level,
+                img_list=lq_list,
+                save_folder=f"tmp/patches/div2k_lq/jpeg/qf{quality}/train",
+                lmdb_folder=f"data/lmdb/div2k_lq/jpeg/qf{quality}/train.lmdb",
                 crop_size=args.crop_size,
                 step=args.step,
                 thresh_size=args.thresh_size,
